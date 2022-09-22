@@ -107,3 +107,5 @@ As we can see, there is a multilevel pointers calculation to go to the recoil of
 To implement no recoil, We can just simply nop this instruction. (**nopping** is pratically "hiding" that particular instruction without impacting the whole program, and that instruction will never be executed).
 
 I hope that you liked this little post :)
+
+video: https://www.youtube.com/watch?v=huTILhprxls
