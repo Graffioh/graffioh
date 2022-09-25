@@ -6,4 +6,4 @@ I don't know the frequency of the publications, I will try to keep it updated.
 
 Lately the focus of this blog is being shifted towards my personal carreer in the Computer Science field.
 
-Created using [Docusaurus](https://docusaurus.io/).
+Created using [Jekyll](https://jekyllrb.com/).
