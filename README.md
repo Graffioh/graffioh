@@ -4,6 +4,6 @@ A blog about my journey in game hacking and reverse engineering,the goal is to l
 The focus of the reverse part is on the FPS genre, but I'm open to learn every genre.
 I don't know the frequency of the publications, I will try to keep it updated.
 
-Lately the focus of this blog is being shifted towards my personal carreer in the Computer Science field.
+Lately the focus of this blog is being shifted towards my personal career in the Computer Science field.
 
 Created using [Jekyll](https://jekyllrb.com/).
