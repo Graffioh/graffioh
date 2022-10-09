@@ -10,7 +10,7 @@ The focus of this journey is to get a good understanding of how an anti-cheat wo
 
 Even though I have university, I preferred to do a "side" project instead of studying only for the exams, because **for me**, if you will graduate without any side project, you wont get very far.
 
-So lets Begin!
+So lets begin!
 
 I started with tutorials on [Cheat Engine](https://cheatengine.org/), a powerful memory tool for game hackers that is really straightforward.
 
@@ -34,7 +34,7 @@ In addition to getting experience with Internal Cheats and C++, I started using 
 
 For the disassembler I use IDA. (not Ghidra because for IDA there a lot of resources online + plugins).
 
-Following Guided Hacking tutorial I reversed [Assault Cube](https://assault.cubers.net/), and made an Internal cheats with No recoil, flyhack, god mode and other things, some of them works in multiplayers and some of them don't.
+Following Guided Hacking tutorial I reversed [Assault Cube](https://assault.cubers.net/), and made an Internal cheats with no recoil, flyhack, god mode and other things, some of them works in multiplayers and some of them don't.
 
 Now I am "reversing" CS:GO (of course still following tutorials but not copy-pasting), with quite a bit of difficulty, but I'm sure I will get through this too.
 

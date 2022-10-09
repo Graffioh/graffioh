@@ -5,9 +5,9 @@ tags: [game-hacking, reversing, journey, assault-cube]
 date: 2022-06-09 14:00:00
 ---
 
-Assault Cube is an Open Source FPS game, now it's outdated, but for practicing game hacking is really good, because the reversing part is easy (except maybe for some functions).
+Assault Cube is an open source FPS game, now it's outdated, but for practicing game hacking is really good, because the reversing part is easy (except maybe for some functions).
 
-When reversing a game, We don't mind if the cheat is gonna be External or Internal (maybe I will do a post explaining it based on my knowledge in the future), both of them have pros and cons, and both of them are really similar when We talk about coding the cheat.
+When reversing a game, We don't mind if the cheat is gonna be External or Internal (maybe I will do a post explaining it based on my knowledge in the future), both of them have pros and cons, and both of them are really similar when we talk about coding the cheat.
 
 Assault Cube cheat table (for Cheat Engine):
 
@@ -31,26 +31,26 @@ We gonna start with a basic scan for the health, using granades and decreasing o
 {% include figure.html path="assets/img/scanhealth1.png" title="img" class="img-fluid rounded z-depth-1" %}
 
 
-Now we need a pointer to that otherwise everytime We restart the game, that address is gonna change, and We will need to do this process again.
+Now we need a pointer to that otherwise everytime We restart the game, that address is gonna change, and we'll need to do this process again.
 
 To find a pointer do a pointer scan with pointermaps or as you want.
 
-Now that We have a pointer, We have the offset too (in our case 0xF8), and with It We can finally modify our health with our cheat.
+Now that we have a pointer, We have the offset too (in our case 0xF8), and with It We can finally modify our health with our cheat.
 
 Through health you can find the local player too.
 
 {% include figure.html path="assets/img/examplehealth1.png" title="img" class="img-fluid rounded z-depth-1" %}
 
 
-With the local player + offsets We can basically access every properties of that particular class.
+With the local player + offsets we can basically access every properties of that particular class.
 
 2) **INTERMEDIATE** (Current ammo and Weapon Damage):
 
 We gonna use REClass.Net, a powerful tool to find offsets based on local player (in this case).
 
-before REClass just scan your ammo that you see for your current weapon type, for example rifle ammo and after that you will find the pointer.
+Before REClass just scan your ammo that you see for your current weapon type, for example rifle ammo and after that you will find the pointer.
 
-Now that We have the rifle ammo ptr, We can find the current weapon offset by reversing with "Multi-level pointer base calculation".
+Now that we have the rifle ammo ptr, We can find the current weapon offset by reversing with "Multi-level pointer base calculation".
 
 For reference the calculation is like this (took this formula from Guided Hacking):
 
@@ -60,7 +60,7 @@ For reference the calculation is like this (took this formula from Guided Hackin
     base ptr -> address + offset 2 = address
     static base -> address + offset 1 = address
 
-And with some scans We have this:
+And with some scans we have this:
 
     00FCA190 = Value = 20
     00FCA474 -> 00FCA190 + 0 = 00FCA190
@@ -69,7 +69,7 @@ And with some scans We have this:
 
 So the current Weapon offset is 374.
 
-We still have to find the weapon damage, and We will do it with REClass, it will look like this:
+We still have to find the weapon damage, and we will do it with REClass, it will look like this:
 
 {% include figure.html path="assets/img/weaponDmg1.PNG" title="img" class="img-fluid rounded z-depth-1" %}
 
@@ -102,7 +102,7 @@ After reversing it (I'm not gonna explain the whole process because I'm not the 
 
 (IDA fucked up the indentation)
 
-As we can see, there is a multilevel pointers calculation to go to the recoil offset, now We can conclude that the instruction where We need to operate on is this one.
+As we can see, there is a multilevel pointers calculation to go to the recoil offset, now We can conclude that the instruction where we need to operate on is this one.
 
 To implement no recoil, We can just simply nop this instruction. (**nopping** is pratically "hiding" that particular instruction without impacting the whole program, and that instruction will never be executed).
 

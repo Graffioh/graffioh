@@ -9,13 +9,13 @@ social: true  # includes social icons at the bottom of the page
 
 I'm Umberto, 19 years old from Italy, Computer Science student and passionate about Reverse engineering.
 
-With this blog I want to do a sort of journal through my journey about game hacking.
+With this blog I want to do a sort of journal through my journey in <s>game hacking</s> the CS field.
 
 **(FOR EDUCATIONAL PURPOSE ONLY!)**
 
-I've never wrote a blog before or documented anything online, so this is my first time.
+I've never wrote a blog before or documented anything online, this is my first time.
 
-I hope you enjoy. If you want updates/suggest anything, you can go on my Twitter: [@graffioh](https://twitter.com/graffioh).
+I hope you enjoy. If you want updates/suggest anything, you can DM me on Twitter or Discord.
 
 {% include figure.html path="assets/img/griffith-castle.jpg" title="griffith-castle" class="img-fluid rounded z-depth-1" %}
 

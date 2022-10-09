@@ -5,10 +5,10 @@ tags: [personal life, journey]
 date: 2022-08-01 14:30:00
 ---
 
-So, here We are again, from now on there will be a little shift regarding this blog's topic.
+So, here we are again, from now on there will be a little shift regarding this blog's topic.
 
 I got into a sort of Internship in Apple, precisely a 9 months "training program" called [Apple Developer Academy](https://www.developeracademy.unina.it/it/) in collaboration with my University.
-The Academy is based on mobile development (code+design) in a team environment, really different from what You do in Uni, so I decided to apply and after some selection I got accepted with other 220 people. 
+The Academy is based on mobile development (code+design) in a team environment, really different from what you do in Uni, so I decided to apply and after some selection I got accepted with other 220 people. 
 
 This has been an hard choice, because I needed to choose between full time uni or this sort of internship+uni. Of course the first choice would have been less stressful, as I already said, I always choose the hard and rewardful path and this is how I got in this situation.
 

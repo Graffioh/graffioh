@@ -7,6 +7,7 @@ nav: true
 nav_order: 3
 ---
 
+<!--
 ## GitHub user
 
 {% if site.data.repositories.github_users %}
@@ -17,7 +18,7 @@ nav_order: 3
 </div>
 {% endif %}
 
----
+--->
 
 ## GitHub Repositories
 
