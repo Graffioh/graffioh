@@ -7,7 +7,7 @@ permalink: /
 social: true  # includes social icons at the bottom of the page
 ---
 
-I'm Umberto, 19 years old from Italy, Computer Science student and passionate about Reverse engineering.
+I'm Umberto, ~~19~~ 20 years old from Italy, Computer Science student and passionate about Reverse engineering.
 
 With this blog I want to do a sort of journal through my journey in <s>game hacking</s> the CS field.
 
