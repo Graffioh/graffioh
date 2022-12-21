@@ -2,7 +2,7 @@
 layout: post
 title: Life Update II
 tags: [personal life, journey]
-date: 2022-12-21 17:30:00
+date: 2022-12-21 15:30:00
 ---
 
 Yo it's been a while!
