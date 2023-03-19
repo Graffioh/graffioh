@@ -1,7 +1,7 @@
 ---
 layout: page
 permalink: /repositories/
-title: projects
+title: public-projects
 description: 
 nav: true
 nav_order: 3
