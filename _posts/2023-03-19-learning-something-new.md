@@ -3,7 +3,7 @@ layout: post
 title: Learning something new
 tags: [programming, tech, back-end, mobile, swift]
 date: 2023-03-19 16:20:00
-og_image: https://i.imgur.com/meCM7B1.jpg
+og_image: https://i.imgur.com/Jqnav0s.jpg
 ---
 
 I needed to make an iOS App in 1 month with other 5 people from different backgrounds. The focus was to help lawyers network with eachother using an app.
