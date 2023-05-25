@@ -6,13 +6,11 @@ date: 2023-03-19 16:20:00
 og_image: https://i.imgur.com/Jqnav0s.jpg
 ---
 
-I needed to make an iOS App in 1 month with other 5 people from different backgrounds. The focus was to help lawyers network with eachother using an app.
+I had to create an iOS App within one month, collaborating with five individuals from diverse professional backgrounds. 
 
-The main feature was an "Assignment board" that a lawyer could use to post assignments, receive requests and send requests for other assignments.
+The main focus was to develop an app to facilitate networking among lawyers. The key feature was an 'Assignment board,' where lawyers could post their assignments, receive and send assignment requests. 
 
-My job was to make the back-end from the ground up and that was a new thing for me (all my projects were offline). 
-
-I will not go too in depth because it's a private project that maybe in future could be published.
+As for my role, I had to build the back-end from scratch, which was a new experience for me since all my previous projects were offline. I won't go too in-depth as it is a private project that might be published in the future.
 
 So my initial questions were: "Where do I start? What technologies should I use?". I've used C++ for personal projects and PostgreSQL/Java for an (offline) university project, so I had only a vague idea that a DB needs to be deployed online otherwise it would be another offline project :')
 
