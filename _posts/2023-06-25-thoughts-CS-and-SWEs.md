@@ -1,6 +1,6 @@
 ---
 layout: post
-title: My thoughts on CS, SWEs and more...
+title: My thoughts on CS, SWEs and more
 tags: [programming, tech, computer-science, education, swe]
 date: 2023-06-25 04:20:00
 og_image: https://i.imgur.com/SZmanIp.jpg
@@ -22,7 +22,11 @@ At the same time that my thinking was evolving, I realized that as a **Software 
 
 Of course, this approach has some downsides when it comes to the quality of the product. Take, for example, the Twitch web app; it is heavy, sluggish, and not performant. However, since it is profitable, it is considered 'okay'.
 
-The key is to build things and strive to create meaningful products for people. The tool doesn't matter, what truly matters is adaptability. I'm not saying this just for the sake of it, but for me, it applies to everything in our field. For example, I'm not scared of AI and all of this nonsense. If it becomes my assistant, it's just another tool for me to use in my work, and that's a good thing.
+I'm still new to the field as I haven't had a job as a Software Engineer yet. I still need to finish my University studies and potentially wait for an internship opportunity in Summer 2024. However, based on my current understanding, these are my considerations.
+
+The key is to build things and strive to create meaningful products for people. The tool doesn't matter, what truly matters is adaptability. I'm not saying this just for the sake of it, but for me, it applies to everything in our field. 
+
+I'm not scared of AI and all of this nonsense. If it becomes my assistant, it's just another tool for me to use in my work, and that's a good thing.
 
 (Thanks to ChatGPT for improving the readibility of this post).
 
