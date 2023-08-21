@@ -3,4 +3,4 @@ I created this blog to document my journey in game hacking and reverse engineeri
 
 The focus of this blog is shifted towards my personal career in the Computer Science field, sharing personal thoughts and maybe technical knowledge.
 
-Created using [Jekyll](https://jekyllrb.com/).
+Created using [Jekyll](https://jekyllrb.com/) and [al_folio](https://github.com/alshedivat/al-folio).
