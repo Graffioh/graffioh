@@ -4,6 +4,7 @@ title: My thoughts on CS, SWEs and more
 tags: [programming, tech, computer-science, education, swe]
 date: 2023-06-25 04:20:00
 og_image: https://i.imgur.com/SZmanIp.jpg
+baseurl: /ciao/
 ---
 
 Why am I making this post? What is life? Are we alone in the universe? I don't know.
