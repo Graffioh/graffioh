@@ -4,6 +4,7 @@ title: Learning something new
 tags: [programming, tech, back-end, mobile, swift]
 date: 2023-03-19 16:20:00
 og_image: https://i.imgur.com/Jqnav0s.jpg
+permalink: /REwithGraffioh//blog/2023/learning-something-new/
 ---
 
 I had to create an iOS App within one month, collaborating with five individuals from diverse professional backgrounds. 
