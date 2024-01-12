@@ -12,14 +12,14 @@ image: https://images.nightcafe.studio/jobs/PwSQPN4k32Wgu6g9cEEn/PwSQPN4k32Wgu6g
 
 Seems easy, right? Mmmm, not really. It depends on the result that needs to be achieved. Keep that in mind, but also remember that all goals can be achieved.
 
-Why am I talking about process in general? A "process", based on that definition is something that <u>*for sure*</u> will make you achieve a goal, right? Well, it depends, I will explain why by talking about my experience with "the process".
+Why am I talking about process in general? A "process", based on that definition is something that *<u>for sure</u>* will make you achieve a goal, right? Well, it depends, I will explain why by talking about my experience with "the process".
 
 ## My experience
 I first encountered this word when I was at the Apple Developer Academy. They always emphasized the importance of it, saying almost on every occasion: “trust the process”.
 At first, I didn’t give much meaning to this phrase, but as time passed, it started to make more sense.
-It’s not a straightforward discovery; you will understand it at the right time. For me, it was when I realized that I could learn anything by trusting the process and doing the work.
+It’s not a straightforward discovery; you will understand it at the right time. For me, it was when I realized that I could learn anything by trusting the process and **doing the work**.
 
-Why is doing the work in bold? Because “trust the process” doesn’t mean “just wait and you will achieve whatever you want”. Instead, it means “work hard and you will almost certainly achieve whatever you want” (at least based on my interpretation). Now, it’s my mantra.
+Why is **doing the work** in bold? Because “trust the process” doesn’t mean “just wait and you will achieve whatever you want”. Instead, it means “work hard and you will almost certainly achieve whatever you want” (at least based on my interpretation). Now, it’s my mantra.
 
 Do I need to learn a new programming concept? A new programming language? A new math concept (hardcore challenge)? No problem. I’ll put in the work and trust the process. But why am I so sure and confident? Because I’ve experimented with it and found that it works...almost certainly.
 
