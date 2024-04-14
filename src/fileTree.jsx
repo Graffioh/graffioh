@@ -1,11 +1,15 @@
-export default function FileTree() {
-  const directories = ["1", "2", "3"];
+// https://www.youtube.com/watch?v=gT1v33oA1gI
 
+import Item from "./Item";
+
+export default function FileTree({ items }) {
   return (
     <>
-      <div className="border-2 border-red-500">
-        {directories.map((directory, index) => (
-          <div key={index}>{directory}</div>
+      <div className="">
+        {items?.children?.map((item) => (
+          <div key={item.id}>
+            <Item item={item} />
+          </div>
         ))}
       </div>
     </>
