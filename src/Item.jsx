@@ -1,7 +1,18 @@
 import { useState } from "react";
 
-export default function Item({ item }) {
+async function fetchFileContent(filePath) {
+  const contentResponse = await fetch(
+    "http://localhost:6969/api/file-content?path=" + filePath
+  );
+  const contentObject = await contentResponse.json();
+
+  return contentObject.content;
+}
+
+export default function Item({ item, path, onContentChange }) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const fullPath = path ? `${path}/${item.name}` : item.name;
 
   return (
     <div>
@@ -9,7 +20,14 @@ export default function Item({ item }) {
         className={`border-2 p-1 ${
           item.children ? "border-red-500" : "border-stone-600"
         }`}
-        onClick={() => item.children && setIsOpen(!isOpen)}
+        onClick={async () => {
+          if (item.children) {
+            setIsOpen(!isOpen);
+          } else {
+            const content = await fetchFileContent(fullPath);
+            onContentChange(content);
+          }
+        }}
       >
         {item.children && (isOpen ? "v " : "> ")}
         {item.name}
@@ -18,7 +36,11 @@ export default function Item({ item }) {
         <div>
           {item.children.map((subitem) => (
             <div key={subitem.id} className="pl-6" hidden={!isOpen}>
-              <Item item={subitem} />
+              <Item
+                item={subitem}
+                path={fullPath}
+                onContentChange={onContentChange}
+              />
             </div>
           ))}
         </div>

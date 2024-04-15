@@ -2,13 +2,13 @@
 
 import Item from "./Item";
 
-export default function FileTree({ items }) {
+export default function FileTree({ items, onContentChange }) {
   return (
     <>
-      <div className="">
+      <div className="border-2 border-grey-500 p-2 h-screen w-1/4">
         {items?.children?.map((item) => (
           <div key={item.id}>
-            <Item item={item} />
+            <Item item={item} path={""} onContentChange={onContentChange} />
           </div>
         ))}
       </div>

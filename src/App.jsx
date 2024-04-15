@@ -1,7 +1,9 @@
 import "./App.css";
 import FileTree from "./FileTree";
+import ContentViewer from "./ContentViewer";
+import { useState } from "react";
 
-const tree = {
+const treeMock = {
   children: [
     {
       name: "public",
@@ -22,8 +24,38 @@ const tree = {
   ],
 };
 
+async function fetchFiles() {
+  const treeResponse = await fetch("http://localhost:6969/api/file-tree");
+  const treeObject = await treeResponse.json();
+
+  return treeObject;
+}
+
 function App() {
-  return <FileTree items={tree} />;
+  const [tree, setTree] = useState(treeMock);
+  const [content, setContent] = useState("no content");
+
+  function handleContent(content) {
+    setContent(content);
+  }
+
+  return (
+    <>
+      <div className="flex">
+        <button
+          className="w-8 h-8 bg-red-500"
+          onClick={async () => {
+            const treeObj = await fetchFiles();
+            setTree(treeObj);
+          }}
+        >
+          +
+        </button>
+        <FileTree items={tree} onContentChange={handleContent} />
+        <ContentViewer content={content} />
+      </div>
+    </>
+  );
 }
 
 export default App;
