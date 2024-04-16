@@ -40,7 +40,7 @@ Now we need the health Address to write to it, the offset is already reversed, b
 
 Now we can use ReadProcessMemory to read the actual health value, and WriteProcessMemory to overwrite the value.
 
-(everything about ReadProcessMemory,WriteProcessMemory,OpenProcess and others is explained on msdn documentation).
+(everything about ReadProcessMemory, WriteProcessMemory, OpenProcess and others is explained on msdn documentation).
 
 ![img-3](https://imgur.com/TiaAor3.jpg)
 
