@@ -29,20 +29,20 @@ The template is basically this:
 
 Basically we get the Process ID with GetProcID function, the module base with GetModule (both of these func will be explained later), and the Proc ID enable us to open the process.
 
-{% include figure.html path="assets/img/1.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![img-1](https://imgur.com/nt5NtWB.jpg)
 
 With that we are going to operate on the memory.
 
 Before overwriting the health we need to open the process using the ID, after that lets declare localPlayer using the module Base + offset (found by reversing the game).
 Now we need the health Address to write to it, the offset is already reversed, but It's a multi-level pointer so let's use findDMAAddy function (by Fleep from Guided Hacking) and we can calculate the pointer by doing that.
 
-{% include figure.html path="assets/img/2.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![img-2](https://imgur.com/VjhmGgm.jpg)
 
 Now we can use ReadProcessMemory to read the actual health value, and WriteProcessMemory to overwrite the value.
 
 (everything about ReadProcessMemory,WriteProcessMemory,OpenProcess and others is explained on msdn documentation).
 
-{% include figure.html path="assets/img/3.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![img-3](https://imgur.com/TiaAor3.jpg)
 
 I hope everything makes sense until now.
 
@@ -62,18 +62,18 @@ Functions:
 
   For the process ID we will use a snapshot of the current active processes, and with that snapshot, We can iterate through it and find the correct process by using his .exe name.
 
-{% include figure.html path="assets/img/getprocid.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![getprocid](https://imgur.com/ZiYcCyu.jpg)
 
 - _GetModule_
   This is really similar to GetProcID but there the snapshot will be a little different, but the mechanism is the same.
 
-{% include figure.html path="assets/img/getmodule.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![getmodule](https://imgur.com/QUmExSP.jpg)
 
 - FindDMAAddy
 
   A simple and powerful function, by passing the handle to the process, the base pointer and the offsets, it will calculate the multi-level pointer with a for loop and ReadProcessMemory.
 
-{% include figure.html path="assets/img/finddmaaddy.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![finddmaaddy](https://imgur.com/esN6pY4.jpg)
 
 Thats it, if you want a really good starting tutorial for external go [there](https://www.unknowncheats.me/forum/programming-for-beginners/267073-coding-hacking-introduction-guide-practical-external-game-hacking.html).
 
@@ -98,19 +98,19 @@ We need to create a thread, and in that thread we are gonna run the hack
 
 So from there, We need only to get the module base address by doing:
 
-{% include figure.html path="assets/img/modulebaseint.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![modulebase](https://imgur.com/grg2QX1.jpg)
 
 And the local player:
 
-{% include figure.html path="assets/img/localplayerint.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![localplayer](https://imgur.com/rUH4yRc.jpg)
 
 I'm used to do a toggle "menu" like this where we can separate each functionality like overwriting health, overwriting ammo, no recoil and more:
 
-{% include figure.html path="assets/img/togglesetupint.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![togglehealth](https://imgur.com/yOdhVHJ.jpg)
 
 Now we will continous write the new health value:
 
-{% include figure.html path="assets/img/writehealthint.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![ifhealth](https://imgur.com/0pbIwFC.jpg)
 
 I don't really know what to explain in this part, everything is straightforward with some practice.
 
@@ -136,4 +136,4 @@ If you are interested you can follow [Guided Hacking Bible](https://guidedhackin
 
 Everything is up to you, I'm doing this for educational purpose.
 
-{% include figure.html path="assets/img/memetwoways.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![twoways](https://imgur.com/51RlvHW.jpg)

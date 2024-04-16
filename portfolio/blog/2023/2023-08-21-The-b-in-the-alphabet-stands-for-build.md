@@ -44,4 +44,4 @@ I wanted to share my thoughts and maybe inspire others to **build, ship and shap
 
 &nbsp;
 
-{% include figure.html path="assets/img/future-cities.png" title="img" class="img-fluid rounded z-depth-1" %}
+![futurecities](https://imgur.com/xv8VcCo.jpg)

@@ -17,7 +17,7 @@ export default function Item({ item, path, onContentChange }) {
   return (
     <div>
       <button
-        className={`border-2 p-1 ${
+        className={`p-1 w-full flex hover:bg-red-500 ${
           item.children ? "border-red-500" : "border-stone-600"
         }`}
         onClick={async () => {

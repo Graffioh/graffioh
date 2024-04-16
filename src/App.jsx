@@ -5,22 +5,23 @@ import { useState } from "react";
 
 const treeMock = {
   children: [
-    {
-      name: "public",
-      children: [{ name: "index.html" }, { name: "style.css" }],
-    },
-    {
-      name: "src",
-      children: [
-        { name: "App.css" },
-        { name: "App.js" },
-        {
-          name: "components",
-          children: [{ name: "Component1.js" }, { name: "Component2.js" }],
-        },
-      ],
-    },
-    { name: "package.json" },
+    //   {
+    //     name: "public",
+    //     children: [{ name: "index.html" }, { name: "style.css" }],
+    //   },
+    //   {
+    //     name: "src",
+    //     children: [
+    //       { name: "App.css" },
+    //       { name: "App.js" },
+    //       {
+    //         name: "components",
+    //         children: [{ name: "Component1.js" }, { name: "Component2.js" }],
+    //       },
+    //     ],
+    //   },
+    //   { name: "package.json" },
+    { name: "press +" },
   ],
 };
 

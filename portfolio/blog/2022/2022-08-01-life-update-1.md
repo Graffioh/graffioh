@@ -17,4 +17,4 @@ I can try to keep this blog updated with little sort of life/what I've been lear
 
 See you guys. \*shake the hand\*
 
-{% include figure.html path="assets/img/cowboy.jpg" title="img" class="img-fluid rounded z-depth-1" %}
+![shakehand](https://imgur.com/ZmBSlhr.jpg)

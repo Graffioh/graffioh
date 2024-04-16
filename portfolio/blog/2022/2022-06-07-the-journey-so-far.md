@@ -26,7 +26,7 @@ There I started basic external tutorials, with Windows API, in concomitance with
 
 I really liked studying these things, so I decided to donate to Guided Hacking for a yearly subscription, as they had a really good "path" to follow.
 
-{% include figure.html path="assets/img/spongebob-RE-meme.png" title="griffith-castle" class="img-fluid rounded z-depth-1" %}
+![spongebob](https://imgur.com/fF1GAX4.jpg)
 
 After some experience with External cheats and C++, I went into Internal Cheats as I liked it more, yeah....I like pointers.
 

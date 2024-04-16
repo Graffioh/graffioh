@@ -7,7 +7,7 @@ date: 2022-12-21 15:30:00
 
 Yo it's been a while!
 
-{% include figure.html path="assets/img/graffioh-recap-2022.png" title="img" class="img-fluid rounded z-depth-1" %}
+![graffiohrecap](https://imgur.com/3HyIZqh.jpg)
 
 So, what happened during these months? The usual stuffs: gym, university, friends and coding.
 

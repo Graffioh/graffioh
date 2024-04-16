@@ -11,7 +11,7 @@ When reversing a game, We don't mind if the cheat is gonna be External or Intern
 
 Assault Cube cheat table (for Cheat Engine):
 
-{% include figure.html path="assets/img/assaultcubeCT.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![ptr-table](https://imgur.com/iqGomMZ.jpg)
 
 The goal is to get a cheat table like that, it's not complete, but you can do a lot of things with these pointers and offsets.
 
@@ -27,7 +27,7 @@ The basic way is through Cheat Engine and "find out what accesses this address",
 
 We gonna start with a basic scan for the health, using granades and decreasing our health, by doing that and after some hits we will find something like this:
 
-{% include figure.html path="assets/img/scanhealth1.png" title="img" class="img-fluid rounded z-depth-1" %}
+![beginner-1](https://imgur.com/29krO2A.jpg)
 
 Now we need a pointer to that otherwise everytime We restart the game, that address is gonna change, and we'll need to do this process again.
 
@@ -37,7 +37,7 @@ Now that we have a pointer, We have the offset too (in our case 0xF8), and with 
 
 Through health you can find the local player too.
 
-{% include figure.html path="assets/img/examplehealth1.png" title="img" class="img-fluid rounded z-depth-1" %}
+![beginner-2](https://imgur.com/PJMaO8r.jpg)
 
 With the local player + offsets we can basically access every properties of that particular class.
 
@@ -68,9 +68,9 @@ So the current Weapon offset is 374.
 
 We still have to find the weapon damage, and we will do it with REClass, it will look like this:
 
-{% include figure.html path="assets/img/weaponDmg1.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![intermediate-1](https://imgur.com/kKUDBJW.jpg)
 
-{% include figure.html path="assets/img/weaponDmg2.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![intermediate-2](https://imgur.com/z6JlYpH.jpg)
 
 As we can see there are a lot of properties beyond the weapon damage, but they need to be reversed.
 
@@ -80,19 +80,19 @@ From the process showed for the weapon damage, We see that We found recoil too (
 
 Using that offset, on Cheat Engine we will find out what accesses to that address, go to disassembler, and retrieve the address:
 
-{% include figure.html path="assets/img/recoil1.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![hard-1](https://imgur.com/zoyi60K.jpg)
 
 Now It's time for IDA.
 
 Going to that address and Decompiling the assembly instructions We get this:
 
-{% include figure.html path="assets/img/idarecoil1.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![hard-2](https://imgur.com/FOCQqzO.jpg)
 
 Confusing right? It's not easy but with some practice everything will make sense.
 
 After reversing it (I'm not gonna explain the whole process because I'm not the one that should teach you these things):
 
-{% include figure.html path="assets/img/idarecoil2.PNG" title="img" class="img-fluid rounded z-depth-1" %}
+![hard-3](https://imgur.com/KORQoi4.jpg)
 
 (IDA fucked up the indentation)
 
