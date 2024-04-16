@@ -15,9 +15,9 @@ export default function Item({ item, path, onContentChange }) {
   const fullPath = path ? `${path}/${item.name}` : item.name;
 
   return (
-    <div>
+    <div className={"border-stone-700 border-l-2"}>
       <button
-        className={`p-1 w-full flex hover:bg-red-500 ${
+        className={`p-1 w-full flex hover:bg-red-800 ${
           item.children ? "border-red-500" : "border-stone-600"
         }`}
         onClick={async () => {

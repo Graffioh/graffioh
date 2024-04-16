@@ -25,6 +25,7 @@ blockquote p {
   background-color: #535050;
   padding: 12px;
   border-radius: 10px;
+  border: 2px solid #7e7e7e; 
 }
 
 a {
@@ -34,6 +35,7 @@ a {
 
 .twitter-tweet p {
   background-color: #242424;
+  border: 0 solid #7e7e7e; 
 }
 
 /* body {

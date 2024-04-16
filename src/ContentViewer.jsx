@@ -7,7 +7,7 @@ export default function ContentViewer({ content }) {
   console.log(content);
   return (
     <>
-      <div className="border-2 border-red-500 px-6 w-8/12 md:w-7/12">
+      <div className="px-6 w-8/12 md:w-7/12">
         <Markdown
           className="markdown"
           remarkPlugins={[remarkGfm]}
@@ -16,15 +16,6 @@ export default function ContentViewer({ content }) {
             img(props) {
               const { node, ...rest } = props;
               return <img className="w-10/12 md:w-7/12" {...rest} />;
-            },
-            blockquote(props) {
-              const { node, ...rest } = props;
-              return (
-                <blockquote
-                  className="border-2 border-white bg-red-500"
-                  {...rest}
-                />
-              );
             },
           }}
         >
