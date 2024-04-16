@@ -12,7 +12,7 @@ Why am I making this post? What is life? Are we alone in the universe? I don't k
 
 As a Computer Science student, I used to have a wrong perception of the topic. I would often say things like, "They are not teaching me to code," "These math classes are useless," or "We'll never use Bézout's Theorem," and so on...
 
-Something clicked inside my head after watching this **[video by Leslie Lampart](https://www.youtube.com/watch?v=rkZzg7Vowao)** and this tweet by John Carmack:
+Something clicked inside my head after watching this [video by Leslie Lampart](https://www.youtube.com/watch?v=rkZzg7Vowao) and this tweet by John Carmack:
 
 ![carmackscreen](https://imgur.com/obDlvqi.jpg)
 

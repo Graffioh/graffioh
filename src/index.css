@@ -7,9 +7,9 @@
 }
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
-  font-weight: 400;
+  font-weight: 500;
 
   /* color-scheme: light dark; */
   color: rgba(255, 255, 255, 0.87);
@@ -19,6 +19,21 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+blockquote p {
+  background-color: #535050;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+a {
+  color: #B70117;
+  margin-left: 3px;
+}
+
+.twitter-tweet p {
+  background-color: #242424;
 }
 
 /* body {
