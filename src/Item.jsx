@@ -29,7 +29,9 @@ export default function Item({ item, path, onContentChange }) {
           }
         }}
       >
-        {item.children && (isOpen ? "v " : "> ")}
+        <div className="mx-1 font-bold">
+          {item.children && (isOpen ? "v" : ">")}
+        </div>
         {item.name}
       </button>
       {item.children && (

@@ -102,4 +102,4 @@ To implement no recoil, We can just simply nop this instruction. (**nopping** is
 
 I hope that you liked this little post :)
 
-[video](https://www.youtube.com/watch?v=huTILhprxls)
+**[video](https://www.youtube.com/watch?v=huTILhprxls)**
