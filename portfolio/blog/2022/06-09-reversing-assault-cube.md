@@ -5,6 +5,8 @@ tags: [game-hacking, reversing, journey, assault-cube]
 date: 2022-06-09 14:00:00
 --- -->
 
+# Reversing Assault Cube (v1.2.0.2)
+
 Assault Cube is an open source FPS game, now it's outdated, but for practicing game hacking is really good, because the reversing part is easy (except maybe for some functions).
 
 When reversing a game, We don't mind if the cheat is gonna be External or Internal (maybe I will do a post explaining it based on my knowledge in the future), both of them have pros and cons, and both of them are really similar when we talk about coding the cheat.

@@ -6,6 +6,8 @@ date: 2023-06-25 04:20:00
 og_image: https://i.imgur.com/SZmanIp.jpg
 --- -->
 
+# My thoughts on CS, SWEs and more
+
 Why am I making this post? What is life? Are we alone in the universe? I don't know.
 
 As a Computer Science student, I used to have a wrong perception of the topic. I would often say things like, "They are not teaching me to code," "These math classes are useless," or "We'll never use Bézout's Theorem," and so on...

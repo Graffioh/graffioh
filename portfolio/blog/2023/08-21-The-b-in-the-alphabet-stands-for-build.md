@@ -7,6 +7,8 @@ og_image: https://i.imgur.com/vwFzWGt.jpg
 image: https://i.imgur.com/vwFzWGt.jpg
 --- -->
 
+# The B in the alphabet stands for build
+
 ## What's "building"?
 
 > "The action of "building" refers to the process of creating, constructing, or assembling a physical or conceptual entity by combining various components, materials, or elements in a deliberate and organized manner. This process involves planning, designing, and executing the necessary steps to bring the desired structure, object, system, or concept into existence. Building can encompass a wide range of activities, from constructing physical structures like buildings, bridges, and machinery to creating digital products, relationships, or abstract ideas through careful arrangement and coordination of parts or elements." \

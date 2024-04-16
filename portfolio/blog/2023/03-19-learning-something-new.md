@@ -7,6 +7,8 @@ og_image: https://i.imgur.com/Jqnav0s.jpg
 permalink: /REwithGraffioh//blog/2023/learning-something-new/
 --- -->
 
+# Learning something new
+
 I had to create an iOS App within one month, collaborating with five individuals from diverse professional backgrounds.
 
 The main focus was to develop an app to facilitate networking among lawyers. The key feature was an 'Assignment board,' where lawyers could post their assignments, receive and send assignment requests.

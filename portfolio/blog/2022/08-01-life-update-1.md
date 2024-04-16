@@ -5,6 +5,8 @@ tags: [personal life, journey]
 date: 2022-08-01 14:30:00
 --- -->
 
+# Life Update I
+
 So, here we are again, from now on there will be a little shift regarding this blog's topic.
 
 I got into a sort of Internship in Apple, precisely a 9 months "training program" called [Apple Developer Academy](https://www.developeracademy.unina.it/it/) in collaboration with my University.

@@ -6,6 +6,8 @@ tags: [game-hacking, reversing, journey]
 date: 2022-06-06 15:00:00
 --- -->
 
+# The journey so far
+
 The focus of this journey is to get a good understanding of how an anti-cheat work and how to develop it especially for FPS games.
 
 Even though I have university, I preferred to do a "side" project instead of studying only for the exams, because **for me**, if you will graduate without any side project, you wont get very far.

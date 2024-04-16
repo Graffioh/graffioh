@@ -5,6 +5,8 @@ tags: [personal life, journey]
 date: 2022-12-21 15:30:00
 --- -->
 
+# Life Update II
+
 Yo it's been a while!
 
 ![graffiohrecap](https://imgur.com/3HyIZqh.jpg)

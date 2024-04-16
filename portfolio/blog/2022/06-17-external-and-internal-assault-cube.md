@@ -5,6 +5,8 @@ tags: [game-hacking, reversing, journey, assault-cube]
 date: 2022-06-17 21:20:00
 --- -->
 
+# External and Internal Cheats (Basics)
+
 External and Internal are two types of Cheats, both of them are good, and of course they have pros and cons.
 
 I'm gonna explain what I know so far about these two types in a very basic way, with cheat examples, I might say something wrong, so suggestion are strongly accepted (twitter: [@graffioh](https://twitter.com/graffioh) or Discord: Graffioh#2823).

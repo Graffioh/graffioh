@@ -7,7 +7,7 @@ og_image: https://images.nightcafe.studio/jobs/PwSQPN4k32Wgu6g9cEEn/PwSQPN4k32Wg
 image: https://images.nightcafe.studio/jobs/PwSQPN4k32Wgu6g9cEEn/PwSQPN4k32Wgu6g9cEEn_2x.jpg?tr=w-1600,c-at_max
 --- -->
 
-## "The process"
+# "The process"
 
 > A process is a series of steps or actions that are taken in order to achieve a particular result or goal
 
