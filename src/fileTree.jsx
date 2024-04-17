@@ -18,24 +18,23 @@ export default function FileTree({ items, onContentChange }) {
         enable={{ right: true }}
       >
         <div className="flex justify-between">
-          <div className="w-full" hidden={areFilesHidden}>
+          <div className="w-full min-w-full" hidden={areFilesHidden}>
             {items?.children?.map((item) => (
               <div key={item.id}>
                 <Item item={item} path={""} onContentChange={onContentChange} />
               </div>
             ))}
           </div>
-          <div className="text-xl mr-2 bg-stone-700 h-full px-2">
-            <button
-              onClick={() => {
-                setMinWidth(areFilesHidden ? "20%" : "0%");
-                setMaxWidth(areFilesHidden ? "60%" : "0%");
-                setAreFilesHidden(!areFilesHidden);
-              }}
-            >
-              {areFilesHidden ? ">" : "<"}
-            </button>
-          </div>
+          <button
+            className="text-xl bg-stone-700 h-full px-2"
+            onClick={() => {
+              setMinWidth(areFilesHidden ? "20%" : "0%");
+              setMaxWidth(areFilesHidden ? "60%" : "0%");
+              setAreFilesHidden(!areFilesHidden);
+            }}
+          >
+            {areFilesHidden ? ">" : "<"}
+          </button>
         </div>
       </Resizable>
     </>

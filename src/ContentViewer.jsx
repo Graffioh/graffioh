@@ -7,7 +7,7 @@ export default function ContentViewer({ content }) {
   console.log(content);
   return (
     <>
-      <div className="px-6 w-8/12 md:w-7/12">
+      <div className="px-10 w-8/12 md:w-7/12">
         <Markdown
           className="markdown"
           remarkPlugins={[remarkGfm]}
