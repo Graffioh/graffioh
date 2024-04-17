@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import FileTree from "./FileTree";
+import FileTree from "./fileTree";
 import ContentViewer from "./ContentViewer";
 
 const treeMock = {
