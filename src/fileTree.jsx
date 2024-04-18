@@ -14,7 +14,7 @@ export default function FileTree({ items, onContentChange }) {
       <Resizable
         minWidth={minWidth}
         maxWidth={maxWidth}
-        className="bg-neutral-900 border-r-2 border-neutral-600 min-h-screen max-h-max"
+        className="bg-neutral-900 border-r-2 border-neutral-600 min-safe-h-screen"
         enable={{ right: true }}
       >
         <div className="flex justify-between">
