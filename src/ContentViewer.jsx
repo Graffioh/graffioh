@@ -4,7 +4,6 @@ import rehypeRaw from "rehype-raw";
 import rehypeRemoveComments from "rehype-remove-comments";
 
 export default function ContentViewer({ content }) {
-  console.log(content);
   return (
     <>
       <div className="px-10 w-8/12 md:w-7/12">
