@@ -1,7 +1,7 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
-const url = require('url');
+import http from "http";
+import fs from "fs";
+import path from "path";
+import url from "url";
 
 const port = process.env.PORT || 6969;
 
@@ -13,14 +13,12 @@ const server = http.createServer((req, res) => {
 
   const parsedUrl = url.parse(req.url, true);
   if (parsedUrl.pathname === '/api/file-tree') {
-    console.log(`/api/file-tree`);
-    const directoryPath = path.join(__dirname, 'portfolio');
+    const directoryPath = './portfolio';
     const fileTree = traverse(directoryPath);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(fileTree));
   } else if (parsedUrl.pathname === '/api/file-content') {
-    console.log(`/api/file-content`);
-    const filePath = path.join(__dirname, 'portfolio', parsedUrl.query.path);
+    const filePath = path.join('./portfolio', parsedUrl.query.path);
     fs.readFile(filePath, 'utf8', (err, data) => {
       if (err) {
         res.writeHead(500);

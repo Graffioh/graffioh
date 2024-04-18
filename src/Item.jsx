@@ -1,13 +1,13 @@
 import { useState } from "react";
 
 async function fetchFileContent(filePath) {
-  // const contentResponse = await fetch(
-  //   "http://localhost:6969/api/file-content?path=" + filePath
-  // );
-  
   const contentResponse = await fetch(
-    "https://zealous-addition-production.up.railway.app/api/file-content?path=" + filePath
+    "http://localhost:6969/api/file-content?path=" + filePath
   );
+  
+  // const contentResponse = await fetch(
+  //   "https://zealous-addition-production.up.railway.app/api/file-content?path=" + filePath
+  // );
  
   const contentObject = await contentResponse.json();
 

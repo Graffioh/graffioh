@@ -8,8 +8,8 @@ const treeMock = {
 };
 
 async function fetchFiles() {
-  // const treeResponse = await fetch("http://localhost:6969/api/file-tree");
-  const treeResponse = await fetch("https://zealous-addition-production.up.railway.app/api/file-tree");
+  const treeResponse = await fetch("http://localhost:6969/api/file-tree");
+  // const treeResponse = await fetch("https://zealous-addition-production.up.railway.app/api/file-tree");
   const treeObject = await treeResponse.json();
   return treeObject;
 }
