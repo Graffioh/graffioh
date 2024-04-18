@@ -6,7 +6,7 @@ import { useState } from "react";
 
 export default function FileTree({ items, onContentChange }) {
   const [minWidth, setMinWidth] = useState("20%");
-  const [maxWidth, setMaxWidth] = useState("60%");
+  const [maxWidth, setMaxWidth] = useState("80%");
   const [areFilesHidden, setAreFilesHidden] = useState(false);
 
   return (

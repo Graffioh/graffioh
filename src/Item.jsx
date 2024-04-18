@@ -1,37 +1,12 @@
 import { useState } from "react";
 
-// async function fetchFileContent(filePath) {
-//   const contentResponse = await fetch(
-//     "http://localhost:6969/api/file-content?path=" + filePath
-//   );
-
-//   // const contentResponse = await fetch(
-//   //   "https://zealous-addition-production.up.railway.app/api/file-content?path=" + filePath
-//   // );
-
-//   const contentObject = await contentResponse.json();
-
-//   return contentObject.content;
-// }
-
-async function fetchFileContent(filePath) {
-  const contentResponse = await fetch(
-    "https://worker-graffioh-portfolio.bregliascuola2002.workers.dev/value?path=" +
-      filePath
-  );
-
-  const contentText = await contentResponse.text();
-
-  return contentText;
-}
-
 export default function Item({ item, path, onContentChange }) {
   const [isOpen, setIsOpen] = useState(false);
 
   const fullPath = path ? `${path}/${item.name}` : item.name;
-
+  
   const isDir = item.children.length !== 0;
-
+  
   return (
     <div className={"border-stone-700 border-l-2 truncate"}>
       <button
@@ -42,10 +17,8 @@ export default function Item({ item, path, onContentChange }) {
           if (isDir) {
             setIsOpen(!isOpen);
           } else {
-            console.log("PATH: " + fullPath);
-            const content = await fetchFileContent(fullPath);
+            const content = item.content;
             onContentChange(content);
-            console.log("CONTET: " + content);
           }
         }}
       >
