@@ -22,10 +22,8 @@
 }
 
 blockquote p {
-  background-color: #535050;
   padding: 12px;
-  border-radius: 10px;
-  border: 2px solid #7e7e7e; 
+  border-left: 3px solid #7e7e7e; 
 }
 
 a {
@@ -33,10 +31,10 @@ a {
   margin-left: 3px;
 }
 
-.twitter-tweet p {
+/* .twitter-tweet p {
   background-color: #242424;
   border: 0px solid #7e7e7e; 
-}
+} */
 
 /* body {
   margin: 0;
