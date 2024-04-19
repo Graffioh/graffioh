@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
-import FileTree from "./fileTree";
-import ContentViewer from "./ContentViewer";
-import treePosts from "./treePosts";
+import FileTree from "./components/fileTree";
+import ContentViewer from "./components/contentViewer";
+import treePosts from "./content/treePosts";
 
 function App() {
   const [content, setContent] = useState("← please select a file.");

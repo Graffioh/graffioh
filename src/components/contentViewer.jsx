@@ -16,6 +16,10 @@ export default function ContentViewer({ content }) {
               const { node, ...rest } = props;
               return <img className="w-10/12 md:w-7/12" {...rest} />;
             },
+            a(props) {
+              const { node, ...rest } = props;
+              return <a target="__blank" {...rest} />;
+            },
           }}
         >
           {String(content)}
