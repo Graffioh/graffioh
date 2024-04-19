@@ -1,6 +1,6 @@
 // https://www.youtube.com/watch?v=1OE11AMdbvI
 //
-import Item from "./Item";
+import Item from "./item";
 import { Resizable } from "re-resizable";
 import { useState } from "react";
 
