@@ -6,7 +6,7 @@ import { useState } from "react";
 
 const RightHandle = () => (
   <div
-    className="md:w-1 w-2 ml-1 bg-neutral-600 min-safe-h-screen min-h-screen"
+    className="md:w-1 w-2 ml-1 bg-neutral-600 min-safe-h-screen min-h-screen h-full"
   />
 );
 
