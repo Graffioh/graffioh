@@ -31,7 +31,7 @@ Auction site assignment for software engineering university class (Next.js, Spri
 
 ## Pontus
 
-iOS app for lawyers, make them network in an easy and fast way for judicial substitution (Swift)
+iOS app for lawyers, make them network in an easy and fast way for judicial substitution (Swift, Express.js, MongoDB, Render)
 
 [demo](https://www.youtube.com/watch?v=eavKse5ax44&feature=youtu.be)
 
