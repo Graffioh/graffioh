@@ -18,6 +18,7 @@ I'll be sharing my journey in the CS field, my personal thoughts and technical s
 + [X](https://x.com/graffioh)
 + [github](https://github.com/graffioh)
 + [discord](http://discordapp.com/users/165500587109122049)
++ [linkedin](https://www.linkedin.com/in/umberto-breglia/)
     `,
       children: [],
     },
