@@ -3,17 +3,26 @@
 import Item from "./item";
 import { Resizable } from "re-resizable";
 import { useState } from "react";
+import { useMediaQuery } from "react-responsive";
 
 const RightHandle = () => (
-  <div
-    className="md:w-1 w-2 ml-1 bg-neutral-600 min-safe-h-screen min-h-screen h-full"
-  />
+  <div className="md:w-1 ml-1 bg-neutral-600 min-safe-h-screen min-h-screen h-full" />
 );
+
+const RightHandleMobile = () => {
+  return (
+    <div className="relative flex flex-col items-center justify-center min-safe-h-screen min-h-screen h-full">
+      <div className="z-0 w-1 ml-1 bg-neutral-600 min-safe-h-screen min-h-screen h-full" />
+      <div className="sticky inset-y-1/2 bg-neutral-600 px-2 py-0.5 z-10">&gt;</div>
+    </div>
+  );
+};
 
 export default function FileTree({ items, onContentChange }) {
   const [minWidth, setMinWidth] = useState("20%");
   const [maxWidth, setMaxWidth] = useState("80%");
   const [areFilesHidden, setAreFilesHidden] = useState(false);
+  const isMobile = useMediaQuery({ maxWidth: 767 });
 
   return (
     <>
@@ -23,7 +32,7 @@ export default function FileTree({ items, onContentChange }) {
         className="bg-neutral-900 min-safe-h-screen min-h-screen"
         enable={{ right: true }}
         handleComponent={{
-          right: <RightHandle />,
+          right: isMobile ? <RightHandleMobile /> : <RightHandle />,
         }}
       >
         <div className="flex justify-between">
