@@ -13,7 +13,7 @@ const RightHandleMobile = () => {
   return (
     <div className="relative flex flex-col items-center justify-center min-safe-h-screen min-h-screen h-full">
       <div className="z-0 w-1 ml-1 bg-neutral-600 min-safe-h-screen min-h-screen h-full" />
-      <div className="sticky inset-y-1/2 bg-neutral-600 px-2 py-0.5 z-10">&gt;</div>
+      <div className="sticky inset-y-1/2 bg-neutral-600 px-1 z-10 text-xl">↔</div>
     </div>
   );
 };
