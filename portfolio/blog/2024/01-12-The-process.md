@@ -27,7 +27,9 @@ Do I need to learn a new programming concept? A new programming language? A new 
 
 Twitter post made some weeks ago related to that:
 
-<blockquote class="twitter-tweet"><p lang="en" dir="ltr" data-theme="dark">still can’t realize how much i improved during this year, unbelievable.</p>&mdash; bertø (@graffioh) <a href="https://twitter.com/graffioh/status/1738992218797486248?ref_src=twsrc%5Etfw">December 24, 2023</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet"><p lang="en" dir="ltr" data-theme="dark">still can’t realize how much i improved during this year, unbelievable.<a href="https://twitter.com/graffioh/status/1738992218797486248?ref_src=twsrc%5Etfw"></p>&mdash; bertø (@graffioh) December 24, 2023</a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+&nbsp;
 
 I just flowed through the process and now I am much better than before. A little reminder, always compare yourself to your past self.
 
