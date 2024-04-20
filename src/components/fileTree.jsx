@@ -19,10 +19,11 @@ const RightHandleMobile = () => {
 };
 
 export default function FileTree({ items, onContentChange }) {
-  const [minWidth, setMinWidth] = useState("20%");
-  const [maxWidth, setMaxWidth] = useState("80%");
-  const [areFilesHidden, setAreFilesHidden] = useState(false);
   const isMobile = useMediaQuery({ maxWidth: 767 });
+  const [minWidth, setMinWidth] = useState("20%");
+  const maxWidthValue = isMobile ? "90%" : "50%";
+  const [maxWidth, setMaxWidth] = useState(maxWidthValue);
+  const [areFilesHidden, setAreFilesHidden] = useState(false);
 
   return (
     <>
@@ -47,7 +48,7 @@ export default function FileTree({ items, onContentChange }) {
             className="text-xl bg-stone-700 h-full px-2 ml-1 md:ml-0"
             onClick={() => {
               setMinWidth(areFilesHidden ? "20%" : "0%");
-              setMaxWidth(areFilesHidden ? "60%" : "0%");
+              setMaxWidth(areFilesHidden ? maxWidthValue : "0%");
               setAreFilesHidden(!areFilesHidden);
             }}
           >
