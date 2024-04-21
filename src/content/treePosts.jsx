@@ -2,6 +2,7 @@ const treePosts = {
   children: [
     {
       name: "aboutme.md",
+      path: "aboutme.md",
       content: `# About me
 
 I'm Umberto, 21 years old from Italy, Computer Science student.
@@ -14,6 +15,7 @@ I'll be sharing my journey in the CS field, my personal thoughts and technical s
     },
     {
       name: "contacts.md",
+      path: "contacts.md",
       content: `# Contacts
 + [X](https://x.com/graffioh)
 + [github](https://github.com/graffioh)
@@ -24,6 +26,7 @@ I'll be sharing my journey in the CS field, my personal thoughts and technical s
     },
     {
       name: "projects.md",
+      path: "projects.md",
       content: `## DietiDeals24
 
 Auction site assignment for software engineering university class (Next.js, Spring boot, PostgreSQL, AWS ECS, AWS RDS, AWS S3)
@@ -60,14 +63,17 @@ Arcade aim game (C++)
     },
     {
       name: "blog",
+      path: "blog/",
       content: "",
       children: [
         {
           name: "2022",
+          path: "blog/2022/",
           content: "",
           children: [
             {
               name: "06-07-the-journey-so-far.md",
+              path: "blog/2022/06-07-the-journey-so-far.md",
               content: `<!-- ---
 layout: post
 slug: journey-1
@@ -120,6 +126,7 @@ _Off-Topic_: Miura's friend just announced that Him and Miura's assistants will 
             },
             {
               name: "06-09-reversing-assault-cube.md",
+              path: "blog/2022/06-09-reversing-assault-cube.md",
               content: `<!-- ---
 layout: post
 title: Reversing Assault Cube (v1.2.0.2)
@@ -233,6 +240,7 @@ I hope that you liked this little post :)
             },
             {
               name: "06-17-external-and-internal-assault-cube.md",
+              path: "blog/2022/06-17-external-and-internal-assault-cube.md",
               content: `<!-- ---
 layout: post
 title: External and Internal Cheats (Basics)
@@ -380,6 +388,7 @@ Everything is up to you, I'm doing this for educational purpose.
             },
             {
               name: "08-01-life-update-1.md",
+              path: "blog/2022/08-01-life-update-1.md",
               content: `<!-- ---
 layout: post
 title: Life Update I
@@ -408,6 +417,7 @@ See you guys. \*shake the hand\*
             },
             {
               name: "12-21-life-update-2.md",
+              path: "blog/2022/12-21-life-update-2.md",
               content: `<!-- ---
 layout: post
 title: Life Update II
@@ -468,10 +478,12 @@ This small TED talk is over, thank you for listening me.
         },
         {
           name: "2023",
+          path: "blog/2023/",
           content: "",
           children: [
             {
               name: "03-19-learning-something-new.md",
+              path: "blog/2023/03-19-learning-something-new.md",
               content: `<!-- ---
 layout: post
 title: Learning something new
@@ -520,6 +532,7 @@ I'm always open to learn new things and to re-invent myself as a software engine
             },
             {
               name: "06-25-thoughts-CS-and-SWEs.md",
+              path: "blog/2023/06-25-thoughts-CS-and-SWEs.md",
               content: `<!-- ---
 layout: post
 title: My thoughts on CS, SWEs and more
@@ -560,6 +573,7 @@ I'm not scared of AI and all of this nonsense. If it becomes my assistant, it's 
             },
             {
               name: "08-21-The-b-in-the-alphabet-stands-for-build.md",
+              path: "blog/2023/08-21-The-b-in-the-alphabet-stands-for-build.md",
               content: `<!-- ---
 layout: post
 title: The B in the alphabet stands for build
@@ -617,10 +631,12 @@ I wanted to share my thoughts and maybe inspire others to **build, ship and shap
         },
         {
           name: "2024",
+          path: "blog/2024/",
           content: "",
           children: [
             {
               name: "01-12-The-process.md",
+              path: "blog/2024/01-12-The-process.md",
               content: `<!-- ---
 layout: post
 title: "The process"
@@ -671,6 +687,7 @@ Now back to studying for DSA exam, cya.
             },
             {
               name: "04-20-In-the-making-of-my-first-webshite.md",
+              path: "blog/2024/04-20-In-the-making-of-my-first-webshite.md",
               content: `<!-- ---
               layout: post
               title: "In the making of a webshite"

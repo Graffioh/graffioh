@@ -22,7 +22,7 @@ export default function ContentViewer({ content }) {
             },
           }}
         >
-          {String(content)}
+          {content}
         </Markdown>
       </div>
     </>
