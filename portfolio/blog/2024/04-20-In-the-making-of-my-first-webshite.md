@@ -80,7 +80,7 @@ For the last auction type
 
 - _Fixed Time_: it was a simple timer. When it arrived at the end, the best offerer would get the auction.
 
-The decision was made to manage the Fixed Time auction timer sort of "frontend-wise", by calculating how much time was left client-side. Only when the timer finished, a request to the backend was made to set the attribute setOver for that auction to true.
+The decision was made to manage the Fixed Time auction timer sort of "frontend-wise", by calculating how much time was left client-side. Only when the timer finished, a request to the backend was made to set the attribute "isOver" for that auction to true.
 
 However, for the English and Descending auctions, as they needed to be real-time, a client-side approach was not an option. Instead, the timer was handled with a scheduled task backend-wise. While this solution may not be the most optimal for scaling, it worked.
 
