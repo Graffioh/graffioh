@@ -49,7 +49,7 @@ Started prototyping the frontend using Figma and the [shadcn/ui](https://ui.shad
 
 After creating acceptable screen prototypes, everything was transposed to the Next.js frontend. Approximately a month and a half was spent on creating the frontend, learning React/Next.js, website best practices and completing other exams, after which the frontend was ready.
 
-Of course, the  as a platform was chosen also because it's portable; the browser can be accessed everywhere. For a good website, there needs to be a mobile-optimized version as well, and thanks to TailwindCSS, it wasn't a big problem.
+Of course, the website was chosen also because it's portable; the browser can be accessed everywhere. For a good website, there needs to be a mobile-optimized version as well, and thanks to TailwindCSS, it wasn't a big problem.
 
 Now it's time for the backend!
 
