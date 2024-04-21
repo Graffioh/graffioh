@@ -19,12 +19,15 @@ const RightHandleMobile = () => {
 };
 
 export default function FileTree({ items, onContentChange }) {
+  const searchParams = new URLSearchParams(window.location.search);
   const isMobile = useMediaQuery({ maxWidth: 767 });
   const [minWidth, setMinWidth] = useState("20%");
   const maxWidthValue = isMobile ? "90%" : "50%";
   const [maxWidth, setMaxWidth] = useState(maxWidthValue);
   const [areFilesHidden, setAreFilesHidden] = useState(false);
-
+  
+  const searchParamsPath = searchParams.get("path")
+  
   return (
     <>
       <Resizable
@@ -40,7 +43,7 @@ export default function FileTree({ items, onContentChange }) {
           <div className="w-full min-w-full" hidden={areFilesHidden}>
             {items?.children?.map((item) => (
               <div key={item.id}>
-                <Item item={item} path={""} onContentChange={onContentChange} />
+                <Item item={item} path={""} searchParamsPath={searchParamsPath} onContentChange={onContentChange} />
               </div>
             ))}
           </div>

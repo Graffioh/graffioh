@@ -14,7 +14,7 @@ export default function ContentViewer({ content }) {
           components={{
             img(props) {
               const { node, ...rest } = props;
-              return <img className="w-10/12 md:w-7/12" {...rest} />;
+              return <img className="w-11/12" {...rest} />;
             },
             a(props) {
               const { node, ...rest } = props;

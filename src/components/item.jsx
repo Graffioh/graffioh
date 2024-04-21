@@ -1,11 +1,13 @@
 import { useState } from "react";
 
-export default function Item({ item, path, onContentChange }) {
+export default function Item({ item, path, searchParamsPath, onContentChange}) {
   const [isOpen, setIsOpen] = useState(false);
-
+  
   const fullPath = path ? `${path}/${item.name}` : item.name;
   
   const isDir = item.children.length !== 0;
+  
+  console.log(searchParamsPath)
   
   return (
     <div className={"border-stone-700 border-l-2 truncate"}>
@@ -31,7 +33,7 @@ export default function Item({ item, path, onContentChange }) {
             <div key={subitem.id} className="pl-6" hidden={!isOpen}>
               <Item
                 item={subitem}
-                path={fullPath}
+                path={searchParamsPath ?? fullPath}
                 onContentChange={onContentChange}
               />
             </div>
