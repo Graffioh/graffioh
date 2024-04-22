@@ -6,14 +6,18 @@ import { useEffect, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 
 const RightHandle = () => (
-  <div className="md:w-1 ml-1 hover:bg-neutral-600 active:bg-neutral-600 min-safe-h-screen min-h-screen h-full" />
+  <>
+    <div className="w-full hover:border-r-4 hover:border-neutral-600 active:border-r-4 active:border-neutral-600 min-safe-h-screen min-h-screen h-full"/>
+  </>
 );
 
 const RightHandleMobile = () => {
   return (
     <div className="relative flex flex-col items-center justify-center min-safe-h-screen min-h-screen h-full">
       <div className="z-0 w-1 ml-1 bg-neutral-900 min-safe-h-screen min-h-screen h-full" />
-      <div className="sticky inset-y-1/2 bg-neutral-600 px-1 z-10 text-xl">↔</div>
+      <div className="sticky inset-y-1/2 bg-neutral-700 px-1 z-10 text-xl">
+        ↔
+      </div>
     </div>
   );
 };
@@ -24,7 +28,7 @@ export default function FileTree({ items, onContentChange }) {
   const maxWidthValue = isMobile ? "90%" : "50%";
   const [maxWidth, setMaxWidth] = useState(maxWidthValue);
   const [areFilesHidden, setAreFilesHidden] = useState(false);
-  
+
   return (
     <>
       <Resizable
@@ -45,7 +49,7 @@ export default function FileTree({ items, onContentChange }) {
             ))}
           </div>
           <button
-            className="text-xl bg-stone-700 h-full px-2 ml-1 md:ml-0"
+            className="text-xl bg-neutral-700 h-full px-2 ml-1 md:ml-0"
             onClick={() => {
               setMinWidth(areFilesHidden ? "20%" : "0%");
               setMaxWidth(areFilesHidden ? maxWidthValue : "0%");
