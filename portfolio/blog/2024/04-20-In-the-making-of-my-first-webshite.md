@@ -88,7 +88,7 @@ However, for the English and Descending auctions, as they needed to be real-time
 
 The frontend is deployed on Vercel, even though i could've dockerized it and deployed anywhere else, but not worth it imho.
 
-For testing purpose the Spring boot app was deployed on [Render](https://render.com) and for the db [Neon](https://neon.tech) was used.
+For testing purpose the Spring boot app was deployed on <del>[Render](https://render.com)</del> [Fly.io](https://fly.io) and for the db [Neon](https://neon.tech) was used.
 
 For production, everything is managed with AWS and Docker;
 Elastic Container Service ([ECS](https://aws.amazon.com/en/ecs/)) for Spring boot app, Simple Storage ([S3](https://aws.amazon.com/en/s3/)) for handling images and Relational Database Service ([RDS](https://aws.amazon.com/en/rds/)) for PostgreSQL db
@@ -104,3 +104,5 @@ I'll open a little section about AWS, because...well it's a mess, that's it, no 
 Everything is possible till you recognize your skill issues and work to overcome them.
 
 It was fun developing it, using javascript/typescript will give you the freedom to do everything, even if not in the most performant way, but it's really versatile. After all javascript rules the world.
+
+[website link](https://dietideals24.vercel.app)
