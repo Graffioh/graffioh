@@ -8,7 +8,7 @@ export default function Item({ item, onContentChange }) {
   return (
     <div className={"border-stone-700 border-l-2 truncate"}>
       <button
-        className={`p-1 w-full flex hover:bg-red-800 ${
+        className={`p-1 w-full flex hover:bg-violet-500 ${
           isDir ? "border-red-500" : "border-stone-600"
         }`}
         onClick={async () => {
