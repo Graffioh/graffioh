@@ -7,7 +7,7 @@ import { useMediaQuery } from "react-responsive";
 
 const RightHandle = () => (
   <>
-    <div className="w-full hover:border-r-4 hover:border-neutral-600 active:border-r-4 active:border-neutral-600 min-safe-h-screen min-h-screen h-full"/>
+    <div className="w-full hover:border-r-4 hover:border-neutral-600 active:border-r-4 active:border-neutral-600 min-safe-h-screen min-h-screen h-full" />
   </>
 );
 
@@ -37,16 +37,12 @@ export default function FileTree({ items, onContentChange }) {
         className="bg-neutral-900 min-safe-h-screen min-h-screen"
         enable={{ right: true }}
         handleComponent={{
-          right: isMobile ? <RightHandleMobile /> : <RightHandle />,
+          right: isMobile && !areFilesHidden ? <RightHandleMobile /> : <RightHandle />,
         }}
       >
         <div className="flex justify-between">
-          <div className="w-full min-w-full" hidden={areFilesHidden}>
-            {items?.children?.map((item) => (
-              <div key={item.id}>
-                <Item item={item} onContentChange={onContentChange} />
-              </div>
-            ))}
+          <div className="mb-2 pl-2 py-1 border-b-2 border-violet-400 min-w-full" hidden={areFilesHidden}>
+            graffioh
           </div>
           <button
             className="text-xl bg-neutral-700 h-full px-2 ml-1 md:ml-0"
@@ -58,6 +54,13 @@ export default function FileTree({ items, onContentChange }) {
           >
             {areFilesHidden ? ">" : "<"}
           </button>
+        </div>
+        <div className="w-full min-w-full" hidden={areFilesHidden}>
+          {items?.children?.map((item) => (
+            <div key={item.id}>
+              <Item item={item} onContentChange={onContentChange} />
+            </div>
+          ))}
         </div>
       </Resizable>
     </>
