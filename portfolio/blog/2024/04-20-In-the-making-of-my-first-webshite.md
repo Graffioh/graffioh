@@ -99,6 +99,13 @@ Elastic Container Service ([ECS](https://aws.amazon.com/en/ecs/)) for Spring boo
 
 I'll open a little section about AWS, because...well it's a mess, that's it, no more to say.
 
+## 05/11 Update
+Found out two things:
++ There were problems with OAuth login and Fly.io / any load balanced environment due to how Spring session manages OAuth authentication flow
++ AWS from February 2024 started charging for public IPs (idle or active) + subtle hidden costs so not worth for a university project
+
+Still using AWS S3 and RDS, but the Spring Boot app is deployed on Microsoft Azure (Azure Container App, ACA) with Affinity session turned ON .
+
 ## Closing thoughts
 
 Everything is possible till you recognize your skill issues and work to overcome them.
