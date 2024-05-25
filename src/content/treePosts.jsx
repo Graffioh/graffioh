@@ -31,7 +31,13 @@ I'll be sharing my journey in the CS field, my personal thoughts and technical s
 
 Auction site assignment for software engineering university class (Next.js, Spring boot, PostgreSQL, AWS ECS, AWS RDS, AWS S3)
 
-[github repo](https://github.com/Graffioh/dietideals24ucm) | [website link](https://dietideals24.vercel.app)
+[github repo (with demo)](https://github.com/Graffioh/dietideals24ucm) | [website link](https://dietideals24.vercel.app)
+
+## Hivemind (WIP)
+
+Simple social network for web Technologies class (Typescript, React + Vite, Go, PostgreSQL)
+
+[github repo](https://github.com/Graffioh/hivemind)
 
 ## Pontus
 
@@ -47,13 +53,13 @@ iOS app for photographers and location scouts, keep track of locations and equip
 
 iOS app to edit photos, made most of the tools from scratch for learning purpose (Swift)
 
-[github repo](https://github.com/Graffioh/PhotoEditAppClone)
+[github repo (with demo)](https://github.com/Graffioh/PhotoEditAppClone)
 
 ## ArcAim
 
 Arcade aim game (C++)
 
-[github repo](https://github.com/Graffioh/ArcAim)
+[github repo (with demo)](https://github.com/Graffioh/ArcAim)
 
 ## Other minor projects
 
