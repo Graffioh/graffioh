@@ -35,7 +35,7 @@ Auction site assignment for software engineering university class (Next.js, Spri
 
 ## Hivemind (WIP)
 
-Simple social network for web Technologies class (Typescript, React + Vite, Go, PostgreSQL)
+Simple social network for web technologies class (Typescript, React + Vite, Go, PostgreSQL)
 
 [github repo](https://github.com/Graffioh/hivemind)
 
