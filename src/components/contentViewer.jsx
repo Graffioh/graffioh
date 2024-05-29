@@ -2,6 +2,8 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeRemoveComments from "rehype-remove-comments";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { dracula } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export default function ContentViewer({ content }) {
   return (
@@ -19,6 +21,23 @@ export default function ContentViewer({ content }) {
             a(props) {
               const { node, ...rest } = props;
               return <a target="__blank" {...rest} />;
+            },
+            code(props) {
+              const { children, className, node, ...rest } = props;
+              const match = /language-(\w+)/.exec(className || "");
+              return match ? (
+                <SyntaxHighlighter
+                  {...rest}
+                  PreTag="div"
+                  children={String(children).replace(/\n$/, "")}
+                  language={match[1]}
+                  style={dracula}
+                />
+              ) : (
+                <code {...rest} className={className}>
+                  {children}
+                </code>
+              );
             },
           }}
         >
