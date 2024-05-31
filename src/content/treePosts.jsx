@@ -959,7 +959,7 @@ if (url === "/") {
         <body>
             <script>
                 function onClick() {
-                    const data = ${JSON.stringify(json)};
+                    const data = \$\{JSON.stringify(json)\};
                     ...
                 }
             </script>
