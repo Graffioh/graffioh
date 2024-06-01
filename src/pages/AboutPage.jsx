@@ -1,4 +1,4 @@
-import ContentViewer from "../components/ContentViewer"
+import ContentViewer from "../components/contentViewer"
 import about from "../../mds/aboutme.md?raw"
 
 export default function AboutPage() {
