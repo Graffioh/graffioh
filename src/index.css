@@ -31,7 +31,7 @@ p {
 
 blockquote p {
   padding: 12px;
-  border-left: 3px solid #7e7e7e; 
+  border-left: 3px solid rgb(214, 118, 255); 
 }
 
 a {
