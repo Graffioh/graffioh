@@ -1,44 +1,25 @@
-import React, { useEffect, useState } from "react";
 import "./App.css";
-import FileTree from "./components/fileTree";
-import ContentViewer from "./components/contentViewer";
-import treePosts from "./content/treePosts";
-
-function findContentByName(tree, path) {
-  if (tree.path === path || tree.name === path) {
-    return tree.content;
-  }
-
-  if (tree.children) {
-    for (const child of tree.children) {
-      const foundContent = findContentByName(child, path);
-      if (foundContent !== null) {
-        return foundContent;
-      }
-    }
-  }
-
-  return null;
-}
+import AboutPage from "./pages/AboutPage";
+import NotesPage from "./pages/NotesPage";
+import ProjectsPage from "./pages/ProjectsPage";
+import BlogPage from "./pages/BlogPage";
+import PostPage from "./pages/PostPage";
+import Header from "./components/Header";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
-  const searchParams = new URLSearchParams(window.location.search);
-  const searchParamsPath = searchParams.get("path");
-
-  const contentFromPath = findContentByName(treePosts, searchParamsPath);
-  
-  const [content, setContent] = useState(contentFromPath ?? "← please select a file.");
-
-  function handleContent(content) {
-    setContent(content);
-  }
-
   return (
     <>
-      <div className="flex">
-        <FileTree items={treePosts} onContentChange={handleContent} />
-        <ContentViewer content={content} />
-      </div>
+      <Router>
+        <Header />
+        <Routes>
+          <Route path="/" element={<AboutPage />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/notes" element={<NotesPage />} />
+          <Route path="/blog/post/:id" element={<PostPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+        </Routes>
+      </Router>
     </>
   );
 }

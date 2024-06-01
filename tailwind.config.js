@@ -2,7 +2,11 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        bricolageGrotesque: ['Bricolage Grotesque', 'sans-serif'],
+      },
+    },
   },
   plugins: [],
 };
