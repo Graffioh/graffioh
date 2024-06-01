@@ -21,7 +21,7 @@ const PostPage = () => {
 
   return (
     <div>
-      {content ? <ContentViewer content={content} /> : <p>Loading...</p>}
+      {content ? <ContentViewer content={content} /> : null}
     </div>
   );
 };
