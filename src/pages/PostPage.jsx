@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import ContentViewer from '../components/ContentViewer';
+import ContentViewer from '../ContentViewer';
 
 const PostPage = () => {
   const { id } = useParams();
