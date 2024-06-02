@@ -53,9 +53,6 @@ export default function BlogPage() {
   return (
     <div className="text-2xl font-bold flex flex-col justify-center items-center p-8">
       <h1>Posts</h1>
-      <p className="text-sm text-stone-400">
-        sorted by publication date (newest first)
-      </p>
       <ul>
         {blogPosts.map((post) => (
           <li key={post.id} className="my-8">
