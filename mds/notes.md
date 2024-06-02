@@ -1,3 +1,106 @@
+# basic auth from scratch (sort of)
+
+[The Copenhagen Book](https://thecopenhagenbook.com) by the creator of Lucia-auth ([pilcrow](https://x.com/pilcrowonpaper))
+
+store a **token** on the server
+
+```sql
+CREATE TABLE token (
+	token STRING NOT NULL UNIQUE,
+	expires_at INTEGER NOT NULL,
+	user_id INTEGER NOT NULL,
+
+	FOREIGN KEY (user_id) REFERENCES user(id)
+)
+```
+
+where this token should be for example a **session for auth** and should be stored as a cookie
+
+using this session cookie we can everytime retrieve (if present) user infos thanks to user_id foreign key
+
+token must be **generated using a cryptographically secure random generator** and must be case-sensitive (generally)
+
+```go
+import (
+	"crypto/rand"
+	"encoding/base32"
+)
+
+bytes := make([]byte, 15)
+rand.Read(bytes)
+sessionId := base32.StdEncoding.EncodeToString(bytes)
+```
+
+if you need to store tokens that require an extra level of security (password reset tokens), there should be hashing using SHA-256
+
+a new session with a session_id should be created whenever a user signs in
+
+you could also implement sessions for non-authenticated users
+
+the **session lifetime** is important for security reasons
+
+for security-critical apps, the session should expire automatically and should match how long the user is expected to use the app in a single sitting, to prevent **session hijacking** (stealing a session)
+
+for a social app tho, a good practice is to set the expiration time to a reasonable value, like 30 days
+
+```go
+func validateSession(sessionId string) (*Session, error) {
+	session, ok := getSessionFromStorage(sessionId)
+	if !ok {
+		return nil, errors.New("invalid session id")
+	}
+	if time.Now().After(session.ExpiresAt) {
+		return nil, errors.New("expired session")
+	}
+	return session, nil
+}
+```
+
+sessions should be _invalidated_ whenever a user signs out (delete from db and cookies)
+
+session cookies should have the following attributes:
+
+- **HttpOnly**: Cookies are only accessible server-side
+- **SameSite=Lax**: Use Strict for critical websites
+- **Secure**: Cookies can only be sent over HTTPS
+- **Max-Age** or Expires: Must be defined to persist cookies
+- **Path=/**: Cookies can be accessed from all routes
+
+when using cookies **CSRF protection** must be implemented
+
+CSRF attacks consists of an attacker that makes authenticated requests on behalf of users when credentials are stored in cookies
+
+_CSRF can be prevented by only accepting POST and POST-like (PUT, DELETE) requests made by browsers from a trusted origin_
+
+use CORS in a strict way and check **Origin header** for non-GET requests
+
+```go
+func handleRequest(w http.ResponseWriter, request *http.Request) {
+  	if request.Method != "GET" {
+		originHeader := request.Header.Get()
+
+		if originHeader != "https://example.com" {
+			// Invalid request origin
+			w.WriteHeader(403)
+			return
+		}
+  	}
+  	// ...
+}
+```
+
+(the origin header has been supported by all modern browsers since around 2020, chrome and safari even before 2020)
+
+SameSite=Lax is recommended, it will only be sent on cross-site requests if the request uses a safe HTTP method such as GET (it's crucial that the app doesn't use GET requests for modifying resources when using Lax (who does that?))
+
+SameSite flag determines when the browser includes the cookie in requests
+
+send cookies using **Authorization header** in request
+
+<u>DON'T send cookies inside URLs as query params or inside form data, DON'T store session ids inside localStorage or sessionStorage</u>
+
+
+
 # let's go with go
 
 doing [a tour of go](https://go.dev/tour)
@@ -21,16 +124,16 @@ go has **no pointer arithmetic**
 
 with **slice literals** is possible to do this thing:
 
-~~~go
+```go
 q := []int{2, 3, 5, 7, 11, 13}
-~~~
+```
 
 to create dinamically-sized arrays use **make** + **slice**
 
-~~~go
+```go
 a := make([]int, 5)  // len(a)=5
 b := make([]int, 0, 5) // len(b)=0, cap(b)=5
-~~~
+```
 
 use **append** to append elements to a slice
 
@@ -54,9 +157,9 @@ s = s[2 : 4]
 
 use make to construct a **map**:
 
-~~~go
+```go
 m := make(map[string]int)
-~~~
+```
 
 **value receiver**, method related to a specific type (struct), it operates on a copy of the struct
 
@@ -72,26 +175,26 @@ m := make(map[string]int)
 
 **channels** used to communicate between goroutines, send and receive values between different parts ensuring safe concurrency
 
-~~~go
+```go
 ch := make(chan int, 100) // 100 is the buffer length, optional param if you need buffered channels
 ch <- v    // Send v to channel ch.
 v := <-ch  // Receive from ch, and
            // assign value to v.
-~~~
+```
 
 they act like mutex locks, so while a side is doing things, the other side is closed
 
 a sender can **close** a channel to indicate that no more values will be sent (<u>only the sender should close a channel</u>)
 
-~~~go
+```go
 v, ok := <-ch // ok is false if there are no more values to receive and channel is closed
-~~~
+```
 
 closing operation is not mandatory
 
 **select** lets a goroutine wait on multiple communication operations, it blocks until one of its cases can run, then it executes that case, if multiple are ready, the coice is random
 
-~~~go
+```go
 select {
     case c <- x:
         //...
@@ -99,7 +202,7 @@ select {
         //...
         return
 }
-~~~
+```
 
 time for concurrency exercise: _Equivalent Binary Trees_
 
@@ -124,7 +227,7 @@ the advantage is that the datas that were requested from the script are automati
 
 server code:
 
-~~~javascript
+```javascript
 if (url === "/") {
   // regular fetch operation but he also does other operations here
   // to minimize html code that is sent as a response
@@ -147,7 +250,7 @@ if (url === "/") {
     </html>
     `;
 }
-~~~
+```
 
 he says that the approach on top is pretty much like a php approach (i've never written a line of php so idk)
 
@@ -177,13 +280,13 @@ it's possible to change fixed state value in the same render calling set multipl
 
 n => n + 1 is called an **updater function** and is using a queue that is processed during re-render and is used to keep track of n
 
-~~~javascript
+```javascript
 n = 0;
 setNumber((n) => n + 1);
 setNumber((n) => n + 1);
 setNumber((n) => n + 1);
 n = 3;
-~~~
+```
 
 i'm sure that 90% of react bootcamp devs don't know these things
 
