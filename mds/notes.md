@@ -95,10 +95,7 @@ SameSite=Lax is recommended, it will only be sent on cross-site requests if the 
 
 SameSite flag determines when the browser includes the cookie in requests
 
-send cookies using **Authorization header** in request
-
 <u>DON'T send cookies inside URLs as query params or inside form data, DON'T store session ids inside localStorage or sessionStorage</u>
-
 
 
 # let's go with go
