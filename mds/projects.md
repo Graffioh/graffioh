@@ -32,6 +32,12 @@ Arcade aim game (C++)
 
 [github repo (with demo)](https://github.com/Graffioh/ArcAim)
 
+## pastellm
+
+Paste text into multiple LLM chats all at once. (Chrome extension)
+
+[github repo](https://github.com/Graffioh/pastellm)
+
 ## Other minor projects
 
 [AirChat](https://github.com/Graffioh/AirChat) | [LaboratorioScientificoUCM](https://github.com/Graffioh/LaboratorioScientificoUCM)
