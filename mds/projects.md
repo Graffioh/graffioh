@@ -36,7 +36,7 @@ Arcade aim game (C++)
 
 Paste text into multiple LLM chats all at once. (Chrome extension)
 
-[github repo](https://github.com/Graffioh/pastellm)
+[github repo](https://github.com/Graffioh/pastellm) | [demo](https://x.com/graffioh/status/1787834117070942475)
 
 ## Other minor projects
 
