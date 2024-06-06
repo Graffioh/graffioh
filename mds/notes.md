@@ -1,3 +1,72 @@
+# password auth best practices
+
+still reading [The Copenhagen Book](https://thecopenhagenbook.com)
+
+- at least 8 chars long
+- all valid unicode chars should be allowed, including whitespace
+- use [zxcvbn](https://github.com/dropbox/zxcvbn) for weak password
+- detect leak password using [haveibeenpawned](https://haveibeenpwned.com/API/v3)
+
+passwords must be salted and hased before storage.
+
+**argon2id** with salting is recommended
+
+hashing is to generate a unique representation of the input, so same input same hash...it's not reversible unlike encryption
+
+recommended to not use MD5, SHA-1 and SHA-256 for password
+
+**salting** is a common technique to add random values to each password before hashing to prevent brute force attacks
+
+```go
+salt = randomValues()
+hash = hashPassword(password + salt) + salt
+```
+
+when comparing password hashes use constant time comparison instead of "==", to ensure protection against time-based attacks (where an attacker can extract infos using how long it took to compare the password with the hash lol)
+
+the standard way should be with argon2id, scrypt and bcrypt:
+
+```go
+import (
+	"crypto/subtle"
+	"golang.org/x/crypto/argon2"
+)
+
+var storedHash []byte
+var password []byte
+hash := argon2.IDKey(password, salt, 2, 19*1024, 1, 32)
+
+if (subtle.ConstantTimeCompare(hash, storedHash)) {
+	// Valid password.
+}
+```
+
+argon2id recommended minimum parameters
+
+- memorySize: 19456 (19MB)
+- iterations: 2
+- parallelism: 1
+- optional: use secret parameter
+
+scrypt recommended minimum parameters
+
+- N: 16384
+- P: 16
+- r: 1
+- dkLen: 64
+
+bcrypt work factor should be minimum 10
+
+**MFA** is the best defense against brute-force attacks
+
+a good rule of thumb is that error messages needs to be vague like "incorrect username or password", not "incorrect username" or "incorrect password".
+
+for ux perspective it's more user friendly with targeted error messages, ofc
+
+- don't prevent users from copy-pasting password as it discourages users from using password managers (clever)
+- ask the current password when a user attempts to change their password
+- [open redirect](https://thecopenhagenbook.com/open-redirect)
+
 # basic auth from scratch (sort of)
 
 [The Copenhagen Book](https://thecopenhagenbook.com) by the creator of Lucia-auth ([pilcrow](https://x.com/pilcrowonpaper))
@@ -96,7 +165,6 @@ SameSite=Lax is recommended, it will only be sent on cross-site requests if the 
 SameSite flag determines when the browser includes the cookie in requests
 
 <u>DON'T send cookies inside URLs as query params or inside form data, DON'T store session ids inside localStorage or sessionStorage</u>
-
 
 # let's go with go
 
