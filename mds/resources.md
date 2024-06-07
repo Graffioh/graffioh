@@ -8,9 +8,11 @@
 
 - [learn react](https://react.dev/learn)
 - [dan abramov blog](https://overreacted.io)
+- [useState deep-dive](https://medium.com/@ryardley/react-hooks-not-magic-just-arrays-cd4f1857236e)
 
 # Distributed systems
 
+- [goated general overview + list](https://ferd.ca/a-distributed-systems-reading-list.html)
 - [goated list](https://dancres.github.io/Pages/)
 - [goated book](https://dataintensive.net)
 
