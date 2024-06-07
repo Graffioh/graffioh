@@ -43,19 +43,19 @@ if (subtle.ConstantTimeCompare(hash, storedHash)) {
 
 argon2id recommended minimum parameters
 
-- memorySize: 19456 (19MB)
-- iterations: 2
-- parallelism: 1
-- optional: use secret parameter
+- **memorySize**: 19456 (19MB)
+- **iterations**: 2
+- **parallelism**: 1
+- **optional**: use secret parameter
 
 scrypt recommended minimum parameters
 
-- N: 16384
-- P: 16
-- r: 1
-- dkLen: 64
+- **N**: 16384
+- **P**: 16
+- **r**: 1
+- **dkLen**: 64
 
-bcrypt work factor should be minimum 10
+bcrypt **work factor** should be minimum 10
 
 **MFA** is the best defense against brute-force attacks
 

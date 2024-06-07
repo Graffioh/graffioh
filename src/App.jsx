@@ -4,6 +4,7 @@ import NotesPage from "./pages/NotesPage";
 import ProjectsPage from "./pages/ProjectsPage";
 import BlogPage from "./pages/BlogPage";
 import PostPage from "./pages/PostPage";
+import ResourcesPage from "./pages/ResourcesPage";
 import { Link, BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
@@ -14,9 +15,10 @@ function App() {
         <Routes>
           <Route path="/" element={<AboutPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/notes" element={<NotesPage />} />
           <Route path="/blog/post/:id" element={<PostPage />} />
           <Route path="/blog" element={<BlogPage />} />
+          <Route path="/resources" element={<ResourcesPage />} />
+          <Route path="/notes" element={<NotesPage />} />
         </Routes>
       </Router>
     </>
@@ -31,6 +33,7 @@ function Header() {
         <Link to={"/"} className="px-2">about</Link>
         <Link to={"/projects"} className="px-2">projects</Link>
         <Link to={"/blog"} className="px-2">blog</Link>
+        <Link to={"/resources"} className="px-2">resources</Link>
         <Link to={"/notes"} className="px-2">notes</Link>
       </div>
     </div>
