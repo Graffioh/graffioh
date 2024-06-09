@@ -1,3 +1,43 @@
+# the argon wrath (go)
+
+so tried to implement password verification with argon but failed miserably so found this [blog post](https://www.alexedwards.net/blog/how-to-hash-and-verify-passwords-with-argon2-in-go#:~:text=Verifying%20Passwords,-The%20final%20aspect&text=In%20essence%2C%20the%20steps%20to,same%20as%20the%20original%20one.) and started reading it
+
+even if argon has 3 variants, for password hashing it's preferably to use **Argo2id** (hybrid of Argon2d and Argon2i)
+
+the argon algo accepts various parameters:
+
+- **Memory** — The amount of memory used by the algorithm (in kibibytes).
+- **Iterations** — The number of iterations (or passes) over the memory.
+- **Parallelism** — The number of threads (or lanes) used by the algorithm.
+- **Salt length** — Length of the random salt. 16 bytes is recommended for password hashing.
+- **Key length** — Length of the generated key (or password hash). 16 bytes or more is recommended.
+
+memory and iterations control the computational cost (and time cost) of hashing, more cost more difficult is for the hacker to guess the password
+
+for login/signup hashing, it's better for ux to have a runtime less than 500ms
+
+formally argon2 is a key-derivation func, so the key that is produced is our hashed password
+
+now with a random salt everytime a different hashed password will appear (with the same string)
+
+to store the password the standard way is to create an encoded rep of the hashed password which looks like this:
+
+$argon2id$v=19$m=\<memory>,t=\<iterations>,p=<parallelism>$\<base64-salt>$\<base64-hash>
+
+in my case:\
+$argon2id$v=19$m=19456,t=2,p=1$...$...
+
+to **verify the password** there are a few steps:
+- Extract the salt and parameters from the encoded password hash stored in the database.
+- Derive the hash of the plaintext password using the exact same Argon2 variant, version, salt and parameters.
+- Check whether this new hash is the same as the original one.
+
+i implemented everything like the article suggested and it actually work.
+
+feels good
+
+![bojji](https://m.media-amazon.com/images/M/MV5BMzc0NTgxMTMtMmIzMS00ZmJhLWI5NjItZGNlN2Y1ZDM1YmUxXkEyXkFqcGdeQVRoaXJkUGFydHlJbmdlc3Rpb25Xb3JrZmxvdw@@._V1_.jpg)
+
 # password auth best practices
 
 still reading [The Copenhagen Book](https://thecopenhagenbook.com)
