@@ -19,3 +19,8 @@
 # Auth
 
 - [auth basics by pilcrow creator of lucia-auth](https://thecopenhagenbook.com)
+- [hash and verify password with argon](https://www.alexedwards.net/blog/how-to-hash-and-verify-passwords-with-argon2-in-go#:~:text=Verifying%20Passwords,-The%20final%20aspect&text=In%20essence%2C%20the%20steps%20to,same%20as%20the%20original%20one.)
+
+# Computers from scratch
+
+- [book from nand2tetris guys](https://www.amazon.com/Elements-Computing-Systems-Building-Principles/dp/0262640686)
