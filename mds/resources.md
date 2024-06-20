@@ -9,6 +9,7 @@
 - [learn react](https://react.dev/learn)
 - [dan abramov blog](https://overreacted.io)
 - [useState deep-dive](https://medium.com/@ryardley/react-hooks-not-magic-just-arrays-cd4f1857236e)
+- [react internal explorer](https://jser.pro/ddir/rie)
 
 # Distributed systems
 
@@ -23,4 +24,10 @@
 
 # Computers from scratch
 
+- [nand2tetris](https://www.nand2tetris.org)
 - [book from nand2tetris guys](https://www.amazon.com/Elements-Computing-Systems-Building-Principles/dp/0262640686)
+
+# fun/misc
+
+- [arithmetic with typescript types](https://kennethnym.com/blog/arithmetics-with-typescript-types/)
+- [post about mem alloc in c](https://www.rfleury.com/p/untangling-lifetimes-the-arena-allocator)
