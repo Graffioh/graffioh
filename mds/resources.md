@@ -31,3 +31,5 @@
 
 - [arithmetic with typescript types](https://kennethnym.com/blog/arithmetics-with-typescript-types/)
 - [post about mem alloc in c](https://www.rfleury.com/p/untangling-lifetimes-the-arena-allocator)
+- [spaced repetition by gwern](https://gwern.net/spaced-repetition)
+- [learn how to learn by dnbt777](https://learnhowtolearn.org/)
