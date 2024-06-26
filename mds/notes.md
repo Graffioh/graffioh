@@ -1,3 +1,49 @@
+# database indexes
+
+## [blog post](https://medium.com/@rtawadrous/introduction-to-database-indexes-9b488e243cc1)
+
+an index irl is basically an index that is at the end of a book or something like this:
+
+![index-irl](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*czofk-NEw-JHQHa3Zc0fqw.jpeg)
+
+use indexes to help the db engine to not make a full scan of datas every query
+
+two types of indexes:\
+- **clustered index (primary key)**: each table can have only one clustered index, the data rows are rearranged in the order of the indexed columns and records are stored in the leaf nodes if we think storage as a tree
+- **non clustered index (secondary key)**: table can have multiple of them, stored in a separate data structure, records not stored in the leaf nodes
+
+### under the hood
+db engine will keep everything in sync and will do the heavy work
+
+so indexes improves performances but also comes at a cost
+
+clustered index b+ tree by id:
+![bplustree1-index](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*vDO2GGa4oyDcI_jl41BQXg.png)
+
+non clustered index b+ tree by email and id:
+![bplustree2-index](https://miro.medium.com/v2/resize:fit:1400/format:webp/1*DLHknnmdhz_5ClUr1OqTiw.png)
+
+different indexes implementation as data structures with different pros and cons:
+
+- **b+ tree**
+- **hash**
+- **bitmap**
+- **sparse**
+
+## [video](https://www.youtube.com/watch?v=-qNSXK7s7_w)
+
+select execution time comparison:
+
+- for id WHERE id: 0.141 ms
+- for name WHERE id: 2.520 ms
+- for id WHERE name: 3199.724 ms WTF (full table scan, no index)
+
+~~~sql
+create index users_username on users(username);
+~~~
+
+will implement indexes in web technologies project for users table just for fun
+
 # the argon wrath (go)
 
 so tried to implement password verification with argon but failed miserably so found this [blog post](https://www.alexedwards.net/blog/how-to-hash-and-verify-passwords-with-argon2-in-go#:~:text=Verifying%20Passwords,-The%20final%20aspect&text=In%20essence%2C%20the%20steps%20to,same%20as%20the%20original%20one.) and started reading it
