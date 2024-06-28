@@ -16,6 +16,7 @@
 - [goated general overview + list](https://ferd.ca/a-distributed-systems-reading-list.html)
 - [goated list](https://dancres.github.io/Pages/)
 - [goated book](https://dataintensive.net)
+- [cloudflare learning](https://www.cloudflare.com/en-gb/learning/)
 
 # Auth
 

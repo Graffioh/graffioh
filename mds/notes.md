@@ -1,3 +1,37 @@
+# load balancing (overview)
+
+## [cloudflare blog](https://www.cloudflare.com/en-gb/learning/performance/what-is-load-balancing/)
+
+load balancing is basically distributing computational workloads between two or more computers, to reduce overload/idle time, improve performances/latency => improve ux
+
+![loadbalancing-img1](https://www.cloudflare.com/resources/images/slt3lc6tev37/25mxQ7enQpLxkGkPA65ThD/dedd9667bc99943c8f224b914307316b/without_load_balancing_diagram.png)
+
+![loadbalancing-img2](https://www.cloudflare.com/resources/images/slt3lc6tev37/5XVUMMchWZhrGjDrVk6pU0/40234e77d9f6c0e6cdd8641f26cf9e3c/with_load_balancing_diagram.png)
+
+a load balancer is a standalone tool/app that can be either hardware or software based.
+
+there are two main algorithm categories to choose which server to assign a request to:
+
+- **static**: distribute workloads without taking into account the current state of the system, so the requests are assigned based on a predetermined plan. quick to set up but inefficient
+- **dynamic**: opposite of static, but is more difficult to configure due to different factors like the server health, overall server capacity, size of the task...
+
+dynamic load balancers performs regular server health checks to spot if server are performing slowly or are failed (in this case the load balances do a *failover*, so traffic re-routing)
+
+## [load balancing algorithms](https://www.cloudflare.com/en-gb/learning/performance/types-of-load-balancing-algorithms/)
+
+**dynamic**
+
+- *least connection*: assumes all connections require equal processing power, checks which servers have the fewest connections open at the time
+- *weighted leat connection*: least connection but the admin can assign different wieghts to each server
+- *weighted response time*: send traffic to server with the quickest response time by computing average of each server response time in combination with the number of connections each server has open
+- *resource based*: distributes load based on what resources each server has available at the time. an agent is running on each server and measures available CPU and memory
+
+**static**
+
+- *round robin*: distributes traffic in rotation using the DNS
+- *weighted round robin*: same as round robin but with weights
+- *ip hash*: combines incoming ip addresses of traffic source and destination using a mathematical function to hash it and uses this hash to load balance
+
 # database indexes
 
 ## [blog post](https://medium.com/@rtawadrous/introduction-to-database-indexes-9b488e243cc1)
