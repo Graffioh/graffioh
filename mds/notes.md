@@ -1,12 +1,29 @@
+# go concurrency
+
+## [rob pike I/O 12 concurrency talk](https://www.youtube.com/watch?v=f6kdp27TYZs)
+
+	concurrency is a way to "simulate/interact with" the real world
+
+a go routine:
+- is a way to run a function but in an indipendent way, it basically don't wait for the answer to come back
+- it has it's own "dynamic" call stack (grows and shrinks as required)
+- it's not a thread (there might be 1 thread running with 1000 go routines)
+- they are cheap
+
+in go **"concurrency is the composition of indipendently executing go routines"**
+
+...
+
+## [running multiple http servers in one go](https://freedium.cfd/https://medium.com/rungo/running-multiple-http-servers-in-go-d15300f4e59f)
+
+
 # load balancing (overview)
 
-## [cloudflare blog](https://www.cloudflare.com/en-gb/learning/performance/what-is-load-balancing/)
+## [cloudflare blog](https://www.cloudflare.com/en-gb/learning/performance/what-is-load-balancing/)
 
 load balancing is basically distributing computational workloads between two or more computers, to reduce overload/idle time, improve performances/latency => improve ux
 
-![loadbalancing-img1](https://www.cloudflare.com/resources/images/slt3lc6tev37/25mxQ7enQpLxkGkPA65ThD/dedd9667bc99943c8f224b914307316b/without_load_balancing_diagram.png)
-
-![loadbalancing-img2](https://www.cloudflare.com/resources/images/slt3lc6tev37/5XVUMMchWZhrGjDrVk6pU0/40234e77d9f6c0e6cdd8641f26cf9e3c/with_load_balancing_diagram.png)
+![loadbalancing-img1](https://www.datocms-assets.com/48294/1697786828-load-balancing-3-benefits-of-load-balancing.png?auto=format&dpr=0.84&w=1920)
 
 a load balancer is a standalone tool/app that can be either hardware or software based.
 
