@@ -26,6 +26,9 @@
 
 - [indexing video](https://www.youtube.com/watch?v=-qNSXK7s7_w)
 
+# K8s
+- [kubernetes the hard way](https://github.com/kelseyhightower/kubernetes-the-hard-way?tab=readme-ov-file)
+
 # Computers from scratch
 
 - [nand2tetris](https://www.nand2tetris.org)
