@@ -3,6 +3,7 @@
 - [learn go](https://go.dev/learn/)
 - [yt tutorials by some go elder sorcerer ](https://www.youtube.com/playlist?list=PLoILbKo9rG3skRCj37Kn5Zj803hhiuRK6) (language features)
 - [yt tutorials by nic jackson hashcorp devrel](https://www.youtube.com/watch?v=VzBGi_n65iU&list=PLmD8u-IFdreyh6EUfevBcbiuCKzFk0EW_) (microservices oriented)
+- [alexedwards blog](https://www.alexedwards.net/blog)
 
 # React
 

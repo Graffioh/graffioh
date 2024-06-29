@@ -2,9 +2,9 @@
 
 ## [rob pike I/O 12 concurrency talk](https://www.youtube.com/watch?v=f6kdp27TYZs)
 
-	concurrency is a way to "simulate/interact with" the real world
+> concurrency is a way to "simulate/interact with" the real world
 
-a go routine:
+a *go routine*:
 - is a way to run a function but in an indipendent way, it basically don't wait for the answer to come back
 - it has it's own "dynamic" call stack (grows and shrinks as required)
 - it's not a thread (there might be 1 thread running with 1000 go routines)
@@ -12,10 +12,70 @@ a go routine:
 
 in go **"concurrency is the composition of indipendently executing go routines"**
 
-...
+a *channel*:
+- is used to communicate between goroutines, "<-"
+- implement synchronization as well, because a channel is a blocking operation, so till the sender sent and receiver received, it's blockd (<ins>buffered channels doesn't have this property</ins>)
+
+> don't communicate by sharing memory, share memory by communicating
+
+patterns:
+
+- [**generator**](https://go.dev/talks/2012/concurrency.slide#25): more readability
+- [**fan-in (multiplexing)**](https://go.dev/talks/2012/concurrency.slide#27): pattern to make the channels "indipendent", they are not "blocking" (sort of) anymore, decouple execution.\
+by using [wait](https://go.dev/talks/2012/concurrency.slide#29) as an attribute channel of type bool, it's possible to restore the sequencing
+- [**daisy-chain**](https://go.dev/talks/2012/concurrency.slide#40): channel chaining with one receiver at the end for the chain
+
+a [select](https://go.dev/talks/2012/concurrency.slide#32) is like a switch but each case is a communication (good for fan-in, timeout a communication, quit a channel and more)
+
+proceed to build a toy and fake search engine to show how go is used in system programming
 
 ## [running multiple http servers in one go](https://freedium.cfd/https://medium.com/rungo/running-multiple-http-servers-in-go-d15300f4e59f)
 
+**http.ListenAndServe()**** starts an http server and <ins>blocks the current goroutine</ins>
+
+so we'll use another goroutine different from the main function that will launch another server
+
+~~~go
+func main() {
+	http.HandleFunc("/", handler)
+
+	log.Println("Servers ON")
+
+	go func() {
+		http.ListenAndServe(":6970", nil)
+	}()
+
+	http.ListenAndServe(":6969", nil)
+}
+~~~
+
+it's better to use a WaitGroup to orchestrate goroutines than running them directly on main
+
+~~~go
+func main() {
+	wg := new(sync.WaitGroup)
+	wg.Add(2)
+
+	http.HandleFunc("/", handler)
+
+	log.Println("Servers ON")
+
+	go func() {
+		http.ListenAndServe(":6970", nil)
+		wg.Done()
+	}()
+
+	go func() {
+		http.ListenAndServe(":6969", nil)
+		wg.Done()
+	}()
+
+	wg.Wait()
+}
+~~~
+(maybe use defer wg.Done()?)
+
+other things about servemux, close, shutdown
 
 # load balancing (overview)
 
@@ -34,7 +94,7 @@ there are two main algorithm categories to choose which server to assign a reque
 
 dynamic load balancers performs regular server health checks to spot if server are performing slowly or are failed (in this case the load balances do a *failover*, so traffic re-routing)
 
-## [load balancing algorithms](https://www.cloudflare.com/en-gb/learning/performance/types-of-load-balancing-algorithms/)
+## [load balancing algorithms](https://www.cloudflare.com/en-gb/learning/performance/types-of-load-balancing-algorithms/)
 
 **dynamic**
 
