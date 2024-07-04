@@ -13,6 +13,10 @@
 - [useState deep-dive](https://medium.com/@ryardley/react-hooks-not-magic-just-arrays-cd4f1857236e)
 - [react internal explorer](https://jser.pro/ddir/rie)
 
+# C
+- [build a hash table from scratch](https://github.com/jamesroutley/write-a-hash-table)
+- [post about mem alloc in c](https://www.rfleury.com/p/untangling-lifetimes-the-arena-allocator)
+
 # Distributed systems
 
 - [goated general overview + list](https://ferd.ca/a-distributed-systems-reading-list.html)
@@ -45,4 +49,3 @@
 ## fun/misc
 
 - [arithmetic with typescript types](https://kennethnym.com/blog/arithmetics-with-typescript-types/)
-- [post about mem alloc in c](https://www.rfleury.com/p/untangling-lifetimes-the-arena-allocator)
