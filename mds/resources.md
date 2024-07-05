@@ -16,6 +16,9 @@
 # C
 - [build a hash table from scratch](https://github.com/jamesroutley/write-a-hash-table)
 - [post about mem alloc in c](https://www.rfleury.com/p/untangling-lifetimes-the-arena-allocator)
+- [socket programming in c (blog post)](https://www.codequoi.com/en/sockets-and-network-programming-in-c/#io_multiplexing_handling_several_sockets_without_blocking)
+- [socket programming explanation video](https://www.youtube.com/watch?v=XXfdzwEsxFk )
+- [threads and concurrency in c (blog post)](https://www.codequoi.com/en/threads-mutexes-and-concurrent-programming-in-c/)
 
 # Distributed systems
 
@@ -46,6 +49,6 @@
 - [spaced repetition by gwern](https://gwern.net/spaced-repetition)
 - [learn how to learn by dnbt777](https://learnhowtolearn.org/)
 
-## fun/misc
+## Fun/misc
 
 - [arithmetic with typescript types](https://kennethnym.com/blog/arithmetics-with-typescript-types/)
