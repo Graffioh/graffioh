@@ -14,7 +14,7 @@
 - [react internal explorer](https://jser.pro/ddir/rie)
 
 # C
-- [build a hash table from scratch](https://github.com/jamesroutley/write-a-hash-table)
+- [build a hash table from scratch](https://github.com/jamesroutley/write-a-hash-table)
 - [post about mem alloc in c](https://www.rfleury.com/p/untangling-lifetimes-the-arena-allocator)
 - [socket programming in c (blog post)](https://www.codequoi.com/en/sockets-and-network-programming-in-c/#io_multiplexing_handling_several_sockets_without_blocking)
 - [socket programming explanation video](https://www.youtube.com/watch?v=XXfdzwEsxFk )

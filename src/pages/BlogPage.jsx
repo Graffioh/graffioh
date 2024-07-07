@@ -2,6 +2,11 @@ import { Link } from "react-router-dom";
 
 const blogPosts = [
   {
+    id: "07-06-2024-auth-credentials-go",
+    title: " Authentication made simple, for the web (and more)",
+    date: "07-06-2024",
+  },
+  {
     id: "04-20-2024-In-the-making-of-my-first-webshite",
     title: "In the making of my first webshite",
     date: "04-20-2024",
