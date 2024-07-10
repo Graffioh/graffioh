@@ -22,6 +22,8 @@
 
 # Distributed systems
 
+- [mit 6.824](https://pdos.csail.mit.edu/6.824/schedule.html)
+- [lectures by hog book author](https://www.youtube.com/playlist?list=PLeKd45zvjcDFUEv_ohr_HdUFe97RItdiB)
 - [goated general overview + list](https://ferd.ca/a-distributed-systems-reading-list.html)
 - [goated list](https://dancres.github.io/Pages/)
 - [goated book](https://dataintensive.net)
