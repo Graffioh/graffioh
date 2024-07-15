@@ -1,6 +1,36 @@
-import notes from "../../mds/notes.md?raw"
-import ContentViewer from "../ContentViewer"
+import { Link } from "react-router-dom";
+
+const notes = [
+  {
+    id: "go",
+    title: "Go",
+  },
+  {
+    id: "distributed-systems",
+    title: "Distributed systems",
+  },
+  {
+    id: "react",
+    title: "React",
+  },
+  {
+    id: "random",
+    title: "Random",
+  },
+];
 
 export default function NotesPage() {
-    return <ContentViewer content={notes}/>
+  return (
+    <>
+      <div className="text-2xl font-bold flex flex-col justify-center items-center p-8">
+        <ul>
+          {notes.map((note) => (
+            <li key={note.id} className="my-4">
+              <Link to={`/notes/note/${note.id}`}>{note.title}</Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  );
 }
