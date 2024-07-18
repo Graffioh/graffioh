@@ -115,9 +115,13 @@ a new realm is created whenever:
 
 the **hoisting** happens during the creation phase
 
-## setTimeout and setInterval
+## setTimeout 
 
-...
+the max delay for setTimeout depends on the environment, but usually is 2^31 - 1 = 24.85 days
+
+if you need a delay bigger than this you should consider other approaches
+
+### under the hood
 
 
 

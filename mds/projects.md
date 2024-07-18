@@ -4,9 +4,15 @@ Auction site assignment for software engineering university class (Next.js, Spri
 
 [github repo](https://github.com/Graffioh/dietideals24ucm) | [website link](https://dietideals24.vercel.app)
 
+## Chatlingo
+
+Client-Server multithreaded chat app written in C that translate automatically messages based on chosen languages
+
+[github repo](https://github.com/Graffioh/chatlingo)
+
 ## Hivemind 
 
-Simple social network for web technologies class (Typescript, React + Vite, Go, PostgreSQL)
+Simple social network (Typescript, React + Vite, Go, PostgreSQL)
 
 [github repo](https://github.com/Graffioh/hivemind)
 
