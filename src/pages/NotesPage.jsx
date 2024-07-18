@@ -14,6 +14,10 @@ const notes = [
     title: "React",
   },
   {
+    id: "javascript",
+    title: "Javascript",
+  },
+  {
     id: "random",
     title: "Random",
   },
