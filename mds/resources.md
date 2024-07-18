@@ -29,6 +29,11 @@
 - [goated book](https://dataintensive.net)
 - [cloudflare learning](https://www.cloudflare.com/en-gb/learning/)
 
+# System design
+- [bytebytego fundamentals playlist](https://www.youtube.com/playlist?list=PLCRMIe5FDPsd0gVs500xeOewfySTsmEjf)
+- [crash course for beginner video](https://www.youtube.com/watch?v=MbjObHmDbZo)
+- [fundamentals playlist](https://www.youtube.com/watch?v=zbA-XRnjrhI&list=PL1MM4yIzUdPnU8n75kjTIbgewdLr5DFox)
+
 # Auth
 
 - [auth basics by pilcrow creator of lucia-auth](https://thecopenhagenbook.com)
