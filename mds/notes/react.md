@@ -4,13 +4,78 @@
 
 ---
 
+# [You might not need an effect](https://react.dev/learn/you-might-not-need-an-effect)
+
+- You don't need Effects to transform data for rendering
+- You don't need Effects to handle user events
+
+also <ins>don't use a state</ins> if something can be calculated from existing props or state 
+
+~~~jsx
+// INEFFICIENT
+function FilteredList({ items }) {
+  const [filteredItems, setFilteredItems] = useState(items);
+
+  useEffect(() => {
+    setFilteredItems(items.filter(item => item.isImportant));
+  }, [items]);
+
+  return <ul>{filteredItems.map(item => <li key={item.id}>{item.name}</li>)}</ul>;
+}
+
+// EFFICIENT
+function FilteredList({ items }) {
+  const filteredItems = items.filter(item => item.isImportant);
+
+  return <ul>{filteredItems.map(item => <li key={item.id}>{item.name}</li>)}</ul>;
+}
+~~~
+&nbsp;
+
+<ins>transform data during the rendering</ins>
+
+### How to tell if a calculation is expensive? (when to memoize)
+
+~~~jsx
+console.time('filter array');
+const visibleTodos = getFilteredTodos(todos, filter);
+console.timeEnd('filter array');
+~~~
+
+better with [CPU Throttling](https://developer.chrome.com/blog/new-in-devtools-61/#throttling) options from chrome dev tool
+
+> Use Effects only for code that should run because the component was displayed to the user
+
+this is a good approach to app-wide initialization logic
+
+~~~jsx
+if (typeof window !== 'undefined') { // Check if we're running in the browser.
+   // ✅ Only runs once per app load
+  checkAuthToken();
+  loadDataFromLocalStorage();
+}
+
+function App() {
+  // ...
+}
+~~~
+
+&nbsp;
+
+a lot more things, this article is really awesome.
+
+---
+
+
 # Escape hatches from react.dev/learn
 
-> use **refs** when you want to remember some information but that information doesn't need to trigger a re-render
+## Refs
+
+> use **Refs** when you want to remember some information but that information doesn't need to trigger a re-render
 
 that's why they are used to reference HTML standard components (only standard ones, your customs can't be referenced)
 
-if you need to reference multiple elements, let's say in a loop, you can use **useRef** because you can't put hooks inside loops conditions etc...
+if you need to reference multiple elements, let's say in a loop, you can't use **useRef** because you can't put hooks inside loops conditions etc...
 
 one way is to use useRef to get a single ref to the parent element and then use *querySelectorAll*
 
@@ -19,8 +84,6 @@ the most reliable way is to pass a function to the ref attribute (callback)
 <ins>you don't want to access with ref.current refs during rendering</ins>
 
 <ins>usually you access refs from event handlers</ins>
-
-
 
 ~~~jsx
 function getMap() {
@@ -48,12 +111,89 @@ function getMap() {
 
 <ins>use refs only when you have to step outside of react (focusing/scrolling on elements) and never to modify the DOM manually!</ins>
 
----
+## Effects
 
-> **Effects** let you specify side effects that are caused by rendering itself (synchronize with some external system), rather than by a particular event 
+> **Effects** let you specify side effects that are caused by rendering itself (used for synchronization with some external system), rather than by a particular event 
 
-Effects run at the end of a commit after the screen updates
+Effects run at the end of a commit after the screen updates (after every render)
 
+### usage of useEffect with browser media API
+
+~~~jsx
+import { useState, useRef, useEffect } from 'react';
+
+function VideoPlayer({ src, isPlaying }) {
+  const ref = useRef(null);
+
+  if (isPlaying) {
+    ref.current.play();  // Calling these while rendering isn't allowed.
+  } else {
+    ref.current.pause(); // Also, this crashes.
+}
+~~~
+
+this is not allowed, because you can't play or pause during rendering, since the dom node is not present before the rendering lol + you don't modify the dom during this phase
+
+the solution is simply with an effect:
+
+~~~jsx
+useEffect(() => {
+    if (isPlaying) {
+      ref.current.play();
+    } else {
+      ref.current.pause();
+    }
+});
+~~~
+
+NEVER DO THIS BELOW (infinite loop) 
+
+~~~jsx
+const [count, setCount] = useState(0);
+useEffect(() => {
+  setCount(count + 1);
+});
+~~~
+
+there is no external system, that's simple
+
+to skip unnecessary useEffect execution use dependencies in "[ ]"
+
+### nothing vs [ ] vs [a, b]
+
+~~~jsx
+useEffect(() => {
+  // This runs after every render
+});
+
+useEffect(() => {
+  // This runs only on mount (when the component appears)
+}, []);
+
+useEffect(() => {
+  // This runs on mount *and also* if either a or b have changed since the last render
+}, [a, b]);
+~~~
+
+&nbsp;
+
+the **ref** object, if present in a useEffect, should *almost* never be declared inside the array of dependencies, because refs have stable identity (you'll always get the same object from the same useRef calls). the same applies to set functions of useState.
+
+Strict mode here helps us even with Effects to spot for **cleanup bugs**
+
+~~~jsx
+ useEffect(() => {
+    const connection = createConnection();
+    connection.connect();
+    return () => {
+      connection.disconnect(); // cleanup
+    };
+}, []);
+~~~
+
+after the cleanup (in development) the right sequence <ins>after a re-mount</ins> should be: **setup → cleanup → setup**
+
+using useEffect to fetch data is not really recommended, there are a lot of things to do for a good result without problems. just use useSWR or react query.
 
 
 # [back to react.dev/learn](https://react.dev/learn)
@@ -101,13 +241,13 @@ flatten the structure if updating deeply nested state is complicated (using [imm
 
 ---
 
-never nest component function definitions because of this
+never nest component function definitions because the state will reset like in these 2 photos if you change some nested component
 
 ![img-nesting-1](https://react.dev/_next/image?url=%2Fimages%2Fdocs%2Fdiagrams%2Fpreserving_state_diff_same_pt1.dark.png&w=1920&q=75)
 
 ![img-nesting-2](https://react.dev/_next/image?url=%2Fimages%2Fdocs%2Fdiagrams%2Fpreserving_state_diff_same_pt2.dark.png&w=1920&q=75)
 
----
+## Reducer
 
 > convert State to a **Reducer** to simplify states when there are a lot of updates across many event handlers
 
@@ -214,7 +354,7 @@ there are pros and cons
 
 you can mix reducers and state as you like
 
----
+## Context
 
 don't always use **Context** to avoid prop drilling etc..
 
@@ -223,8 +363,6 @@ when to use?
 - theming (dark/light mode)
 - current account
 - when building your own router
-
----
 
 [combine reducer with context](https://react.dev/learn/scaling-up-with-reducer-and-context) to scale up
 
