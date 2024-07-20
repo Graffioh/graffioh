@@ -86,8 +86,6 @@ for the first render everything works fine, the problem appears during subsequen
 
 ![img5](https://miro.medium.com/v2/resize:fit:1274/format:webp/1*aK7jIm6oOeHJqgWnNXt8Ig.png)
 
----
-
 # [You might not need an effect](https://react.dev/learn/you-might-not-need-an-effect)
 
 - You don't need Effects to transform data for rendering
