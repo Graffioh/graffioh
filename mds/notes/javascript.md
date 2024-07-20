@@ -121,8 +121,68 @@ the max delay for setTimeout depends on the environment, but usually is 2^31 - 1
 
 if you need a delay bigger than this you should consider other approaches
 
-### under the hood
+## Classes
 
+> **classes** are a syntactic sugar over existing prototype based inheritance
 
+js is all about functions
+
+### func constructor
+
+so the constructor here is something like this
+
+~~~js
+function Vehicle(make, model, color) {
+        this.make = make,
+        this.model = model,
+        this.color = color,
+        this.getName = function () {
+            return this.make + " " + this.model;
+        }
+}
+
+let car = new Vehicle("Toyota", "Corolla", "Black");
+let car2 = new Vehicle("Honda", "Civic", "White");
+~~~
+
+all good but the problem here is that for every new instance the methods are copied and if you wanna add a new attribute you need to modify the function.
+
+### prototype
+
+> **prototype** is a default property of a function
+
+it has a constructor function and a _\_proto_\_ object
+
+the proto object is called *dunder proto* and points to the prototype property of the function
+
+this prototype object can be used to add new attributes and method
+
+~~~js
+car.prototype.year = "2016";
+~~~
+
+^ but this change is only related to that car object and not for car2, car3 ... carn
+
+while **reference type properties** are shared among all instances
+
+### now to classes
+
+> classes in js are basically a combination of constructor function and prototype
+
+~~~js
+class Vehicle {
+    constructor(make, model, color) {
+        this.make = make;
+        this.model = model;
+        this.color = color;
+    }
+
+    getName() {
+        return this.make + " " + this.model;
+    }
+}
+~~~
+
+then usual things for classes in most PL
 
 

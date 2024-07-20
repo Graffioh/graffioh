@@ -1,6 +1,90 @@
 # [React hooks deep dive](https://medium.com/@ryardley/react-hooks-not-magic-just-arrays-cd4f1857236e)
 
-...
+- don't call hooks inside loops, conditions or nested functions
+- only call hooks from react functions
+
+## how useState work under the hood
+
+1) Initialisation
+
+two empty arrays (state, setters) and a cursor (set to 0)
+
+![img](https://miro.medium.com/v2/resize:fit:1280/format:webp/1*LAZDuAEm7nbcx0vWVKJJ2w.png)
+
+2) First render (page refresh for example)
+
+push state and setters into array and for every push the counter increment
+
+![img2](https://miro.medium.com/v2/resize:fit:1260/format:webp/1*8TpWnrL-Jqh7PymLWKXbWg.png)
+
+3) Subsequent render
+
+reset the cursor and read values for each array
+
+![img3](https://miro.medium.com/v2/resize:fit:1254/format:webp/1*qtwvPWj-K3PkLQ6SzE2u8w.png)
+
+4) Event handling
+
+each setter has a reference to its cursor position, so by calling setter we can change state variable
+
+![img4](https://miro.medium.com/v2/resize:fit:1260/format:webp/1*3L8YJnn5eV5ev1FuN6rKSQ.png)
+
+that's it
+
+now the blog shows a naive implementation not representative of how hooks really works under the hood (pseudocode)
+
+~~~js
+let state = [];
+let setters = [];
+let firstRun = true;
+let cursor = 0;
+
+function createSetter(cursor) {
+  return function setterWithCursor(newVal) {
+    state[cursor] = newVal;
+  };
+}
+
+// This is the pseudocode for the useState helper
+export function useState(initVal) {
+  if (firstRun) {
+    state.push(initVal);
+    setters.push(createSetter(cursor));
+    firstRun = false;
+  }
+
+  const setter = setters[cursor];
+  const value = state[cursor];
+
+  cursor++;
+  return [value, setter];
+}
+~~~
+
+### why never call useState in conditional/loops
+
+~~~js
+let firstRender = true;
+
+function RenderFunctionComponent() {
+  let initName;
+  
+  if(firstRender){
+    [initName] = useState("Rudi");
+    firstRender = false;
+  }
+  const [firstName, setFirstName] = useState(initName);
+  const [lastName, setLastName] = useState("Yardley");
+
+  return (
+    <Button onClick={() => setFirstName("Fred")}>Fred</Button>
+  );
+}
+~~~
+
+for the first render everything works fine, the problem appears during subsequent renders, because the first useState is not called again, so the count breaks and there always be inconstinstency
+
+![img5](https://miro.medium.com/v2/resize:fit:1274/format:webp/1*aK7jIm6oOeHJqgWnNXt8Ig.png)
 
 ---
 
