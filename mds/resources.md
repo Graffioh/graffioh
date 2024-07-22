@@ -30,9 +30,8 @@
 
 # System design
 - [system design primer](https://github.com/donnemartin/system-design-primer)
-- [bytebytego fundamentals playlist](https://www.youtube.com/playlist?list=PLCRMIe5FDPsd0gVs500xeOewfySTsmEjf)
+- [introduction to architecting systems for scale by ex yahoo engineer](https://lethain.com/introduction-to-architecting-systems-for-scale/)
 - [crash course for beginner video](https://www.youtube.com/watch?v=MbjObHmDbZo)
-- [fundamentals playlist](https://www.youtube.com/watch?v=zbA-XRnjrhI&list=PL1MM4yIzUdPnU8n75kjTIbgewdLr5DFox)
 
 # Auth
 

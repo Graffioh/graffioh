@@ -1,6 +1,5 @@
 
 
-
 # System design interview approach
 
 4 steps:
@@ -81,7 +80,11 @@ Notes
 ~~~
 
 
-# [Intro to system design/distributed systems](https://www.youtube.com/watch?v=MbjObHmDbZo)
+# Intro to system design/distributed systems
+
+resources:
+- [video](https://www.youtube.com/watch?v=MbjObHmDbZo)
+- [blog post](https://lethain.com/introduction-to-architecting-systems-for-scale/)
 
 > A **distributed system**, also known as distributed computing, is a system with multiple components located on different machines that communicate and coordinate actions in order to appear as a single coherent system to the end-user.
 
@@ -305,5 +308,45 @@ most apps are very **read** heavy
 - sharding (horizontal partitioning, same schema but split across multiple DBs)
 - vertical partitioning (dividing schema into separate tables, generally by functionality)
 
+## Async power
 
+[async-img](https://github.com/donnemartin/system-design-primer/raw/master/images/54GYsSx.png)
 
+reduce request time for expensive operations, without doing them in-line
+
+also called **off-line processing**
+
+### Message queues
+
+> **message queues** receive, hold and deliver messages
+
+the user is not blocked and the job is processes in the background
+
+for example: posting a tweet, the tweet could be instantly posted but in reality it could take some time before your tweet is actually delivered to all of your followers.
+
+if the queues start to grow significantly it could results in cache misses, disk reads and slower performance
+
+it comes in help **back pressure** that can help limiting the queue size
+
+### Task queues
+
+> **task queue** is a specialized type of message queue, that is used specifically for distributing and processing tasks or job, so units of work
+
+## CDN (Content distribution networks)
+
+"is a particular kind of cache"
+
+used to serve large amounts of static media based on geographic position
+
+![cdn-img](https://cf-assets.www.cloudflare.com/slt3lc6tev37/7Dy6rquZDDKSJoeS27Y6xc/4a671b7cc7894a475a94f0140981f5d9/what_is_a_cdn_distributed_server_map.png)
+
+## Add a new layer between web server and db
+
+separating out the web layer from the application layer (or platform layer) allows you to scale and configure both layers independently.
+
+for example adding a new API results in adding application servers without necessarily adding additional web servers. 
+this app/platform server can be basically **microservices**, which are a suite of indipendetly deployable small modular services. where each service runs a unique process
+
+this of course will add complexity in terms of deployments and operations
+
+![meme1](https://programmerhumor.io/wp-content/uploads/2023/09/programmerhumor-io-backend-memes-linux-memes-6b3eccb82753699.jpg)
