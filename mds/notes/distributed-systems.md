@@ -310,7 +310,7 @@ most apps are very **read** heavy
 
 ## Async power
 
-[async-img](https://github.com/donnemartin/system-design-primer/raw/master/images/54GYsSx.png)
+![async-img](https://github.com/donnemartin/system-design-primer/raw/master/images/54GYsSx.png)
 
 reduce request time for expensive operations, without doing them in-line
 
@@ -340,7 +340,7 @@ used to serve large amounts of static media based on geographic position
 
 ![cdn-img](https://cf-assets.www.cloudflare.com/slt3lc6tev37/7Dy6rquZDDKSJoeS27Y6xc/4a671b7cc7894a475a94f0140981f5d9/what_is_a_cdn_distributed_server_map.png)
 
-## Add a new layer between web server and db
+## A new layer between web server and the database
 
 separating out the web layer from the application layer (or platform layer) allows you to scale and configure both layers independently.
 
