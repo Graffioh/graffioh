@@ -17,7 +17,7 @@
   font-weight: 500;
   /* color-scheme: light dark; */
   color: rgba(255, 255, 255, 0.87);
-  background-color: #2c2c29;
+  background-color: #000000;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -31,11 +31,15 @@ p {
 
 blockquote p {
   padding: 12px;
-  border-left: 3px solid rgb(214, 118, 255); 
+  border-left: 3px solid rgb(102, 178, 255); 
 }
 
 a {
-  color: rgb(214, 118, 255);
+  color: rgb(102, 178, 255);
+}
+
+a:hover {
+  color: white;
 }
 
 /* .twitter-tweet p {

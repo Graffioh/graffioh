@@ -16,6 +16,10 @@ Simple social network (Typescript, React + Vite, Go, PostgreSQL)
 
 [github repo](https://github.com/Graffioh/hivemind)
 
+## Filari
+
+iOS app smart journal for winegrowers that empowers them to protect their vineyards by helping them track plant conditions and providing recommendations based on sensor data such as humidity, temperature, and other relevant factors (Swift, MapKit, CoreData, Various APIs such as OpenAI API, Agromonitoring API and sensors API)
+
 ## Pontus
 
 iOS app for lawyers, make them network in an easy and fast way for judicial substitution (Swift, Express.js, MongoDB, Render)
@@ -24,7 +28,7 @@ iOS app for lawyers, make them network in an easy and fast way for judicial subs
 
 ## ScoutThis
 
-iOS app for photographers and location scouts, keep track of locations and equipments with photos and notes (Swift)
+iOS app for photographers and location scouts, keep track of locations and equipments with photos and notes (Swift, MapKit, CoreData)
 
 ## PhotoEditAppClone
 
@@ -40,4 +44,8 @@ Arcade aim game (C++)
 
 ## Other minor projects
 
-[pastellm](https://github.com/Graffioh/pastellm) | [AirChat](https://github.com/Graffioh/AirChat) | [LaboratorioScientificoUCM](https://github.com/Graffioh/LaboratorioScientificoUCM)
+- [toy mapreduce implementation in go](https://github.com/Graffioh/wc-mapreduce-go)
+- [toy round robin load balancer in go](https://github.com/Graffioh/rr-lb-go)
+- [pastellm](https://github.com/Graffioh/pastellm)
+- [AirChat](https://github.com/Graffioh/AirChat)
+- [LaboratorioScientificoUCM](https://github.com/Graffioh/LaboratorioScientificoUCM)

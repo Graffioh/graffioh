@@ -57,4 +57,5 @@
 
 ## Fun/misc
 
+- [probability theory 101 for dummies](https://sangeetm.github.io/projects/2019/10/13/Probability-Theory-101-for-Dummies-like-Me/)
 - [arithmetic with typescript types](https://kennethnym.com/blog/arithmetics-with-typescript-types/)
