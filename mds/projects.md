@@ -2,29 +2,31 @@
 
 Auction site assignment for software engineering university class (Next.js, Spring boot, PostgreSQL, AWS ECS, AWS RDS, AWS S3)
 
-[github repo](https://github.com/Graffioh/dietideals24ucm) | [website link](https://dietideals24.vercel.app)
+[[github repo](https://github.com/Graffioh/dietideals24ucm)] [[website link](https://dietideals24.vercel.app)]
 
 ## Chatlingo
 
 Client-Server multithreaded chat app written in C that translate automatically messages based on chosen languages
 
-[github repo](https://github.com/Graffioh/chatlingo)
+[[github repo](https://github.com/Graffioh/chatlingo)]
 
 ## Hivemind 
 
 Simple social network (Typescript, React + Vite, Go, PostgreSQL)
 
-[github repo](https://github.com/Graffioh/hivemind)
+[[github repo](https://github.com/Graffioh/hivemind)]
 
 ## Filari
 
 iOS app smart journal for winegrowers that empowers them to protect their vineyards by helping them track plant conditions and providing recommendations based on sensor data such as humidity, temperature, and other relevant factors (Swift, MapKit, CoreData, Various APIs such as OpenAI API, Agromonitoring API and sensors API)
 
+[[presentation](https://jumpshare.com/v/3trUL2t1bcESCLkBxbOq)]
+
 ## Pontus
 
 iOS app for lawyers, make them network in an easy and fast way for judicial substitution (Swift, Express.js, MongoDB, Render)
 
-[demo](https://www.youtube.com/watch?v=eavKse5ax44&feature=youtu.be)
+[[demo](https://www.youtube.com/watch?v=eavKse5ax44&feature=youtu.be)]
 
 ## ScoutThis
 
@@ -34,13 +36,13 @@ iOS app for photographers and location scouts, keep track of locations and equip
 
 iOS app to edit photos, made most of the tools from scratch for learning purpose (Swift)
 
-[github repo](https://github.com/Graffioh/PhotoEditAppClone)
+[[github repo](https://github.com/Graffioh/PhotoEditAppClone)]
 
 ## ArcAim
 
 Arcade aim game (C++)
 
-[github repo](https://github.com/Graffioh/ArcAim)
+[[github repo](https://github.com/Graffioh/ArcAim)]
 
 ## Other minor projects
 

@@ -7,6 +7,11 @@
   src: url('../BricolageGrotesque-VariableFont.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'Commit Mono';
+  src: url('../CommitMono-400-Regular.otf') format('truetype');
+}
+
 .markdown > * {
   all: revert;
 }
@@ -25,9 +30,18 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-p {
-  font-family: 'Avenir', sans-serif !important; /* Applying Avenir font to all <p> elements */
+li a {
+  font-family: 'Bircolage Grotesque', sans-serif !important; /* Applying Avenir font to all <p> elements */
 }
+
+p {
+  font-family: 'Commit Mono', sans-serif !important; /* Applying Avenir font to all <p> elements */
+}
+
+li {
+  font-family: 'Commit Mono', sans-serif !important; /* Applying Avenir font to all <p> elements */
+}
+
 
 blockquote p {
   padding: 12px;
