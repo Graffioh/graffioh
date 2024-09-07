@@ -12,6 +12,11 @@
   src: url('../CommitMono-400-Regular.otf') format('truetype');
 }
 
+@font-face {
+  font-family: 'Arimo';
+  src: url('../ArimoNerdFont-Regular.ttf') format('truetype');
+}
+
 .markdown > * {
   all: revert;
 }
@@ -35,11 +40,11 @@ li a {
 }
 
 p {
-  font-family: 'Commit Mono', sans-serif !important; /* Applying Avenir font to all <p> elements */
+  font-family: 'Arimo', sans-serif !important; /* Applying Avenir font to all <p> elements */
 }
 
 li {
-  font-family: 'Commit Mono', sans-serif !important; /* Applying Avenir font to all <p> elements */
+  font-family: 'Arimo', sans-serif !important; /* Applying Avenir font to all <p> elements */
 }
 
 
