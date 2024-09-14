@@ -1,18 +1,18 @@
 # 39 days of leetcode
 
-**It's been 39 days**
+It's been 39 days :')
 
 <img src="https://imgur.com/OYG8qor.jpg" alt="lc-streak-img" width="100"/>
 
 # What's the purpose?
 
-My main goal is to land an internship at a big tech company, learn from experienced engineers, and work on large systems to gain real-world experience with distributed systems (a topic I'm passionate about).
+My main goal is to land an internship at a big tech company, learn from experienced engineers, and work on large systems to gain real world experience with distributed systems (a topic that I really like other than money $$$).
 
 # My previous experience
 
 - Weak math reasoning/knowledge
 - Completed a DSA course in university
-- Solved around 30 leetcode problems last year (mostly by copy-pasting solutions)
+- "Solved" 30~ leetcode problems last year (by copy-pasting solutions)
 
 lmao, I had quite a few skill gaps.
 
