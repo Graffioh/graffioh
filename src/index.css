@@ -17,6 +17,11 @@
   src: url('../ArimoNerdFont-Regular.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'Ubuntu';
+  src: url('../UbuntuNerdFont-Regular.ttf') format('truetype');
+}
+
 .markdown > * {
   all: revert;
 }
@@ -36,15 +41,15 @@
 }
 
 li a {
-  font-family: 'Bircolage Grotesque', sans-serif !important; /* Applying Avenir font to all <p> elements */
+  font-family: 'Bircolage Grotesque', sans-serif !important; 
 }
 
 p {
-  font-family: 'Arimo', sans-serif !important; /* Applying Avenir font to all <p> elements */
+  font-family: 'Ubuntu', sans-serif !important;
 }
 
 li {
-  font-family: 'Arimo', sans-serif !important; /* Applying Avenir font to all <p> elements */
+  font-family: 'Ubuntu', sans-serif !important; 
 }
 
 
