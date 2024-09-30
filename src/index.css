@@ -55,7 +55,7 @@ li {
 
 blockquote p {
   padding: 12px;
-  border-left: 3px solid #AEEDFF;
+  border-left: 3px solid #fffcc7;
 }
 
 a[href] {
@@ -63,11 +63,11 @@ a[href] {
 }
 
 a {
-  color: #FFFFFF;
+  color: #fffcc7;
 }
 
 a:hover {
-  color: rgb(220, 220, 220);
+  color: rgb(255, 255, 255);
 }
 
 /* .twitter-tweet p {
