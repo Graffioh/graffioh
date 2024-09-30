@@ -20,13 +20,9 @@ Simple social network (Typescript, React + Vite, Go, PostgreSQL)
 
 iOS app smart journal for winegrowers that empowers them to protect their vineyards by helping them track plant conditions and providing recommendations based on sensor data such as humidity, temperature, and other relevant factors (Swift, MapKit, CoreData, Various APIs such as OpenAI API, Agromonitoring API and sensors API)
 
-[[presentation](https://jumpshare.com/v/3trUL2t1bcESCLkBxbOq)]
-
 ## Pontus
 
 iOS app for lawyers, make them network in an easy and fast way for judicial substitution (Swift, Express.js, MongoDB, Render)
-
-[[demo](https://www.youtube.com/watch?v=eavKse5ax44&feature=youtu.be)]
 
 ## ScoutThis
 
