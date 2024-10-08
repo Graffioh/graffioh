@@ -22,10 +22,6 @@ const notes = [
     title: "6.824",
   },
   {
-    id: "how-to-prove-it",
-    title: "How To Prove It",
-  },
-  {
     id: "random",
     title: "Random",
   },

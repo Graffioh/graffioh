@@ -3,95 +3,64 @@
 @tailwind utilities;
 
 @font-face {
-  font-family: 'Bricolage Grotesque';
-  src: url('../BricolageGrotesque-VariableFont.ttf') format('truetype');
+    font-family: "Bricolage Grotesque";
+    src: url("../BricolageGrotesque-VariableFont.ttf") format("truetype");
 }
 
 @font-face {
-  font-family: 'Commit Mono';
-  src: url('../CommitMono-400-Regular.otf') format('truetype');
+    font-family: "Commit Mono";
+    src: url("../CommitMono-400-Regular.otf") format("truetype");
 }
 
 @font-face {
-  font-family: 'Arimo';
-  src: url('../ArimoNerdFont-Regular.ttf') format('truetype');
+    font-family: "Arimo";
+    src: url("../ArimoNerdFont-Regular.ttf") format("truetype");
 }
 
 @font-face {
-  font-family: 'Ubuntu';
-  src: url('../UbuntuNerdFont-Regular.ttf') format('truetype');
+    font-family: "Ubuntu";
+    src: url("../UbuntuNerdFont-Regular.ttf") format("truetype");
 }
 
 .markdown > * {
-  all: revert;
+    all: revert;
 }
 
 :root {
-  font-family: "Bricolage Grotesque";
-  line-height: 1.5;
-  font-weight: 500;
-  /* color-scheme: light dark; */
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #2c2c29;
+    font-family: "Bricolage Grotesque";
+    line-height: 1.5;
+    font-weight: 500;
+    /* color-scheme: light dark; */
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #2c2c29;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 li a {
-  font-family: 'Bircolage Grotesque', sans-serif !important; 
+    font-family: "Bircolage Grotesque", sans-serif !important;
 }
 
 p {
-  font-family: 'Ubuntu', sans-serif !important;
+    font-family: "Ubuntu", sans-serif !important;
 }
 
 li {
-  font-family: 'Ubuntu', sans-serif !important; 
+    font-family: "Ubuntu", sans-serif !important;
 }
-
 
 blockquote p {
-  padding: 12px;
-  border-left: 3px solid #fffcc7;
-}
-
-a[href] {
-    font-weight: bold;
+    padding: 12px;
+    border-left: 3px solid #fffcc7;
 }
 
 a {
-  color: #fffcc7;
+    color: #fffcc7;
 }
 
 a:hover {
-  color: rgb(255, 255, 255);
+    color: rgb(255, 255, 255);
 }
-
-/* .twitter-tweet p {
-  background-color: #242424;
-  border: 0px solid #7e7e7e; 
-} */
-
-/* body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-} */
-/* 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-} */
