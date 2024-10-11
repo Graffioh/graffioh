@@ -6,8 +6,8 @@ const notes = [
     title: "Go",
   },
   {
-    id: "distributed-systems",
-    title: "Distributed systems",
+    id: "system-design",
+    title: "System design",
   },
   {
     id: "react",
@@ -17,9 +17,13 @@ const notes = [
     id: "javascript",
     title: "Javascript",
   },
+  //{
+  //  id: "6.824",
+  //  title: "6.824",
+  //},
   {
-    id: "6.824",
-    title: "6.824",
+    id: "ddia",
+    title: "DDIA (Design Data Intensive Applications)",
   },
   {
     id: "random",
