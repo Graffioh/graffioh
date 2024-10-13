@@ -2,33 +2,33 @@ import { Link } from "react-router-dom";
 
 const notes = [
   {
-    id: "go",
-    title: "Go",
+    id: "ddia",
+    title: "DDIA (Design Data Intensive Applications)",
   },
   {
     id: "system-design",
     title: "System design",
   },
   {
-    id: "react",
-    title: "React",
+    id: "go",
+    title: "Go",
   },
   {
     id: "javascript",
     title: "Javascript",
   },
-  //{
-  //  id: "6.824",
-  //  title: "6.824",
-  //},
   {
-    id: "ddia",
-    title: "DDIA (Design Data Intensive Applications)",
+    id: "react",
+    title: "React",
   },
   {
     id: "random",
     title: "Random",
   },
+  //{
+  //  id: "6.824",
+  //  title: "6.824",
+  //},
 ];
 
 export default function NotesPage() {

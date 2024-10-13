@@ -16,11 +16,37 @@ three concerns that are important in most software systems:
 
 the things that can go wrong are called **faults** and systems that anticipate faults and can cope with them are called **fault-tolerant** (or resilient) but they can only tolerate a certian types of faults (f.e. imagine a black hole swallowing the entire planet earth and all servers on it, tolerance of this fault would require web hosting in space, impossible due to budget approval...even though YC recently announced some startup who wanted to host data in space or smth like that)
 
-**fault != failure**, where *fault* is usually a component of the system deviating from its spec and a *failure* is when the system is unable to give the required service to the user
+**fault != failure**, where *fault* is usually a component of the system deviating from its spec and a *failure* is when the system is unable to give the required service to the user due to the service that stops working
 
 it seems stupid, but in these fault-tolerant systems it can make sense to increase the rate of fault by triggering them deliberately (so you can test that the system actually works even during natural faults)
 
 this strategy was used by netflix in this article: [Netflix Chaos Monkey](https://netflixtechblog.com/the-netflix-simian-army-16e57fbab116)
+
+### hardware faults
+
+hdd crash, faulty ram, blackout, unplugging the wrong network cable...
+
+redundancy is the key to prevent this (add replicas)
+
+as the data volumes and app computing demands have increased, software fault-tolerance techniques are preferred (or added) to hardware redundancy
+
+### software errors
+
+software faults cause more problems then hardware faults, since hardware faults are most of the time indipendent with eachothers, while software fault can cause many more "chained" failures in comparison
+
+### human errors
+
+humans are unreliable, even with the best intentions.
+
+most of the outages are caused by humans and not software/hardware faults
+
+## Scalability
+
+> cope with increased load
+
+### describing load
+
+
 
 
 

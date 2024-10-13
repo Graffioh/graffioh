@@ -20,17 +20,42 @@
 @font-face {
     font-family: "Ubuntu";
     src: url("../UbuntuNerdFont-Regular.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Ubuntu";
+    src: url("../UbuntuNerdFont-Bold.ttf") format("truetype");
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "Ubuntu";
+    src: url("../UbuntuNerdFont-Italic.ttf") format("truetype");
+    font-weight: normal;
+    font-style: italic;
 }
 
 .markdown > * {
     all: revert;
 }
 
+.markdown strong {
+    font-weight: bold !important;
+    color: #fffcc7;
+}
+
+.markdown em {
+    font-style: italic !important;
+    color: #fffcc7;
+}
+
 :root {
     font-family: "Bricolage Grotesque";
     line-height: 1.5;
     font-weight: 500;
-    /* color-scheme: light dark; */
     color: rgba(255, 255, 255, 0.87);
     background-color: #2c2c29;
 
@@ -41,14 +66,10 @@
 }
 
 li a {
-    font-family: "Bircolage Grotesque", sans-serif !important;
+    font-family: "Bricolage Grotesque", sans-serif !important;
 }
 
-p {
-    font-family: "Ubuntu", sans-serif !important;
-}
-
-li {
+p, li {
     font-family: "Ubuntu", sans-serif !important;
 }
 
