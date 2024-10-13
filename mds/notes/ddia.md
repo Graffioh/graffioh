@@ -46,6 +46,52 @@ most of the outages are caused by humans and not software/hardware faults
 
 ### describing load
 
+load is described by **load parameters**
+
+each system could have different key load parameters used to discuss about scalability
+
+### describing performance
+
+in online systems we care about **response time**
+
+latency = duration that a request is waiting to be handled (is *latent*)
+
+response time = what the client sees (network, queueing and other delays), how long the user needs to wait
+
+if we measure the time using a delta from the start of the operation to the end, we are doing a **coordinated omission** where we basically omit various delays that can occur during the operation
+
+if you want to know the typical response time, don't use the mean (average response time) but use the median (with percentiles)
+
+[HdrHistogram](http://hdrhistogram.org) is a good tool to measure latency
+
+median also known as **p50** (50th percentile)
+
+p95, p99, p999 (95%, 99%, 99.9%) are other common percentiles
+
+amazon focuses on p999 (**tail latency**), because usually the customer with the slowest requests are often those who have made many purchases (a lot of data in their account)
+
+but even for amazon, focusing on p9999 was a lot expensive so they stayed with p999
+
+when several backend calls are needed to serve a request, a single slow request can slow down the entire end-user request
+
+### approaches for coping with load
+
+vertical scaling (more compute) & horizontal scaling (more machines) 
+
+it depends on the system and its load parameters
+
+don't scale up prematurely
+
+## Maintainability
+
+- **operability**: making life easy for operations
+- **simplicity**: managing complexity
+- **evolvability**: making change easy
+
+
+
+
+
 
 
 
