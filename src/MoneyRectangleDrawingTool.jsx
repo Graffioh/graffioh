@@ -2,55 +2,58 @@ import React, { useState, useRef, useEffect } from "react";
 
 const MoneyRectangleDrawingTool = () => {
   const [isDrawing, setIsDrawing] = useState(false);
-  const [rectangle, setRectangle] = useState({
+  const [currentBill, setCurrentBill] = useState({
     x: 0,
     y: 0,
     width: 0,
     height: 0,
   });
+  const [bills, setBills] = useState([]);
   const [startPoint, setStartPoint] = useState({ x: 0, y: 0 });
   const canvasRef = useRef(null);
 
   const ASPECT_RATIO = 2.35; // Aspect ratio of a dollar bill (6.14 / 2.61)
 
   useEffect(() => {
+    drawCanvas();
+  }, [bills, currentBill]);
+
+  const drawCanvas = () => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (rectangle.width > 0 && rectangle.height > 0) {
-      // Draw the green rectangle
-      ctx.fillStyle = "#85bb65"; // Color closer to US dollar bill green
-      ctx.fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
+    // Draw all saved bills
+    bills.forEach((bill) => drawBill(ctx, bill));
 
-      // Draw border
+    // Draw current bill being drawn
+    if (isDrawing) {
+      drawBill(ctx, currentBill);
+    }
+  };
+
+  const drawBill = (ctx, bill) => {
+    if (bill.width > 0 && bill.height > 0) {
+      ctx.fillStyle = "#85bb65";
+      ctx.fillRect(bill.x, bill.y, bill.width, bill.height);
+
       ctx.strokeStyle = "#000000";
       ctx.lineWidth = 2;
-      ctx.strokeRect(
-        rectangle.x,
-        rectangle.y,
-        rectangle.width,
-        rectangle.height,
-      );
+      ctx.strokeRect(bill.x, bill.y, bill.width, bill.height);
 
-      // Draw the dollar symbol
       ctx.fillStyle = "white";
-      ctx.font = `bold ${Math.min(rectangle.width, rectangle.height) / 3}px Arial`;
+      ctx.font = `bold ${Math.min(bill.width, bill.height) / 3}px Arial`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(
-        "$",
-        rectangle.x + rectangle.width / 2,
-        rectangle.y + rectangle.height / 2,
-      );
+      ctx.fillText("$", bill.x + bill.width / 2, bill.y + bill.height / 2);
     }
-  }, [rectangle]);
+  };
 
   const startDrawing = (e) => {
     const { offsetX, offsetY } = e.nativeEvent;
     setIsDrawing(true);
     setStartPoint({ x: offsetX, y: offsetY });
-    setRectangle({ x: offsetX, y: offsetY, width: 0, height: 0 });
+    setCurrentBill({ x: offsetX, y: offsetY, width: 0, height: 0 });
   };
 
   const draw = (e) => {
@@ -67,7 +70,6 @@ const MoneyRectangleDrawingTool = () => {
     if (offsetX < startPoint.x) x = offsetX;
     if (offsetY < startPoint.y) y = offsetY;
 
-    // Adjust based on drag direction
     if (offsetY < startPoint.y) {
       height = Math.abs(offsetY - startPoint.y);
       width = height * ASPECT_RATIO;
@@ -77,7 +79,7 @@ const MoneyRectangleDrawingTool = () => {
       }
     }
 
-    // Ensure the rectangle doesn't exceed canvas boundaries
+    // Ensure the bill doesn't exceed canvas boundaries
     if (x < 0) {
       x = 0;
       width = startPoint.x;
@@ -97,11 +99,15 @@ const MoneyRectangleDrawingTool = () => {
       width = height * ASPECT_RATIO;
     }
 
-    setRectangle({ x, y, width, height });
+    setCurrentBill({ x, y, width, height });
   };
 
   const stopDrawing = () => {
-    setIsDrawing(false);
+    if (isDrawing) {
+      setBills((prevBills) => [...prevBills, currentBill]);
+      setIsDrawing(false);
+      setCurrentBill({ x: 0, y: 0, width: 0, height: 0 });
+    }
   };
 
   return (
