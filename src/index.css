@@ -49,7 +49,6 @@
 
 .markdown em {
     font-style: italic !important;
-    color: #fffcc7;
 }
 
 :root {
@@ -80,6 +79,10 @@ blockquote p {
 
 a {
     color: #fffcc7;
+}
+
+p a {
+    text-decoration: underline;
 }
 
 a:hover {

@@ -6,6 +6,7 @@ import ProjectsPage from "./pages/ProjectsPage";
 import BlogPage from "./pages/BlogPage";
 import PostPage from "./pages/PostPage";
 import ResourcesPage from "./pages/ResourcesPage";
+import MoneyToolPage from "./pages/MoneyToolPage";
 import { Link, BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/notes" element={<NotesPage />} />
           <Route path="/notes/note/:id" element={<NotePage />} />
+          <Route path="/money" element={<MoneyToolPage />} />
         </Routes>
       </Router>
     </>

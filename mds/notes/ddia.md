@@ -1,4 +1,4 @@
-# chapter I
+# Chapter I
 
 nowadays apps are data-intensive not compute-intensive, that's why there is so much emphasis on how we manage and improve datas operations performance
 
@@ -60,9 +60,9 @@ response time = what the client sees (network, queueing and other delays), how l
 
 if we measure the time using a delta from the start of the operation to the end, we are doing a **coordinated omission** where we basically omit various delays that can occur during the operation
 
-if you want to know the typical response time, don't use the mean (average response time) but use the median (with percentiles)
-
 [HdrHistogram](http://hdrhistogram.org) is a good tool to measure latency
+
+if you want to know the typical response time, don't use the mean (average response time) but use the median (with percentiles)
 
 median also known as **p50** (50th percentile)
 
@@ -87,6 +87,8 @@ don't scale up prematurely
 - **operability**: making life easy for operations
 - **simplicity**: managing complexity
 - **evolvability**: making change easy
+
+# Chapter II
 
 
 
