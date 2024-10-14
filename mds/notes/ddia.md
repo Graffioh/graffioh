@@ -1,4 +1,4 @@
-# Chapter I
+# Chapter I (Foundations of Data Systems)
 
 nowadays apps are data-intensive not compute-intensive, that's why there is so much emphasis on how we manage and improve datas operations performance
 
@@ -88,7 +88,66 @@ don't scale up prematurely
 - **simplicity**: managing complexity
 - **evolvability**: making change easy
 
-# Chapter II
+# Chapter II (Data Models and Query Languages)
+
+a data model is basically about data storage (relational/document/graph database) and data show/manipulation (json/xml/tables)
+
+## Relational model vs Document model
+
+best known data model today is SQL with relational model
+
+### the birth of noSQL
+
+actually a catchy twitter hashtag for a meetup lol
+
+### the object-relational mismatch
+
+**impedance mismatch** due to the object oriented programming and relational model natures, if data is stored in relational tables, an awkward translation layer is required between the obejct in the code and in the database table/rows/columns
+
+ORM tried to reduce the amount of boilerplate required for the translation layer
+
+JSON models (mongoDB, couchDB etc..) have a better *locality* than multi-table schema of a relational database
+
+### many-to-one and many-to-many relationships
+
+using id for certain fields such as geographic regions or industry names due to easy maintanaibility and avoiding useless duplication since the values are fixed (letting the user choose from a dropdown list)
+
+^ **normalization** that requires many to one relationships (many people live in one particular region or work in one particular industry)
+
+document databases are *join-free* (not rethinkDB), but this is bad if the app start growing and more interconnected features are gonna be added
+
+### are document databases repeating history?
+
+**network data model**: tree/linked list representation, difficult to make changes
+
+the relational model simplified everything that was complicated in the network data model by using simple tables (relations) and rows (tuples)
+
+the difference between document (hierarchical) and relation databases lies in one-to-many relationships, that are within their parent record rather than in a separate table
+
+### relational vs document databases today
+
+it's not possible to say in general which data model leads to simpler code, it depends on the relations in the app
+
+for example:
+
+- many to many relations -> relational
+- app with document-like structure -> document
+- highly interconnected data -> graph 
+
+document databases schema can be considered **schema-on-read** while relational databases schema can be considered **schema-on-write**
+
+schema-on-read is similar to dynamic type checking whereas schema-on-write is similar to static type checking
+
+the locality advantage of document databases only applies if you need large parts of the document at the same time (like rendering a webpage that needs the entire document content)
+
+it's better to keep document smalls otherwise there will be overhead on data write and retrieval
+
+## Query Languages for Data
+
+
+
+
+
 
 
 
