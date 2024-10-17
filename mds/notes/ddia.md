@@ -14,13 +14,13 @@ three concerns that are important in most software systems:
 
 > continuing to work correctly, even when things go wrong
 
-the things that can go wrong are called **faults** and systems that anticipate faults and can cope with them are called **fault-tolerant** (or resilient) but they can only tolerate a certian types of faults (f.e. imagine a black hole swallowing the entire planet earth and all servers on it, tolerance of this fault would require web hosting in space, impossible due to budget approval...even though YC recently announced some startup who wanted to host data in space or smth like that)
+the things that can go wrong are called **faults** and systems that anticipate faults and can cope with them are called **fault-tolerant** (or resilient) but they can only tolerate a certain types of faults (f.e. imagine a black hole swallowing the entire planet earth and all servers on it, tolerance of this fault would require web hosting in space, impossible due to budget approval...even though YC recently announced some startup who wanted to host data in space or smth like that)
 
 **fault != failure**, where *fault* is usually a component of the system deviating from its spec and a *failure* is when the system is unable to give the required service to the user due to the service that stops working
 
 it seems stupid, but in these fault-tolerant systems it can make sense to increase the rate of fault by triggering them deliberately (so you can test that the system actually works even during natural faults)
 
-this strategy was used by netflix in this article: [Netflix Chaos Monkey](https://netflixtechblog.com/the-netflix-simian-army-16e57fbab116)
+this strategy was used by netflix: [Netflix Chaos Monkey](https://netflixtechblog.com/the-netflix-simian-army-16e57fbab116)
 
 ### hardware faults
 
@@ -92,21 +92,17 @@ don't scale up prematurely
 
 a data model is basically about data storage (relational/document/graph database) and data show/manipulation (json/xml/tables)
 
-## Relational model vs Document model
-
-best known data model today is SQL with relational model
-
 ### the birth of noSQL
 
 actually a catchy twitter hashtag for a meetup lol
 
 ### the object-relational mismatch
 
-**impedance mismatch** due to the object oriented programming and relational model natures, if data is stored in relational tables, an awkward translation layer is required between the obejct in the code and in the database table/rows/columns
+**impedance mismatch** due to the object oriented programming and relational model natures, if data is stored in relational tables, an awkward translation layer is required between the object in the code and in the database table/rows/columns
 
 ORM tried to reduce the amount of boilerplate required for the translation layer
 
-JSON models (mongoDB, couchDB etc..) have a better *locality* than multi-table schema of a relational database
+**document models**/JSON models (mongoDB, couchDB etc..) have a better *locality* than multi-table schema of a relational database
 
 ### many-to-one and many-to-many relationships
 
@@ -134,7 +130,8 @@ for example:
 - app with document-like structure -> document
 - highly interconnected data -> graph 
 
-document databases schema can be considered **schema-on-read** while relational databases schema can be considered **schema-on-write**
+document databases -> **schema-on-read** (assimilable to dynamic type checking)\
+relational databases -> **schema-on-write** (assimilable to static type checking)
 
 schema-on-read is similar to dynamic type checking whereas schema-on-write is similar to static type checking
 
@@ -144,7 +141,56 @@ it's better to keep document smalls otherwise there will be overhead on data wri
 
 ## Query Languages for Data
 
+relational model uses declarative language, where you just specify the pattern of the data you want, what condition the results must meet and how you want the data to be transformed (sorted, grouped...) but not **HOW** to achieve that goal
 
+other models uses an imperative language that is the opposite
+
+with declarative database engines can make performance changes without impacting the language, since it's not imperative
+
+declarative are preferred for parallel programming since they specify only the pattern of the results not the whole algorithm used
+
+### declarative queries on the web
+
+html and css -> declarative\
+javascript manipulating the dom -> imperative
+
+## Graph-Like Data Models
+
+if in the app are presents a lot of many-to-many relations and the connections between data become more complext, it becomes natural to start modeling your data as a *graph*
+
+we can thing of a graph store as consisting of two relational tables:
+
+~~~sql
+CREATE TABLE vertices (
+	vertex_id integer PRIMARY KEY,
+	properties json
+);
+
+CREATE TABLE edges (
+	edge_id integer PRIMARY KEY,
+	tail_vertex integer REFERENCES vertices (vertex_id), # where the edge starts
+	head_vertex integer REFERENCES vertices (vertex_id), # where the edge ends
+	label text,
+	properties json
+);
+
+CREATE INDEX edges_tails ON edges (tail_vertex);
+CREATE INDEX edges_heads ON edges (head_vertex);
+~~~
+
+any vertex can have an edge to any other vertex
+
+really "evolvable"
+
+the id is used to refer directly to a particular vertex or edge, so the traverse is optional in this case
+
+### triple-stores model
+
+information stored in the form of three parts statements: (*subject, predicate, object*)
+
+example: (Jim, likes, bananas)
+
+# Storage and Retrieval
 
 
 
