@@ -192,9 +192,43 @@ example: (Jim, likes, bananas)
 
 # Storage and Retrieval
 
+it's important to understand, as a developer, which storage engine is appropriate for the application
 
+*log-structured* and *page-oriented* storage engines
 
+storage engines optimized for transactional workloads or analytics?
 
+## Data Structures That Power Your Database
+
+a **log** is an append-only sequence of records
+
+a lot of dbs internally use a log
+
+an **index** is an additional structure that is derived from the primary data for faster info retrieval (keep some additional metadata on the side which acts as a signpost)
+
+well-chosen indexes speed up read queries but every index slows down writes
+
+indexes for key-value data are the most common ones (but not the only)
+
+### hash indexes
+
+in-memory hash map
+
+used in Bitcask, storage engine, that offers high-performance reads and writes, but all the keys needs to fit in the available RAM
+
+well suited for situations where the value for each key is updated frequently and there are not too many different keys
+
+when using logs, how do we avoid running out of disk space? basically using **compaction** for data segments, means throwing away duplicate keys in the log and keeping only the most recent update for each key in the segments
+
+before doing compaction on the segments, its usually a common practice to also **merge** multiple segment and the compact them
+
+a lot of problems with hash indexes:
+
+- when deleting a record a *tombstone* (special deletion record) needs to be appended
+- if the db is restarted, in-memory hash maps are lost, so bitcask speeds up recovery by storing a snapshot of each segment hash map on disk
+- db crash causing a corrupted record to be appended to the log, Bitcask files include checksums to ignore those records
+
+and so on...
 
 
 
