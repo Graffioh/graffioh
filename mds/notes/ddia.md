@@ -212,15 +212,16 @@ indexes for key-value data are the most common ones (but not the only)
 
 ### hash indexes
 
-in-memory hash map
+in-memory hash map where the key is mapped to the byte offset of where the data is located
 
 used in Bitcask, storage engine, that offers high-performance reads and writes, but all the keys needs to fit in the available RAM
 
-well suited for situations where the value for each key is updated frequently and there are not too many different keys
+well suited for situations where the value for each key is updated frequently and there aren't too many different keys
 
-when using logs, how do we avoid running out of disk space? basically using **compaction** for data segments, means throwing away duplicate keys in the log and keeping only the most recent update for each key in the segments
+when using logs, how do we avoid running out of disk space?\ 
+when a certain log size is reached, we use **compaction**, means throwing away duplicate keys and keeping only the most recent update for each key in the segments
 
-before doing compaction on the segments, its usually a common practice to also **merge** multiple segment and the compact them
+its usually a common practice to also **merge** multiple segment while compacting, since compaction create smaller segments
 
 a lot of problems with hash indexes:
 
@@ -228,7 +229,62 @@ a lot of problems with hash indexes:
 - if the db is restarted, in-memory hash maps are lost, so bitcask speeds up recovery by storing a snapshot of each segment hash map on disk
 - db crash causing a corrupted record to be appended to the log, Bitcask files include checksums to ignore those records
 
-and so on...
+append-only design turns out to be good for several reasons:
+
+- appending and segment merging are sequential write operations, much faster than random writes, especially on magnetic spinning-disk hard drives (but also preferable on ssd)
+- concurrency and crash recovery much simpler since it's append-only/immutable, no consistency issues
+
+but hash index also has limitations:
+
+- must fit in memory (RAM)
+- range queries not efficient (scanning over all keys between kitty00000 and kitty99999)
+
+### sstables and lsm-trees
+
+in **Sorted String Table** we basically require that the sequence of key-value pairs is *sorted* by key in the segment files
+
+we also require that each key only appears once within each merges segment file (the compaction process ensures that)
+
+advantages over log segments with hash indexes:
+
+- merging segments is simple and efficient, the approach is like the one used in the *mergesort* algo (start reading input files side by side -> look at the first key in each file -> copy the lowest key to the output file -> repeat). when multiple segments contain the same key, we can keep the value from the most recent segment and discard the values in older segments since the values are written to the database during some period of time.
+- in order to find a particular key in the file it's no longer needed to keep an index of all the keys in memory. just store one key every few kilobytes since the keys are sorted and if you want to find let's say the key 69, we'll start from the key where the index is the most close to 69  
+- grouping records before writing it to disk, every few kilobytes so the index needs to point at the start of each group, saving disk space and reducing I/O bandwidth use
+
+#### constructing and maintaining sstables (lsm-tree)
+
+to maintain sorted structure in memory is easy, just use avl or rb trees
+
+this in-memory tree is sometimes called a **memtable**
+
+when the memtable gets bigger than some threshold (typically a few mb), write it out to disk as an sstable file
+
+this new sstable file becomes the most recent segment of the database
+
+in order to serve a read request, first try to find the key in the memtable, then most recent ondisk segment, then next-older segment and so on...
+
+but there is a problem: if the databse crashes, the most recent writes (that are in the memtable and not yet in the db) are lost
+
+to avoid this, just store a separate log on disk (even not sorted) just to restore the memtable when the crash happens
+
+this algo and indexing structure described in the previous section is called **LSM-Tree** (*log-structured merge-tree*)
+
+#### performance optimizations
+
+lsm-tree algo can be slow when looking up keys that do not exist in the db: you have to check the memtable, then the segments all the way back to the oldest before making sure that the key doesn't exist
+
+to optimize this, storage engines use **Bloom filters** that it's used to approximate the contents of a set and it can tell if the key appear or not in the db
+
+there are also different strategies to determine the order and timing of how sstables are compacted and merged (*size-tiered* and *leveled* compaction)
+
+the basic idea of lsm-trees (keeping a cascade of sstables that are merged in the background) is simple and effective even when the dataset gets bigger and bigger
+
+### b-trees
+
+the most widely used indexing structure is the **B-tree**
+
+
+
 
 
 
