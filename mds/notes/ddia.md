@@ -190,7 +190,7 @@ information stored in the form of three parts statements: (*subject, predicate, 
 
 example: (Jim, likes, bananas)
 
-# Storage and Retrieval
+# Chapter III (Storage and Retrieval)
 
 it's important to understand, as a developer, which storage engine is appropriate for the application
 
