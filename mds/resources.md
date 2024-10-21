@@ -1,7 +1,7 @@
 # Distributed systems
-- [mit 6.824](https://pdos.csail.mit.edu/6.824/schedule.html)
-- [lectures by hog book author](https://www.youtube.com/playlist?list=PLeKd45zvjcDFUEv_ohr_HdUFe97RItdiB)
 - [ddia (goat)](https://dataintensive.net)
+- [mit 6.824](https://pdos.csail.mit.edu/6.824/schedule.html)
+- [lectures by ddia author](https://www.youtube.com/playlist?list=PLeKd45zvjcDFUEv_ohr_HdUFe97RItdiB)
 - [dancres reading list](https://dancres.github.io/Pages/)
 - [distsys workbench](https://github.com/jepsen-io/maelstrom)
 - [muratbuffalo blogpost from first principles](http://muratbuffalo.blogspot.com/2020/06/learning-about-distributed-systems.html)
@@ -17,6 +17,7 @@
 - [system design primer](https://github.com/donnemartin/system-design-primer)
 - [introduction to architecting systems for scale by ex yahoo engineer](https://lethain.com/introduction-to-architecting-systems-for-scale/)
 - [crash course for beginner video](https://www.youtube.com/watch?v=MbjObHmDbZo)
+- [minamisato system design: zero to hero](https://minamisatokun.gitbook.io/minami-system-design)
 
 # Go
 - [learn go](https://go.dev/learn/)
