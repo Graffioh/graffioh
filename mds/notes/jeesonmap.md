@@ -326,7 +326,66 @@ at step 6 we could have reduced instead of shifting, but this would result in ad
 
 #### practice
 
+same program structure as lex
 
+yacc mantains two stacks in memory:
 
+- parse stack (represent the current parsing state, contains terminals and nonterminals)
+- value stack (array, associates a value with each element in the parse stack)
+
+when lex returns a token, yacc shifts the token to the parse stack and at the same time the corresponding val is shifted in the value stack
+
+both stacks are always in sync
+
+simple calculator code that does addition and subtraction:
+
+~~~py
+%token INTEGER
+
+%%
+program:
+	program expr '\n' { printf("%d\n", $2); }
+	|
+	;
+expr:
+	INTEGER { $$ = $1; }
+	| expr '+' expr { $$ = $1 + $3; }
+	| expr '-' expr { $$ = $1 - $3; }
+	;
+%%
+int yyerror(char *s) {
+	fprintf(stderr, "%s\n", s);
+	return 0;
+}
+int main(void) {
+	yyparse();
+	return 0;
+}
+~~~
+
+we are utilizing left-recursion, and by using this we have specified that a program consists of zero or more expressions
+
+each expression terminates with a newline
+
+when we apply the rule
+
+~~~py
+expr: expr '+' expr    {$$ = $1 + $3}
+~~~
+
+we pop "expr + expr" and push "expr", so we pop 3 terms off the stack (expr, +, expr) and push only 1 (expr)
+
+- $1 and $3 designates the first and third term
+- $$ designates the top of the stack
+
+numeric values are initially entered on the stack when we reduce from INTEGER to expr
+
+~~~py
+expr: INTEGER     {$$ = $1}
+~~~
+
+with this we basically do nothing on the value stack, just pop the integer value off the stack and push it back again
+
+this still has ambiguous grammar but yacc will issue shift-reduce warnings and still process the grammar using shift as default operation
 
 
