@@ -140,6 +140,8 @@ first you a lexer to recognize words (tokens) and pass those words to a parser w
 
 - [JFlex](https://www.jflex.de/)
 
+#### theory
+
 using regex we can specify patterns to lex that allow it to scan and match strings in the input
 
 each pattern has an associated action, an action returns a token
@@ -156,7 +158,7 @@ yacc augments an FSA with a stack
 
 lex is good at pattern matching (lexing) and yacc si appropriate for more challenging tasks such as nested structures (parsing)
 
-#### program structure
+#### practice
 
 ~~~
 ... definitions ...
@@ -257,6 +259,73 @@ int main(void) {
 ### Yacc (Jacc for java)
 
 - [Jacc](http://web.cecs.pdx.edu/~mpj/jacc/)
+
+#### installation (macos)
+
+- brew install ant
+- download [source code](https://github.com/zipwith/jacc)
+- in the jacc root dir, run: ant
+- cp scripts/jacc /usr/local/bin/
+- sudo mkdir -p /usr/local/lib/jacc
+- sudo mv dist/jacc.jar /usr/local/lib/jacc/
+- run: ant clean
+- add to env variables: export JACC_PATH=/path/to/directory/containing/jacc.jar
+
+#### theory 
+
+this grammar specifies that an expression may be the sum of two expressions, the product of two expressions or an identifier:
+
+~~~py
+rule1 E -> E + E
+rule2 E -> E * E
+rule3 E -> id
+~~~
+
+lhs (left-hand side) terms are called *nonterminals* (expressions)\
+terms such as id are called *terminals* (tokens returned by lex)
+
+with this grammar we can generate expressions such as:
+
+~~~py
+E -> E * E       (rule2)
+  -> E * z       (rule3)
+  -> E + E * z   (rule1)
+  -> E + y * z   (rule3)
+  -> x + y * z   (rule3)
+~~~
+
+at each step we expanded the terms and applied different rules
+
+to parse an expression we need to reduce the expression to a since nonterminal (*bottom-up* or *shift-reduce* parsing), uses a stack for storing terms
+
+this is the same derivation but in reverse order:
+
+~~~py
+1   . x + y * z   shift
+2   x . + y * z   reduce(r3)
+3   E . + y * z   shift
+4   E + . y * z   shift
+5   E + y . * z   reduce(r3)
+6   E + E . * z   shift
+7   E + E * . z   shift
+8   E + E * z .   reduce(r3)
+9   E + E * E .   reduce(r2) emit multiply
+10  E + E .       reduce(r1) emit add
+11  E .           accept
+~~~
+
+terms to the left of the dot are on the stack
+
+while remaining input is to the right of the dot
+
+we start shifting tokens onto the stack and when the top of the stack matches the rhs of a production, we replace the matched tokens on the stack with the lhs of the production
+
+conceptually the matched tokens (*handle*) of the rhx are popped off the stack and the lhs of the production is pushed on the stack
+
+at step 6 we could have reduced instead of shifting, but this would result in addition having higher precedence than multiplication, also known as a *shift-reduce* conflict, the grammar is *ambiguous* since more than one possible derivation will yield the expression
+
+#### practice
+
 
 
 
