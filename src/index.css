@@ -49,6 +49,7 @@
 
 .markdown em {
     font-style: italic !important;
+    color: #fffcc7;
 }
 
 :root {
@@ -66,6 +67,7 @@
 
 li a {
     font-family: "Bricolage Grotesque", sans-serif !important;
+    text-decoration: underline;
 }
 
 p, li {
