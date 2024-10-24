@@ -70,6 +70,10 @@ li a {
     text-decoration: underline;
 }
 
+div.text-2xl a {
+    text-decoration: none;
+}
+
 p, li {
     font-family: "Ubuntu", sans-serif !important;
 }
