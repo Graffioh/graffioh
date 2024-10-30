@@ -16,8 +16,10 @@ export default function ContentViewer({ content }) {
             rehypePlugins={[rehypeRaw, rehypeRemoveComments]}
             components={{
               img(props) {
-                const { node, ...rest } = props;
-                return <img className="w-11/12" {...rest} />;
+                const { node, alt, ...rest } = props;
+                // Apply "w-6/12" only if the alt attribute is not "griffith-castle"
+                const className = alt === "griffith-castle" ? "" : "w-8/12";
+                return <img className={className} alt={alt} {...rest} />;
               },
               a(props) {
                 const { node, ...rest } = props;
@@ -36,7 +38,10 @@ export default function ContentViewer({ content }) {
                     className="text-sm"
                   />
                 ) : (
-                  <code {...rest} className={className}>
+                  <code
+                    {...rest}
+                    className={"bg-stone-900 px-1 py-0.5 rounded"}
+                  >
                     {children}
                   </code>
                 );

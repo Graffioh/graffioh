@@ -259,6 +259,7 @@ int main(void) {
 ### Yacc (Jacc for java)
 
 - [Jacc](http://web.cecs.pdx.edu/~mpj/jacc/)
+- [Jacc manual](https://web.cecs.pdx.edu/~mpj/jacc/jacc.pdf)
 
 #### installation (macos)
 
