@@ -43,7 +43,7 @@ Now let's talk about these two steps:
 
 Now I'm gonna explain how I built the JSON Lexer and Parser with the help of [this guide](https://arcb.csc.ncsu.edu/~mueller/codeopt/codeopt00/y_man.pdf) and Claude.
 
-You can also read my notes about Lex and Yacc [here](https://graffioh.com/notes/note/jeesonmap).
+You can also read my notes about Lex and Yacc [here](https://graffioh.com/notes/note/jeesonmap), which I recommend for additional context on the underlying theory.
 
 ## Building the Lexer with JFlex
 
@@ -375,6 +375,8 @@ I suggest thinking of these rules as recursive calls. To build the final JSON re
 
 Based on each rule, we construct the HashMap by defining actions related to that specific rule (the code within the brackets)
 
+Additionally, there is an underlying stack, 
+
 ~~~java
 private JeesonLexer lexer;
 private Object parsedResult;
@@ -455,5 +457,7 @@ public class Main {
 Note that support for arrays at the root level is not fully implemented yet so this JSON parser is still a work in progress.
 
 My goal wasn't to provide a fully functional JSON parser, since there are plenty of well-optimized ones out there already. My goal was to learn something new, going beyond my comfort zone and increasing my skill level.
+
+The Github repo as linked before is [this one](https://github.com/Graffioh/jeesonmap).
 
 I hope you enjoyed this post, cya with the next one.
