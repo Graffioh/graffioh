@@ -375,8 +375,6 @@ I suggest thinking of these rules as recursive calls. To build the final JSON re
 
 Based on each rule, we construct the HashMap by defining actions related to that specific rule (the code within the brackets)
 
-Additionally, there is an underlying stack, 
-
 ~~~java
 private JeesonLexer lexer;
 private Object parsedResult;
