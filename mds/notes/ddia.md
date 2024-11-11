@@ -22,7 +22,7 @@ it seems stupid, but in these fault-tolerant systems it can make sense to increa
 
 this strategy was used by netflix: [Netflix Chaos Monkey](https://netflixtechblog.com/the-netflix-simian-army-16e57fbab116)
 
-### hardware faults
+### Hardware faults
 
 hdd crash, faulty ram, blackout, unplugging the wrong network cable...
 
@@ -30,11 +30,11 @@ redundancy is the key to prevent this (add replicas)
 
 as the data volumes and app computing demands have increased, software fault-tolerance techniques are preferred (or added) to hardware redundancy
 
-### software errors
+### Software errors
 
 software faults cause more problems then hardware faults, since hardware faults are most of the time indipendent with eachothers, while software fault can cause many more "chained" failures in comparison
 
-### human errors
+### Human errors
 
 humans are unreliable, even with the best intentions.
 
@@ -44,13 +44,13 @@ most of the outages are caused by humans and not software/hardware faults
 
 > cope with increased load
 
-### describing load
+### Describing load
 
 load is described by **load parameters**
 
 each system could have different key load parameters used to discuss about scalability
 
-### describing performance
+### Describing performance
 
 in online systems we care about **response time**
 
@@ -74,7 +74,7 @@ but even for amazon, focusing on p9999 was a lot expensive so they stayed with p
 
 when several backend calls are needed to serve a request, a single slow request can slow down the entire end-user request
 
-### approaches for coping with load
+### Approaches for coping with load
 
 vertical scaling (more compute) & horizontal scaling (more machines) 
 
@@ -92,11 +92,11 @@ don't scale up prematurely
 
 a data model is basically about data storage (relational/document/graph database) and data show/manipulation (json/xml/tables)
 
-### the birth of noSQL
+### The birth of noSQL
 
 actually a catchy twitter hashtag for a meetup lol
 
-### the object-relational mismatch
+### The object-relational mismatch
 
 **impedance mismatch** due to the object oriented programming and relational model natures, if data is stored in relational tables, an awkward translation layer is required between the object in the code and in the database table/rows/columns
 
@@ -104,7 +104,7 @@ ORM tried to reduce the amount of boilerplate required for the translation layer
 
 **document models**/JSON models (mongoDB, couchDB etc..) have a better *locality* than multi-table schema of a relational database
 
-### many-to-one and many-to-many relationships
+### Many-to-one and many-to-many relationships
 
 using id for certain fields such as geographic regions or industry names due to easy maintanaibility and avoiding useless duplication since the values are fixed (letting the user choose from a dropdown list)
 
@@ -112,7 +112,7 @@ using id for certain fields such as geographic regions or industry names due to 
 
 document databases are *join-free* (not rethinkDB), but this is bad if the app start growing and more interconnected features are gonna be added
 
-### are document databases repeating history?
+### Are document databases repeating history?
 
 **network data model**: tree/linked list representation, difficult to make changes
 
@@ -120,7 +120,7 @@ the relational model simplified everything that was complicated in the network d
 
 the difference between document (hierarchical) and relation databases lies in one-to-many relationships, that are within their parent record rather than in a separate table
 
-### relational vs document databases today
+### Relational vs document databases today
 
 it's not possible to say in general which data model leads to simpler code, it depends on the relations in the app
 
@@ -149,7 +149,7 @@ with declarative database engines can make performance changes without impacting
 
 declarative are preferred for parallel programming since they specify only the pattern of the results not the whole algorithm used
 
-### declarative queries on the web
+### Declarative queries on the web
 
 html and css -> declarative\
 javascript manipulating the dom -> imperative
@@ -184,7 +184,7 @@ really "evolvable"
 
 the id is used to refer directly to a particular vertex or edge, so the traverse is optional in this case
 
-### triple-stores model
+### Triple-stores model
 
 information stored in the form of three parts statements: (*subject, predicate, object*)
 
@@ -210,7 +210,7 @@ well-chosen indexes speed up read queries but every index slows down writes
 
 indexes for key-value data are the most common ones (but not the only)
 
-### hash indexes
+### Hash indexes
 
 in-memory hash map where the key is mapped to the byte offset of where the data is located
 
@@ -239,7 +239,7 @@ but hash index also has limitations:
 - must fit in memory (RAM)
 - range queries not efficient (scanning over all keys between kitty00000 and kitty99999)
 
-### sstables and lsm-trees
+### SSTables and LSM-trees
 
 in **Sorted String Table** we basically require that the sequence of key-value pairs is *sorted* by key in the segment files
 
@@ -279,15 +279,46 @@ there are also different strategies to determine the order and timing of how sst
 
 the basic idea of lsm-trees (keeping a cascade of sstables that are merged in the background) is simple and effective even when the dataset gets bigger and bigger
 
-### b-trees
+### B-trees
 
 the most widely used indexing structure is the **B-tree**
 
+b-tree have a small similarity with SSTables, kv pairs sorted by key, but that0s it
+
+the approach we saw earlier break the database down into variable-size segments, while, b-trees break the database down into *fixed-size blocks/pages* (4KB, just like pages in OS memory), and read/write 1 page at a time
+
+eah page is identified using an address (reference), similar to a pointer, but on disk instead of in memory
+
+and is split in "ranges"
+
+at the root level, there is page, where the lookup starts
+
+at the leaf level, there are the actual values
+
+a four-level tree of 4KB pages, with a branching factor of 500, can store up to 256TB
 
 
+#### making b-trees reliable
 
+the basic write operation here is to overwrite a page on disk (hardware operation) with new data, while, with lsm-trees and similar, we only append to files but never modifies them in place
 
+in order to make the database resilient to crashes, we inlcude an additional data structure in disk: **write-ahead log** (WAL or *redo log*)
 
+append-only file to which every b-tree modification must be written before it can be applied to the pages of the tree itself
+
+also be careful about concurrency control, if multiple threads are going to access the b-tree at the same time
+
+in this case, **latches** are used (lightweight locks)
+
+#### b-tree optimizations
+
+- instead of WAL, some dbs uses a copy-on-write scheme, also useful for concurrency control
+- save space in pages by not storing the entire key, but abbreviating it
+- pages can be positioned anywhere on disk and this layout can be not efficient, that's why many btrees implementations try to lay out the tree so that leaf pages appear in sequential order (lsm-trees does that)
+- additional pointers, which allows scanning keys in order without jumping back to parent pages
+- btrees variants, *fractal trees*, borrow log-structured ideas to reduce disk seeks (nothing to do with math fractals btw)
+
+### Comparing b-trees and lsm-trees
 
 
 
