@@ -4,12 +4,12 @@ const blogPosts = [
   {
     id: "29-10-2024-JSON-parser-with-JFlex-and-Jacc",
     title: " Writing a JSON parser using JFlex and Jacc (Java)",
-    date: "29-10-2024",
+    date: "10-29-2024",
   },
   {
     id: "14-09-2024-39-days-of-leetcode",
     title: " 39 Days of leetcode",
-    date: "14-09-2024",
+    date: "09-14-2024",
   },
   {
     id: "07-06-2024-auth-credentials-go",
