@@ -47,16 +47,6 @@ const blogPosts = [
     title: "Life Update I",
     date: "08-01-2022",
   },
-  //  {
-  //    id: "06-17-2022-external-and-internal-assault-cube",
-  //    title: "External and Internal Cheats (Basics)",
-  //    date: "06-17-2022",
-  //  },
-  //  {
-  //    id: "06-09-2022-reversing-assault-cube",
-  //    title: "Reversing Assault Cube (v1.2.0.2)",
-  //    date: "06-09-2022",
-  //  },
   {
     id: "06-07-2022-the-journey-so-far",
     title: "The journey so far",
