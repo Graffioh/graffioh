@@ -1,6 +1,8 @@
 ## VVVDEO
 
-WIP 👀
+Video editor built using html, js, go (and python for video segmentation using SAM2 open source model from Meta)
+
+[[website link](https://vvvdeo.com)]
 
 ## DietiDeals24
 
