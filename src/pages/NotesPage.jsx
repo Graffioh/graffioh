@@ -38,7 +38,7 @@ const notes = [
 export default function NotesPage() {
   return (
     <>
-      <div className="text-2xl font-bold flex flex-col justify-center items-center p-8">
+      <div className="text-2xl font-bold flex flex-col justify-center items-center p-4">
         <ul>
           {notes.map((note) => (
             <li key={note.id} className="my-4">

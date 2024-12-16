@@ -1,8 +1,12 @@
 ## VVVDEO
 
-Video editor built using html, js, go (and python for video segmentation using SAM2 open source model from Meta)
+Video editor built using html, js, go, python with cloudflare workers for segmentation event driven workflow
+
+(segmentation is disabled, i'm broke and gpu is too expensive)
+
 
 [[website link](https://vvvdeo.com)]
+
 
 ## DietiDeals24
 

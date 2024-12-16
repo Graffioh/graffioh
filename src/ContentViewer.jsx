@@ -9,7 +9,7 @@ export default function ContentViewer({ content }) {
   return (
     <>
       <div className="flex w-full justify-center">
-        <div className="px-10 md:w-7/12 w-full">
+        <div className="px-10 md:w-6/12 w-full">
           <Markdown
             className="markdown"
             remarkPlugins={[remarkGfm]}
@@ -17,7 +17,6 @@ export default function ContentViewer({ content }) {
             components={{
               img(props) {
                 const { node, alt, ...rest } = props;
-                // Apply "w-6/12" only if the alt attribute is not "griffith-castle"
                 const className = alt === "griffith-castle" ? "" : "w-8/12";
                 return <img className={className} alt={alt} {...rest} />;
               },
