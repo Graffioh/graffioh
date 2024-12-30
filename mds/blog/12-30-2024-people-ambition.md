@@ -21,7 +21,7 @@ This could happen because of recursively unemployed parents or with bad jobs, no
 
 "Why go to work when you have your family money?" (assuming you have a wealthy family)
 
-Well, for personal indipendence, it's not that hard.
+Well, for personal independence, it's not that hard.
 
 "Why leave the comfort of your hometown to go abroad?"
 
