@@ -54,7 +54,7 @@ After a brief general discussion, let's talk a bit about my personal experience 
 ## My university colleagues
 
 Around 98% (made up number) of my university colleagues and in general Italian Computer Science students are ok with working for Italian consultancy companies,
-where they pay you misery (in respect to other companies) and where you basically accept to become their slave.
+where they pay you miserably little (in respect to other companies) and where you basically accept to become their slave.
 
 So why here isn't like Waterloo, where you focus on getting n internships before graduation and if you get n < 3 internship you are considered a failure?
 A contributing factor is that the university system here is more theoretical compared to the US, and Europe tends to have a different
