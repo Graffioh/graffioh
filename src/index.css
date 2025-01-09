@@ -59,6 +59,14 @@
     color: #4bc0a9;
 }
 
+a[href="/"] {
+    color: #fffcc7 !important;
+}
+
+a[href="/"]:hover {
+    color: #FFFFFF !important;
+}
+
 :root {
     font-family: "Bricolage Grotesque";
     line-height: 1.5;
