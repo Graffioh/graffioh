@@ -44,12 +44,19 @@
 
 .markdown strong {
     font-weight: bold !important;
-    color: #fffcc7;
+    color: #569cd6;
 }
 
 .markdown em {
     font-style: italic !important;
-    color: #fffcc7;
+    color: #569cd6;
+}
+
+.markdown h1 {
+    color: #4bc0a9;
+}
+.markdown h2 {
+    color: #4bc0a9;
 }
 
 :root {
@@ -74,13 +81,18 @@ div.text-2xl a {
     text-decoration: none;
 }
 
+h1 {
+    color: #4bc0a9;
+}
+
+
 p, li {
     font-family: "Ubuntu", sans-serif !important;
 }
 
 blockquote p {
     padding: 12px;
-    border-left: 3px solid #fffcc7;
+    border-left: 3px solid #569cd6;
 }
 
 a {
