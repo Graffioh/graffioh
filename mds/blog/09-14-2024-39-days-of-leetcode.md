@@ -2,7 +2,7 @@
 
 It's been 39 days :')
 
-<img src="../img/39-leetcode.png" alt="lc-streak-img" width="100"/>
+<img src="../../39-leetcode.png" alt="lc-streak-img" width="100"/>
 
 # What's the purpose?
 
@@ -38,7 +38,7 @@ For each problem, after 15 minutes, I'd think: "Well, I’m not good enough to s
 
 Yes, I was learning new solutions and patterns, but it was all fast mapping. I wasn’t improving my slow problem-solving skills. If you're curious about this concept, check out [Colin Galen video](https://www.youtube.com/watch?v=1f6N2UrCK6o&list=PLDjGkpToBsYDIFOfF13ojutAkCODac9u5&index=2).
 
-![slow-fast-mapping-img](../img/slow-fast-mapping.png)
+![slow-fast-mapping-img](../../slow-fast-mapping.png)
 
 # What am I doing now?
 
@@ -58,4 +58,4 @@ I'll still aim to get an offer before December. If not, it’ll be too late, so 
 
 > Take action now, not later.
 
-![ippo-motivational-img](../img/ippo-motivation.png)
+![ippo-motivational-img](../../ippo-motivation.png)

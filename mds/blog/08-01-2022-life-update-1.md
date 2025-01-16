@@ -19,4 +19,4 @@ I can try to keep this blog updated with little sort of life/what I've been lear
 
 See you guys. \*shake the hand\*
 
-![shakehand](../img/shake-hands.png)
+![shakehand](../../shake-hands.png)

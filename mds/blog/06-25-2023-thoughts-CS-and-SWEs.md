@@ -6,7 +6,7 @@ As a Computer Science student, I used to have a wrong perception of the topic. I
 
 Something clicked inside my head after watching this [video by Leslie Lampart](https://www.youtube.com/watch?v=rkZzg7Vowao) and this tweet by John Carmack:
 
-![carmackscreen](../img/john-screenshot.png)
+![carmackscreen](../../john-screenshot.png)
 
 I only had a vague idea of coding and nothing more when it came to my association with Computer Science.
 

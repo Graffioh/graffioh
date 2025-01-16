@@ -2,7 +2,7 @@
 
 While doom-scrolling on **X** the everything app, I stumbled on [this post](https://x.com/arpit_bhayani/status/1848931553281450419):
 
-![x-post-screenshot]../img/x-post-screenshot.jpg)
+![x-post-screenshot](../../x-post-screenshot.jpg)
 
 I accepted the challenge to have some fun and learn new things.
 
@@ -30,7 +30,7 @@ To learn more about specific components and how they need to be **parsed** (more
 
 ## Lexer and Parser
 
-![compilation-sequence-img](../img/compilation-sequence.png)
+![compilation-sequence-img](../../compilation-sequence.png)
 
 This is a typical compilation sequence, but what do we need this for?
 

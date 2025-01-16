@@ -37,4 +37,4 @@ I wanted to share my thoughts and maybe inspire others to **build, ship and shap
 
 &nbsp;
 
-![futurecities](../img/future-cities.png)
+![futurecities](../../future-cities.png)
