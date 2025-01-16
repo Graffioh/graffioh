@@ -18,11 +18,11 @@ The high-level auth flow is shown in this beautiful piece of art mouse-drawn by 
 
 ### Registration
 
-![auth-flow-registration](https://imgur.com/7Fntsv4.png)
+![auth-flow-registration](../../auth-reg.png)
 
 ### Login
 
-![auth-flow-login](https://imgur.com/89asKhB.png)
+![auth-flow-login](../../auth-login.png)
 
 ## Basic idea and setup
 
@@ -113,9 +113,9 @@ func createSession(user_id uint64) {
 		ExpiresAt: EXPIRE_TIME,
 		UserID:    user_id,
 	}
-    
+
     "INSERT INTO sessions(token, expires_at, user_id) VALUES (...)"
-    
+
     setCookie(session)
 }
 
@@ -163,12 +163,12 @@ Some notes:
 - Use 'SameSite=Strict' for critical websites
 - DON'T send cookies inside URLs as query params
 - DON'T send cookies inside form data
-- DON'T store session ids inside localStorage or sessionStorage (even if the name is 'session storage'). 
+- DON'T store session ids inside localStorage or sessionStorage (even if the name is 'session storage').
 
 ### CORS
 Cross Origin Resource Sharing, short for:"you can decided which origins (domain,scheme or port) other than your own, should permit loading resources (also called cross-site requests)", is a mechanism based on HTTP headers.
 
-In tutorials you always see: 
+In tutorials you always see:
 
 ~~~js
 Access-Control-Allow-Origin: *
@@ -226,7 +226,7 @@ Before moving to the code example, a few more notes for an effective UX:
 - Ask the current password when a user attempts to change their password
 
 ~~~go
-// Go specific example, remember no error checking is present 
+// Go specific example, remember no error checking is present
 // in these snippets because it' still pseudo code
 // but you should ALWAYS perform error check.
 import (
@@ -297,7 +297,7 @@ func verifyPassword(password string, stored_hashed_password string) (bool) {
     }
 
     p, salt, stored_hash := decodeHash(stored_hashed_password)
-    
+
     new_hash := argon2.IDKey([]byte(password), salt, p.iterations, p.memory, p.parallelism, p.length)
 
     if (subtle.ConstantTimeCompare(stored_hash, new_hash)) {
@@ -325,7 +325,7 @@ It can be prevented by only accepting POST and POST-like (PUT, DELETE) requests 
 
 Most modern languages and framework should provide some sort of out-of-the-box CSRF protection, otherwise, just create the mechanism from scratch by using a token approach (read more [there](https://thecopenhagenbook.com/csrf)).
 
-![auth-csrf](https://imgur.com/bF3ywss.png)
+![auth-csrf](../../auth-csr.png)
 
 ### Session hijacking
 
@@ -337,7 +337,7 @@ The most common ways to compromise session token are:
 - Client-side attacks (e.g. XSS)
 - Man in the middle attack
 
-![auth-session-hijacking](https://imgur.com/NIZFlES.png)
+![auth-session-hijacking](../../session-hijacking.png)
 
 ### OWASP
 
