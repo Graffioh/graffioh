@@ -1,12 +1,3 @@
-<!-- ---
-layout: post
-title: Learning something new
-tags: [programming, tech, back-end, mobile, swift]
-date: 2023-03-19 16:20:00
-og_image: https://i.imgur.com/Jqnav0s.jpg
-permalink: /REwithGraffioh//blog/2023/learning-something-new/
---- -->
-
 # Learning something new
 
 I had to create an iOS App within one month, collaborating with five individuals from diverse professional backgrounds.
@@ -33,7 +24,7 @@ It's time for new beautiful questions:"Where do I deploy the server? Where do I 
 
 The first answer was [Render.com](https://render.com/) and the second was [MongoDB Atlas](https://www.mongodb.com/atlas/database) (both free tiers, for testing purpose they are fine, but in future it could be better to put the server on cloudflare workers or similar)
 
-![pontus-sys-design](https://imgur.com/DZsQBRU.jpg)
+![pontus-sys-design](../img/pontus-design.png)
 
 Overall it was a very linear experience, there were some spikes when building advanced queries with MongoDB but it's been a good journey. Of course I didn't build the most scalable solution due to my lack of experience, but it worked, so for now I'm satisfied but also not satisfied.
 

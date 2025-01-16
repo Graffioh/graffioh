@@ -1,11 +1,3 @@
-<!-- ---
-layout: post
-title: My thoughts on CS, SWEs and more
-tags: [programming, tech, computer-science, education, swe]
-date: 2023-06-25 04:20:00
-og_image: https://i.imgur.com/SZmanIp.jpg
---- -->
-
 # My thoughts on CS, SWEs and more
 
 Why am I making this post? What is life? Are we alone in the universe? I don't know.
@@ -14,7 +6,7 @@ As a Computer Science student, I used to have a wrong perception of the topic. I
 
 Something clicked inside my head after watching this [video by Leslie Lampart](https://www.youtube.com/watch?v=rkZzg7Vowao) and this tweet by John Carmack:
 
-![carmackscreen](https://imgur.com/obDlvqi.jpg)
+![carmackscreen](../img/john-screenshot.png)
 
 I only had a vague idea of coding and nothing more when it came to my association with Computer Science.
 

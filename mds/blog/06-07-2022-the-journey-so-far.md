@@ -28,7 +28,7 @@ There I started basic external tutorials, with Windows API, in concomitance with
 
 I really liked studying these things, so I decided to donate to Guided Hacking for a yearly subscription, as they had a really good "path" to follow.
 
-![spongebob](https://imgur.com/fF1GAX4.jpg)
+![spongebob](../img/spongebob.png)
 
 After some experience with External cheats and C++, I went into Internal Cheats as I liked it more, yeah....I like pointers.
 

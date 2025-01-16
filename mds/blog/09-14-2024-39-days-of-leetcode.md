@@ -2,7 +2,7 @@
 
 It's been 39 days :')
 
-<img src="https://imgur.com/OYG8qor.jpg" alt="lc-streak-img" width="100"/>
+<img src="../img/39-leetcode.png" alt="lc-streak-img" width="100"/>
 
 # What's the purpose?
 
@@ -38,12 +38,12 @@ For each problem, after 15 minutes, I'd think: "Well, I’m not good enough to s
 
 Yes, I was learning new solutions and patterns, but it was all fast mapping. I wasn’t improving my slow problem-solving skills. If you're curious about this concept, check out [Colin Galen video](https://www.youtube.com/watch?v=1f6N2UrCK6o&list=PLDjGkpToBsYDIFOfF13ojutAkCODac9u5&index=2).
 
-![slow-fast-mapping-img](https://imgur.com/MC4fstO.jpg)
+![slow-fast-mapping-img](../img/slow-fast-mapping.png)
 
 # What am I doing now?
 
 - I started reading [How to Prove It](https://users.metu.edu.tr/home205/serge/wwwhome/courses/111-2011/textbook-math111.pdf), a really accessible book that teaches math reasoning and how proofs work.
-  
+
 - I'm working through [neetcode 150](https://neetcode.io/roadmap), solving each problem by category, using a DFS approach—focusing on one topic at a time.
 
 Now, I make a genuine effort to solve problems for 30 minutes. If I see no improvement, I look at the solution. Otherwise, I push a bit more, up to 1 hour.
@@ -54,8 +54,8 @@ This approach is actually working well, even though I started a little late (I m
 
 I need to resume my university studies. I have only 4 exams left (and the thesis) until graduation.
 I'll balance my study time between university and leetcode.
-I'll still aim to get an offer before December. If not, it’ll be too late, so I’ll keep grinding leetcode consistently, even if it’s just 1-2 hours a day. 
+I'll still aim to get an offer before December. If not, it’ll be too late, so I’ll keep grinding leetcode consistently, even if it’s just 1-2 hours a day.
 
 > Take action now, not later.
 
-![ippo-motivational-img](https://imgur.com/ZGShFoR.jpg)
+![ippo-motivational-img](../img/ippo-motivation.png)

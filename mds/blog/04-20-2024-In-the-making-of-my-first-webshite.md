@@ -93,7 +93,7 @@ For testing purpose the Spring boot app was deployed on <del>[Render](https://re
 For production, everything is managed with AWS and Docker;
 Elastic Container Service ([ECS](https://aws.amazon.com/en/ecs/)) for Spring boot app, Simple Storage ([S3](https://aws.amazon.com/en/s3/)) for handling images and Relational Database Service ([RDS](https://aws.amazon.com/en/rds/)) for PostgreSQL db
 
-![system-design-diagram](https://imgur.com/CAERKBO.jpg)
+![system-design-diagram](../img/pontus-sys-design.png)
 
 ### AWS
 

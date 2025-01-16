@@ -1,12 +1,3 @@
-<!-- ---
-layout: post
-title: The B in the alphabet stands for build
-tags: [tech, computer-science, e/acc, future, build]
-date: 2023-08-21 00:00:00
-og_image: https://i.imgur.com/vwFzWGt.jpg
-image: https://i.imgur.com/vwFzWGt.jpg
---- -->
-
 # The B in the alphabet stands for build
 
 ## What's "building"?
@@ -46,4 +37,4 @@ I wanted to share my thoughts and maybe inspire others to **build, ship and shap
 
 &nbsp;
 
-![futurecities](https://imgur.com/xv8VcCo.jpg)
+![futurecities](../img/future-cities.png)

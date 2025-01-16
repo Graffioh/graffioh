@@ -2,11 +2,11 @@
 
 While doom-scrolling on **X** the everything app, I stumbled on [this post](https://x.com/arpit_bhayani/status/1848931553281450419):
 
-![x-post-screenshot](https://imgur.com/EdehlHv.jpg)
+![x-post-screenshot]../img/x-post-screenshot.jpg)
 
 I accepted the challenge to have some fun and learn new things.
 
-I didn’t have any prior experience with compilers and I chose to do this in Java to brush up on my Java skills before my Amazon internship next year, since many of their microservices are written in it. 
+I didn’t have any prior experience with compilers and I chose to do this in Java to brush up on my Java skills before my Amazon internship next year, since many of their microservices are written in it.
 
 In reality I didn’t end up brushing up on much Java at all.
 
@@ -30,7 +30,7 @@ To learn more about specific components and how they need to be **parsed** (more
 
 ## Lexer and Parser
 
-![compilation-sequence-img](https://imgur.com/quJeqb8.jpg)
+![compilation-sequence-img](../img/compilation-sequence.png)
 
 This is a typical compilation sequence, but what do we need this for?
 
@@ -56,7 +56,7 @@ It has its own syntax and and it needs to be structured as follows:
 %%
 ... rules ...
 %%
-... subroutines ... 
+... subroutines ...
 ~~~
 
 ### The code
@@ -164,7 +164,7 @@ This section contains additional code specifying what actions to perform for eac
  return OP_BRK; }
 
 {string} {
-    semantic = yytext().substring(1, yytext().length() - 1);  
+    semantic = yytext().substring(1, yytext().length() - 1);
     System.out.println("Recognized string: " + semantic);
     return STR;
 }
@@ -284,40 +284,40 @@ json:
 
 object:
    OP_BRK pair_list CL_BRK {
-       $$ = $2; 
+       $$ = $2;
    }
    | OP_BRK CL_BRK {
-       $$ = new JeesonMap(); 
+       $$ = new JeesonMap();
    }
    ;
 
 array:
    OP_SQR value_list CL_SQR {
-       $$ = $2; 
+       $$ = $2;
    }
    | OP_SQR CL_SQR {
-       $$ = new JeesonArray(); 
+       $$ = new JeesonArray();
    }
    ;
 
 value:
    STR {
-       $$ = (String) $1; 
+       $$ = (String) $1;
    }
    | NUM {
-       $$ = Integer.parseInt((String) $1); 
+       $$ = Integer.parseInt((String) $1);
    }
    | array {
-       $$ = $1; 
+       $$ = $1;
    }
    | object {
-       $$ = $1; 
+       $$ = $1;
    }
    | BOOL {
-       $$ = Boolean.parseBoolean((String) $1); 
+       $$ = Boolean.parseBoolean((String) $1);
    }
    | NULL {
-       $$ = null; 
+       $$ = null;
    }
    ;
 
@@ -422,7 +422,7 @@ public class Main {
             System.out.println("Parsing completed successfully!!!.\n");
 
             System.out.println("Parsed result: " + parsedResult + "\n");
-            
+
             if (parsedResult instanceof JeesonMap) {
                 JeesonMap jsonMap = (JeesonMap) parsedResult;
 
