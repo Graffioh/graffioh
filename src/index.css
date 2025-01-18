@@ -44,27 +44,16 @@
 
 .markdown strong {
     font-weight: bold !important;
-    color: #569cd6;
+    color: #a8a8a8;
 }
 
 .markdown em {
     font-style: italic !important;
-    color: #569cd6;
-}
-
-.markdown h1 {
-    color: #4bc0a9;
-}
-.markdown h2 {
-    color: #4bc0a9;
-}
-
-a[href="/"] {
-    color: #fffcc7 !important;
+    color: #a8a8a8;
 }
 
 a[href="/"]:hover {
-    color: #FFFFFF !important;
+    color: #a8a8a8 !important;
 }
 
 :root {
@@ -81,18 +70,13 @@ a[href="/"]:hover {
 }
 
 li a {
-    font-family: "Bricolage Grotesque", sans-serif !important;
     text-decoration: underline;
+    color: #FFFFFF;
 }
 
 div.text-2xl a {
     text-decoration: none;
 }
-
-h1 {
-    color: #4bc0a9;
-}
-
 
 p, li {
     font-family: "Ubuntu", sans-serif !important;
@@ -100,17 +84,18 @@ p, li {
 
 blockquote p {
     padding: 12px;
-    border-left: 3px solid #569cd6;
+    border-left: 3px solid #a8a8a8;
 }
 
 a {
-    color: #fffcc7;
+    color: #fffff;
 }
 
 p a {
     text-decoration: underline;
+    color: #FFFFFF;
 }
 
 a:hover {
-    color: rgb(255, 255, 255);
+    color: #a8a8a8;
 }
