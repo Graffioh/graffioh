@@ -33,20 +33,21 @@ function Header() {
   return (
     <div className="flex border-b-2 border-stone-500 justify-between items-center p-2 md:w-7/12 mx-auto">
       <Link to={"/"} className="text-white">
-        graffioh
+        <button class="cs-btn">graffioh</button>
       </Link>
       <div>
         <Link to={"/projects"} className="px-2">
-          projects
+          <button class="cs-btn">projects</button>
         </Link>
         <Link to={"/blog"} className="px-2">
-          blog
+          <button class="cs-btn">blog</button>
         </Link>
+        {/*
         <Link to={"/resources"} className="px-2">
-          resources
-        </Link>
+          <button class="cs-btn">resources</button>
+        </Link>*/}
         <Link to={"/notes"} className="px-2">
-          notes
+          <button class="cs-btn">notes</button>
         </Link>
       </div>
     </div>

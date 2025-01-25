@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+/*
 @font-face {
     font-family: "Bricolage Grotesque";
     src: url("../BricolageGrotesque-VariableFont.ttf") format("truetype");
@@ -37,6 +37,7 @@
     font-weight: normal;
     font-style: italic;
 }
+*/
 
 .markdown > * {
     all: revert;
@@ -56,6 +57,7 @@ a[href="/"]:hover {
     color: #a8a8a8 !important;
 }
 
+/*
 :root {
     font-family: "Bricolage Grotesque";
     line-height: 1.5;
@@ -78,9 +80,11 @@ div.text-2xl a {
     text-decoration: none;
 }
 
+
 p, li {
     font-family: "Ubuntu", sans-serif !important;
 }
+*/
 
 blockquote p {
     padding: 12px;
@@ -99,3 +103,4 @@ p a {
 a:hover {
     color: #a8a8a8;
 }
+
