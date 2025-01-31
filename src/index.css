@@ -1,21 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/*
-@font-face {
-    font-family: "Bricolage Grotesque";
-    src: url("../BricolageGrotesque-VariableFont.ttf") format("truetype");
-}
-
-@font-face {
-    font-family: "Commit Mono";
-    src: url("../CommitMono-400-Regular.otf") format("truetype");
-}
-
-@font-face {
-    font-family: "Arimo";
-    src: url("../ArimoNerdFont-Regular.ttf") format("truetype");
-}
 
 @font-face {
     font-family: "Ubuntu";
@@ -37,8 +22,6 @@
     font-weight: normal;
     font-style: italic;
 }
-*/
-
 .markdown > * {
     all: revert;
 }
@@ -97,10 +80,9 @@ a {
 
 p a {
     text-decoration: underline;
-    color: #FFFFFF;
+    color: #ffffff;
 }
 
 a:hover {
     color: #a8a8a8;
 }
-

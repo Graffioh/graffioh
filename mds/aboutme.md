@@ -6,4 +6,3 @@ I'll be sharing my journey in the cs field, my personal thoughts and technical s
 
 ![griffith-castle](../griffith-castle.png)
 
-[cs1.6 css theme](https://cs16.samke.me/)
