@@ -1,7 +1,3 @@
-
-
-
-
 # System design interview approach
 
 4 steps:
@@ -352,3 +348,188 @@ this app/platform server can be basically **microservices**, which are a suite o
 this of course will add complexity in terms of deployments and operations
 
 ![meme1](https://programmerhumor.io/wp-content/uploads/2023/09/programmerhumor-io-backend-memes-linux-memes-6b3eccb82753699.jpg)
+
+-----
+
+# Jordan has no life System Design 2.0 Series
+
+# Indexes
+
+- faster reads on specific key value
+- slower writes for any possible writes
+
+multi dimensional index used to put in an ordering relation more than one field
+
+## DB indexes
+
+- speed-up read operations (from O(n) to O(1)) thanks to an additional 'table' or in the same table with a clustered index
+- slow down write operations since an index needs to be written every new record
+
+## Hash indexes
+
+- O(1) read and writes thanks to the hash function
+
+in case of collisions
+
+- chaining (linked list)
+- probing (next available spot)
+
+- not feasable for range queries
+
+- bad on disk because the elements are distributed evenly thanks to the hash function (bad locality performance boost)
+
+indexes (keys) stored in RAM, not durable and not much space
+
+v
+
+use a WAL to circumvent this problem
+
+## WAL (write ahead log)
+
+- provides durability
+
+a list of all the updates/writes stored on disk, to not lose datas
+
+writes are fast since they are one after another
+
+in case of shutdown, thanks to this it's possible to re-populate the hash index
+
+but since it's on disk it's a slow operation
+
+## B-trees indexes
+
+- on disk so persistent
+- O(logN) for reads/updates
+- write ops are expensive
+- good for range queries
+
+the b-tree remains balanced thanks to a split operation performed when the size of a page becomes too big
+
+if the b-tree gets modified and the computer shutoff before syncing with the tree, then it's bad so in this case a WAL is used to recovery
+
+## LSM Tree
+
+- O(logN) operations 
+- binary search property to search for keys
+- number of keys not limited by RAM size
+
+always WAL for durability
+
+if the LSM tree becomes too big we reset it by putting the data in a **SSTable** that is an immutable sorted list (on disk)
+
+if the key is not in the tree, then we need to check in the ssttables
+
+tombstone to mark deleted keys in sstables
+
+### optimizations: sparse index & bloom filter 
+
+**sparse index**
+
+move some indexes from sstables to the sparse index table to speed up some reads
+
+**bloom filter**
+
+used to check if the key is or not in the sstable to skip some of them while searching for it (not 100% accurate since it's using probability)
+
+### compaction
+
+- cons: uses CPU
+
+a 'merge tables' technique based on the most recent duplicate value
+
+used to remove duplicates created during updates (since the sstable is immutable we can only add, right?)
+
+### extra on LSM trees
+
+LSM tree is the name industry gives to the entire structure (the in memory BST plus the different SST tables)
+The in memory BST part is called the "memtable"
+
+That is, memtable + SSTables + Bloom filter == LSM Tree
+
+# DB things
+
+## ACID transactions
+
+- **Atomicity**: all writes succeed or none of them do
+- **Consistency**: all fails occur gracefully and its state always respect invariants (no corruption etc..)
+- **Isolation**: no race condition, all transactions are executed indipendently
+- **Durability**: committed writes don't get lost randomly, thanks to the disk
+
+To achieve ACD a WAL is used!
+
+Hard to obtain Isolation
+
+## Read Committed Isolation for dirty writes/reads
+
+- before committing there could be some race conditions like **dirty writes** or **dirty reads**
+
+----
+
+### Dirty reads/writes 
+
+...
+
+----
+
+- solve race conditions with row level locking (slow) or <ins>store old value until commit</ins>
+
+**committing a write** means that the write is 'confirmed' in the database
+
+if there is a sequence of writes, they are committed when both are finished
+
+## Snapshot Isolation for read skew
+
+- other race conditions called **read skew**
+
+----
+
+### Read Skew
+
+Due to a write during a massive read, the invariant no longer holds and the database is not viewed in a consistent state
+
+----
+
+to fix this it's possible to use a WAL with a monotonically increasing number as id to identify transactions
+
+this allow us, at a chosen transaction, to snapshot the values by actually picking the most updated ones thanks to the ids
+
+(don't delete old values but store them, since the WAL keeps appending new records and never updates the old ones)
+
+
+## Write skew and phantoms
+
+### Write skew 
+
+- happens when there are multiple writes that without 'proper checking' causes the invariant to no longer holds
+- **fix**: grab all the locks of the rows that i read during the checking, that are relevant to the writes, even if not strictly related to it
+
+### Phantoms
+
+- happens when multiple writes are performed at the same time because the check for a specific condition says that the write is permitted (checking if the row already exists)
+- can't fix with simple locks because the row that we were interested in wasn't even present in the db at the time of the checking
+- **fix**: with *materialize conflicts*, prepopulate the row that might conflict with fake data so we can actually grab locks (it fixes the problem in the second point) 
+
+## Serial execution to achieve Isolation/Serializability
+
+- **run everything in one core** so it's a sequential execution and there is no risk of race conditions
+- limited performances (disk is slow, network is slow, ram has limited size)
+- VoltDB
+
+## Two phase locking in DB internals to achieve Isolation/Seriazability
+
+- make concurrent transactions sees as if they were running on one thread
+- the same lock has 2 modes: **shared reader lock** and **exclusive writer lock**
+- problem with *deadlocks* that makes this technique slow
+
+### Predicate locks
+
+- grab locks based on conditions
+- slow to run, have to evaluate the query with the conditions
+
+### Index Range locking
+
+- grab locks based on a less specific condition
+- be careful if you grab locks for too many rows
+
+## Serializable Snapshot Isolation
+
