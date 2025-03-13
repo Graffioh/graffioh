@@ -2,12 +2,12 @@ import { Link } from "react-router-dom";
 
 const notes = [
   {
-    id: "ddia",
-    title: "DDIA (Design Data Intensive Applications)",
-  },
-  {
     id: "system-design",
     title: "System design",
+  },
+  {
+    id: "ddia",
+    title: "DDIA (Design Data Intensive Applications)",
   },
   {
     id: "go",

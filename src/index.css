@@ -1,15 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 /*
 @font-face {
     font-family: "Bricolage Grotesque";
     src: url("../BricolageGrotesque-VariableFont.ttf") format("truetype");
-}
-
-@font-face {
-    font-family: "Commit Mono";
-    src: url("../CommitMono-400-Regular.otf") format("truetype");
 }
 
 @font-face {
@@ -39,38 +35,46 @@
 }
 */
 
+@font-face {
+    font-family: "Commit Mono";
+    src: url("../CommitMono-400-Regular.otf") format("truetype");
+}
+
 .markdown > * {
     all: revert;
 }
 
 .markdown strong {
     font-weight: bold !important;
-    color: #a8a8a8;
 }
 
 .markdown em {
     font-style: italic !important;
-    color: #a8a8a8;
 }
 
 a[href="/"]:hover {
-    color: #a8a8a8 !important;
+    color: #000000 !important;
+    text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
 }
 
-/*
 :root {
-    font-family: "Bricolage Grotesque";
+    font-family: "Commit Mono";
     line-height: 1.5;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #181818;
+    font-size: 15px;
+    /* color: rgba(255, 255, 255, 0.87); */
+    /* background-color: #181818; */
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
 
+/*
 li a {
     text-decoration: underline;
     color: #FFFFFF;
@@ -88,19 +92,21 @@ p, li {
 
 blockquote p {
     padding: 12px;
-    border-left: 3px solid #a8a8a8;
+    border-left: 3px solid #000000;
 }
 
 a {
-    color: #fffff;
 }
 
 p a {
     text-decoration: underline;
-    color: #FFFFFF;
 }
 
 a:hover {
-    color: #a8a8a8;
+    color: #ffffff;
+    text-shadow:
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
 }
-

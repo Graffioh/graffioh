@@ -32,22 +32,30 @@ function App() {
 function Header() {
   return (
     <div className="flex border-b-2 border-stone-500 justify-between items-center p-2 md:w-7/12 mx-auto">
-      <Link to={"/"} className="text-white">
-        <button class="cs-btn">graffioh</button>
+      <Link to={"/"}>
+        <button
+          className="text-white font-bold bg-[url('/bersk-swrd.png')] bg-cover bg-center w-[185px] h-[35px] pl-[15px] pb-[7px]"
+          style={{
+            textShadow:
+              "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
+          }}
+        >
+          graffioh
+        </button>
       </Link>
       <div>
         <Link to={"/projects"} className="px-2">
-          <button class="cs-btn">projects</button>
+          projects
         </Link>
         <Link to={"/blog"} className="px-2">
-          <button class="cs-btn">blog</button>
+          blog
         </Link>
         {/*
         <Link to={"/resources"} className="px-2">
           <button class="cs-btn">resources</button>
         </Link>*/}
         <Link to={"/notes"} className="px-2">
-          <button class="cs-btn">notes</button>
+          notes
         </Link>
       </div>
     </div>
