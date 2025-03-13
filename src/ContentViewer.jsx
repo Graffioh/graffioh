@@ -9,7 +9,7 @@ export default function ContentViewer({ content }) {
   return (
     <>
       <div className="flex w-full justify-center">
-        <div className="px-10 md:w-6/12 w-full">
+        <div className="md:w-6/12 w-full md:pl-12 pl-4">
           <Markdown
             className="markdown"
             remarkPlugins={[remarkGfm]}

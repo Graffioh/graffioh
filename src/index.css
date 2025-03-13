@@ -40,6 +40,11 @@
     src: url("../CommitMono-400-Regular.otf") format("truetype");
 }
 
+@font-face {
+    font-family: "Roboto";
+    src: url("../Roboto-Regular.ttf") format("truetype");
+}
+
 .markdown > * {
     all: revert;
 }
