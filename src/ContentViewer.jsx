@@ -39,7 +39,7 @@ export default function ContentViewer({ content }) {
                 ) : (
                   <code
                     {...rest}
-                    className={"bg-stone-900 px-1 py-0.5 rounded"}
+                    className={"bg-stone-200 px-1 py-0.5 rounded"}
                   >
                     {children}
                   </code>
