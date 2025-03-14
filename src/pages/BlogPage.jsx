@@ -2,6 +2,11 @@ import { Link } from "react-router-dom";
 
 const blogPosts = [
   {
+    id: "03-14-2025-java-8-101",
+    title: "All about Java (8, the ugly version)",
+    date: "03-14-2025",
+  },
+  {
     id: "12-30-2024-people-ambition",
     title: "People here have no ambition",
     date: "12-30-2024",
