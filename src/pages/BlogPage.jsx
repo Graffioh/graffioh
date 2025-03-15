@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 const blogPosts = [
   {
     id: "03-14-2025-java-8-101",
-    title: "Java 8 for noobs",
+    title: "J8FN (Java 8 For Noobs)",
     date: "03-14-2025",
   },
   {
