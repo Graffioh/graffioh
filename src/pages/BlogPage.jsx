@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 
 const blogPosts = [
-  // {
-  //   id: "03-14-2025-java-8-101",
-  //   title: "J8FN (Java 8 For Noobs)",
-  //   date: "03-14-2025",
-  // },
+  {
+    id: "03-16-2025-java-8-101",
+    title: "J8FZ (Java 8 For Zoomers)",
+    date: "03-16-2025",
+  },
   {
     id: "12-30-2024-people-ambition",
     title: "People here have no ambition",
@@ -65,11 +65,11 @@ const blogPosts = [
 ];
 
 const draftPosts = [
-  {
-    id: "03-14-2025-java-8-101",
-    title: "J8FN (Java 8 For Noobs)",
-    date: "03-14-2025",
-  },
+  // {
+  //   id: "03-14-2025-java-8-101",
+  //   title: "J8FZ (Java 8 For Zoomers)",
+  //   date: "03-14-2025",
+  // },
 ];
 
 export default function BlogPage() {
