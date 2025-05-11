@@ -10,7 +10,7 @@ For several months I was afraid to start with AI as well and there were multiple
 2.	I didn’t want to jump on the hype wagon.
 3.	I was focused on LeetCode after work, preparing for a future newgrad job.
 
-But now I’ve started, and I feel a strong urge to learn more every day. I’m not bored. I haven’t felt this way since I was developing vvvdeo. I began because I’m genuinely fascinated by the (statistical) magic that AI brings. I want to explore further, understand research papers and new discoveries without feeling like an outsider, and contribute to AI discussions with the RAGa (⌐■_■).
+But now I’ve started, I feel a strong urge to learn more every day without getting bored. I haven’t felt this way since I was developing vvvdeo. I began because I’m genuinely fascinated by the (statistical) magic that AI brings. I want to explore further, understand research papers and new discoveries without feeling like an outsider, and contribute to AI discussions with the RAGa (⌐■_■).
 
 It's not really important where you start. Just pick one of the starting points (high level, low level or a mix of both) and then BFS/DFS through the various levels. After you start, you'll start building the knowledge piece by piece.
 
