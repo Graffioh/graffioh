@@ -56,10 +56,10 @@ function Header() {
         {/*
         <Link to={"/resources"} className="px-2">
           <button class="cs-btn">resources</button>
-        </Link>*/}
+        </Link>
         <Link to={"/notes"} className="px-2">
           notes
-        </Link>
+        </Link>*/}
       </div>
     </div>
   );
