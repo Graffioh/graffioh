@@ -1,32 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 /*
 @font-face {
     font-family: "Bricolage Grotesque";
     src: url("../BricolageGrotesque-VariableFont.ttf") format("truetype");
 }
-
 @font-face {
     font-family: "Arimo";
     src: url("../ArimoNerdFont-Regular.ttf") format("truetype");
 }
-
 @font-face {
     font-family: "Ubuntu";
     src: url("../UbuntuNerdFont-Regular.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
 }
-
 @font-face {
     font-family: "Ubuntu";
     src: url("../UbuntuNerdFont-Bold.ttf") format("truetype");
     font-weight: bold;
     font-style: normal;
 }
-
 @font-face {
     font-family: "Ubuntu";
     src: url("../UbuntuNerdFont-Italic.ttf") format("truetype");
@@ -34,38 +29,56 @@
     font-style: italic;
 }
 */
-
 @font-face {
     font-family: "Commit Mono";
     src: url("../CommitMono-400-Regular.otf") format("truetype");
 }
-
 @font-face {
     font-family: "Roboto";
     src: url("../Roboto-Regular.ttf") format("truetype");
 }
 
+/* Theme variables */
+:root {
+    --bg-color: #ffffff;
+    --text-color: #181818;
+    --border-color: #000000;
+    --hover-text-color: #ffffff;
+    --hover-shadow-color: #000;
+    --blockquote-border-color: #000000;
+}
+
+body.dark {
+    --bg-color: #181818;
+    --text-color: rgba(255, 255, 255, 0.87);
+    --border-color: #4a4a4a;
+    --hover-text-color: #ffffff;
+    --hover-shadow-color: #808080;
+    --blockquote-border-color: #ffffff;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
 .markdown > * {
     all: revert;
 }
-
 .markdown strong {
     font-weight: bold !important;
 }
-
 .markdown em {
     font-style: italic !important;
 }
-
 a[href="/"]:hover {
-    color: #000000 !important;
+    color: var(--hover-text-color) !important;
     text-shadow:
-        -1px -1px 0 #000,
-        1px -1px 0 #000,
-        -1px 1px 0 #000,
-        1px 1px 0 #000;
+        -1px -1px 0 var(--hover-shadow-color),
+        1px -1px 0 var(--hover-shadow-color),
+        -1px 1px 0 var(--hover-shadow-color),
+        1px 1px 0 var(--hover-shadow-color);
 }
-
 :root {
     font-family: "Commit Mono";
     line-height: 1.5;
@@ -73,45 +86,36 @@ a[href="/"]:hover {
     font-size: 15px;
     /* color: rgba(255, 255, 255, 0.87); */
     /* background-color: #181818; */
-
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -moz-osx-font-smoothing: grayscale;
 }
-
 /*
 li a {
     text-decoration: underline;
     color: #FFFFFF;
 }
-
 div.text-2xl a {
     text-decoration: none;
 }
-
-
 p, li {
     font-family: "Ubuntu", sans-serif !important;
 }
 */
-
 blockquote p {
     padding: 12px;
-    border-left: 3px solid #000000;
+    border-left: 3px solid var(--blockquote-border-color);
 }
-
 a {
 }
-
 p a {
     text-decoration: underline;
 }
-
 a:hover {
-    color: #ffffff;
+    color: var(--hover-text-color);
     text-shadow:
-        -1px -1px 0 #000,
-        1px -1px 0 #000,
-        -1px 1px 0 #000,
-        1px 1px 0 #000;
+        -1px -1px 0 var(--hover-shadow-color),
+        1px -1px 0 var(--hover-shadow-color),
+        -1px 1px 0 var(--hover-shadow-color),
+        1px 1px 0 var(--hover-shadow-color);
 }

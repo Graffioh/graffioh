@@ -8,10 +8,12 @@ import PostPage from "./pages/PostPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import MoneyToolPage from "./pages/MoneyToolPage";
 import { Link, BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import ThemeToggle from "./ThemeToggle";
+import { ThemeProvider } from "./ThemeContext";
 
 function App() {
   return (
-    <>
+    <ThemeProvider>
       <Router>
         <Header />
         <Routes>
@@ -25,7 +27,7 @@ function App() {
           <Route path="/money" element={<MoneyToolPage />} />
         </Routes>
       </Router>
-    </>
+    </ThemeProvider>
   );
 }
 
@@ -44,6 +46,7 @@ function Header() {
         </button>
       </Link>
       <div>
+        <ThemeToggle />
         <Link to={"/projects"} className="px-2">
           projects
         </Link>
