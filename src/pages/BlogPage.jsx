@@ -4,7 +4,7 @@ const blogPosts = [
   {
     id: "05-11-2025-afraid-to-start",
     title: "Afraid to start",
-    date: "11-05-2025",
+    date: "05-11-2025",
   },
   {
     id: "03-16-2025-java-8-101",
