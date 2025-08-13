@@ -10,11 +10,13 @@ import MoneyToolPage from "./pages/MoneyToolPage";
 import { Link, BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { ThemeProvider } from "./ThemeContext";
+import BackgroundVortex from "./BackgroundVortex";
 
 function App() {
   return (
     <ThemeProvider>
       <Router>
+        <BackgroundVortex />
         <Header />
         <Routes>
           <Route path="/" element={<AboutPage />} />

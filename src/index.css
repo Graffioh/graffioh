@@ -39,23 +39,27 @@
 }
 
 /* Theme variables */
+/* Light theme */
 :root {
-    --bg-color: #ffffff;
-    --text-color: #181818;
-    --border-color: #000000;
-    --hover-text-color: #ffffff;
-    --hover-shadow-color: #000;
-    --blockquote-border-color: #000000;
-}
-
-body.dark {
-    --bg-color: #181818;
-    --text-color: rgba(255, 255, 255, 0.87);
-    --border-color: #4a4a4a;
-    --hover-text-color: #ffffff;
-    --hover-shadow-color: #808080;
-    --blockquote-border-color: #ffffff;
-}
+    --bg-color: #faf9f5; /* warm off-white */
+    --text-color: #1a1a1a; /* deep gray for readability */
+    --border-color: #d8d5d0; /* soft warm gray border */
+    --hover-text-color: #000000; /* dark hover text */
+    --hover-shadow-color: rgba(0, 0, 0, 0.15); /* subtle shadow */
+    --blockquote-border-color: #c8c5c0; /* muted warm gray */
+    --vortex-color: rgba(0, 0, 0, 0.05); /* faint overlay */
+  }
+  
+  /* Dark theme */
+  body.dark {
+    --bg-color: #282424; /* deep warm charcoal */
+    --text-color: rgba(255, 255, 255, 0.88); /* soft white */
+    --border-color: #3a3636; /* muted warm border */
+    --hover-text-color: #ffffff; /* white hover text */
+    --hover-shadow-color: rgba(255, 255, 255, 0.15); /* subtle glow */
+    --blockquote-border-color: #5a5555; /* muted warm gray */
+    --vortex-color: rgba(255, 255, 255, 0.05); /* faint overlay */
+  }
 
 body {
     background-color: var(--bg-color);
