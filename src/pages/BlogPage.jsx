@@ -2,68 +2,68 @@ import { Link } from "react-router-dom";
 
 const blogPosts = [
   {
-    id: "05-11-2025-afraid-to-start",
+    id: "14",
     title: "Afraid to start",
     date: "05-11-2025",
   },
   {
-    id: "03-16-2025-java-8-101",
+    id: "13",
     title: "J8FZ (Java 8 For Zoomers)",
     date: "03-16-2025",
   },
   {
-    id: "12-30-2024-people-ambition",
+    id: "12",
     title: "People here have no ambition",
     date: "12-30-2024",
   },
   {
-    id: "10-29-2024-JSON-parser-with-JFlex-and-Jacc",
+    id: "11",
     title: " Writing a JSON parser using JFlex and Jacc (Java)",
     date: "10-29-2024",
   },
   {
-    id: "09-14-2024-39-days-of-leetcode",
+    id: "10",
     title: " 39 Days of leetcode",
     date: "09-14-2024",
   },
   {
-    id: "07-06-2024-auth-credentials-go",
+    id: "9",
     title: " Authentication made simple, for the web (and more)",
     date: "07-06-2024",
   },
   {
-    id: "04-20-2024-In-the-making-of-my-first-webshite",
+    id: "8",
     title: "In the making of my first webshite",
     date: "04-20-2024",
   },
-  { id: "01-12-2024-The-process", title: '"The process"', date: "01-12-2024" },
+  { id: "7", title: '"The process"', date: "01-12-2024" },
   {
-    id: "08-21-2023-The-b-in-the-alphabet-stands-for-build",
+    id: "6",
     title: "The B in the alphabet stands for build",
     date: "08-21-2023",
   },
   {
-    id: "06-25-2023-thoughts-CS-and-SWEs",
+    id: "5",
     title: "My thoughts on CS, SWEs and more",
     date: "06-25-2023",
   },
   {
-    id: "03-19-2023-learning-something-new",
+    id: "4",
     title: "Learning something new",
     date: "03-19-2023",
   },
   {
-    id: "12-21-2022-life-update-2",
+    id: "3",
     title: "Life Update II",
     date: "12-21-2022",
   },
   {
-    id: "08-01-2022-life-update-1",
+    id: "2",
     title: "Life Update I",
     date: "08-01-2022",
   },
   {
-    id: "06-07-2022-the-journey-so-far",
+    id: "1",
     title: "The journey so far",
     date: "06-07-2022",
   },
