@@ -123,3 +123,9 @@ a:hover {
         -1px 1px 0 var(--hover-shadow-color),
         1px 1px 0 var(--hover-shadow-color);
 }
+
+@media (max-width: 1024px) {
+    .background-vortex {
+      display: none !important;
+    }
+  }
