@@ -2,6 +2,16 @@
 
 This place is a collection of bertologies (or analogies, as you prefer) that I post on my [X](https://x.com/graffioh), so don't expect to be rigorous or well formatted.
 
+## Normalization in NN (Batch norm, Layer norm...)
+
+imagine you are reordering your room.
+you have a bunch of items that you need to put in the right place, but every once in a while these items changes position.
+
+it's going to be hard to reorder them without losing (vanishing or exploding) your mind.
+that's why we buy a bag, and we put all these items in it before reordering, so that they will be arranged in a more "compact way" making our life easier.
+
+but keep in mind that some of them might be already in the right place so we put them back in the right spot!
+
 ## Model merging
 
 [blog post](https://crisostomi.github.io/blog/2025/model_merging)
