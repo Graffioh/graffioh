@@ -7,6 +7,7 @@ import BlogPage from "./pages/BlogPage";
 import PostPage from "./pages/PostPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import MoneyToolPage from "./pages/MoneyToolPage";
+import BertologiesPage from "./pages/BertologiesPage";
 import { Link, BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { ThemeProvider } from "./ThemeContext";
@@ -27,6 +28,7 @@ function App() {
           <Route path="/notes" element={<NotesPage />} />
           <Route path="/notes/note/:id" element={<NotePage />} />
           <Route path="/money" element={<MoneyToolPage />} />
+          <Route path="/bertologies" element={<BertologiesPage />} />
         </Routes>
       </Router>
     </ThemeProvider>
@@ -54,6 +56,9 @@ function Header() {
         </Link>
         <Link to={"/blog"} className="px-2">
           blog
+        </Link>
+        <Link to={"/bertologies"} className="px-2">
+          bertologies
         </Link>
         {/*
         <Link to={"/resources"} className="px-2">
