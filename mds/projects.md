@@ -1,3 +1,9 @@
+## pucky
+
+A tiny coding agent implementation with minimal dependencies to experiment and research coding agents.
+
+[github repo](https://github.com/Graffioh/pucky) | [demo](https://x.com/graffioh/status/1989019831992188932)
+
 ## VVVDEO
 
 Video editor built using html, js, go, python with cloudflare workers for segmentation event driven workflow
