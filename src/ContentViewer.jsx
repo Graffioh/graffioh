@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useContext } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -6,8 +6,10 @@ import rehypeRemoveComments from "rehype-remove-comments";
 import rehypeSlug from "rehype-slug";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { ThemeContext } from "./ThemeContext";
 
 export default function ContentViewer({ content }) {
+  const { theme } = useContext(ThemeContext);
   // Add anchor scroll handling for smooth navigation
   useEffect(() => {
     // Handle hash changes for table of contents navigation
@@ -100,7 +102,9 @@ export default function ContentViewer({ content }) {
                 ) : (
                   <code
                     {...rest}
-                    className={"border-2 border-black px-1 pb-0.5 rounded"}
+                    className={`border-2 ${
+                      theme === "dark" ? "border-white" : "border-black"
+                    } px-1 pb-0.5 rounded`}
                   >
                     {children}
                   </code>
