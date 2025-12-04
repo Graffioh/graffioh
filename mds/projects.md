@@ -1,10 +1,16 @@
+## latent transfer
+
+A CLI tool to transfer small files easily from one host to another.
+
+[[github repo](https://github.com/Graffioh/latenttransfer)] [[demo](https://x.com/graffioh/status/1996215707315425347)]
+
 ## pucky
 
 A tiny coding agent implementation with minimal dependencies to experiment and research coding agents.
 
-[[github repo](https://github.com/Graffioh/pucky)] | [[demo](https://x.com/graffioh/status/1989019831992188932)]
+[[github repo](https://github.com/Graffioh/pucky)] [[demo](https://x.com/graffioh/status/1989019831992188932)]
 
-## VVVDEO
+## vvvdeo
 
 Video editor built using html, js, go, python with cloudflare workers for segmentation event driven workflow
 
