@@ -16,7 +16,7 @@ Video editor built using html, js, go, python with cloudflare workers for segmen
 
 (segmentation is disabled, i'm broke and gpu is too expensive)
 
-[[github repo](https://github.com/Graffioh/vvvdeo)] [[website link](https://vvvdeo.com)]
+[[github repo](https://github.com/Graffioh/vvvdeo)] [[website link](https://vvvdeo.pages.dev)]
 
 ## DietiDeals24
 
