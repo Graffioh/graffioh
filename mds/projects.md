@@ -1,6 +1,6 @@
 ## my agent is dumb
 
-Right now it's a playground to experiment agent engineering by using an inspection panel to inspect the model decisions and outputs.
+Dev tool to debug your agent thought process/context/outputs.
 
 [[github repo](https://github.com/Graffioh/myagentisdumb)] 
 
