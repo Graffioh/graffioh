@@ -1,3 +1,9 @@
+## my agent is dumb
+
+Right now it's a playground to experiment agent engineering by using an inspection panel to inspect the model decisions and outputs.
+
+[[github repo](https://github.com/Graffioh/myagentisdumb)] 
+
 ## latent transfer
 
 A CLI tool to transfer small files easily from one host to another.
