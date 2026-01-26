@@ -54,18 +54,6 @@ iOS app smart journal for winegrowers that empowers them to protect their vineya
 
 (Swift, MapKit, CoreData, Various APIs such as OpenAI API, Agromonitoring API and sensors API)
 
-## Pontus
-
-iOS app for lawyers, make them network in an easy and fast way for judicial substitution
-
-(Swift, Express.js, MongoDB, Render)
-
-## ScoutThis
-
-iOS app for photographers and location scouts, keep track of locations and equipments with photos and notes 
-
-(Swift, MapKit, CoreData)
-
 ## PhotoEditAppClone
 
 iOS app to edit photos, made most of the tools from scratch for learning purpose 
@@ -82,10 +70,4 @@ Arcade aim game
 
 [[github repo](https://github.com/Graffioh/ArcAim)]
 
-## Other minor projects
-
-- [toy mapreduce implementation in go](https://github.com/Graffioh/wc-mapreduce-go)
-- [toy round robin load balancer in go](https://github.com/Graffioh/rr-lb-go)
-- [pastellm](https://github.com/Graffioh/pastellm)
-- [AirChat](https://github.com/Graffioh/AirChat)
-- [LaboratorioScientificoUCM](https://github.com/Graffioh/LaboratorioScientificoUCM)
+## Other minor projects in my github

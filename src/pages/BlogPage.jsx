@@ -2,6 +2,11 @@ import { Link } from "react-router-dom";
 
 const blogPosts = [
   {
+    id: "18",
+    title: "Empower a curl request: super-curl",
+    date: "25-01-2026",
+  },
+  {
     id: "17",
     title: "Building a simple coding agent infrastructure",
     date: "15-11-2025",

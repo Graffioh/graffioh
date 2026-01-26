@@ -8,7 +8,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { ThemeContext } from "./ThemeContext";
 
-export default function ContentViewer({ content }) {
+export default function ContentViewer({ content, centered = false }) {
   const { theme } = useContext(ThemeContext);
   // Add anchor scroll handling for smooth navigation
   useEffect(() => {
@@ -37,17 +37,17 @@ export default function ContentViewer({ content }) {
 
   return (
     <>
-      <div className="flex w-full justify-center">
-        <div className="md:w-6/12 w-full md:pl-12 pl-4">
+      <div className="w-full">
+        <div className="md:w-7/12 w-full px-4 mx-auto">
           <Markdown
-            className="markdown"
+            className={`markdown ${centered ? "text-center" : ""}`}
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw, rehypeRemoveComments, rehypeSlug]}
             components={{
               img(props) {
                 const { node, alt, ...rest } = props;
                 const className = alt === "griffith-castle" ? "" : "w-8/12";
-                return <img className={className} alt={alt} {...rest} />;
+                return <img className={`${className} ${centered ? "mx-auto" : ""}`} alt={alt} {...rest} />;
               },
               a(props) {
                 const { node, ref, href, children, ...rest } = props;
@@ -98,6 +98,8 @@ export default function ContentViewer({ content }) {
                     language={match[1]}
                     style={vscDarkPlus}
                     className="text-sm my-4"
+                    wrapLongLines={false}
+                    customStyle={{ overflowX: 'auto' }}
                   />
                 ) : (
                   <code
@@ -126,6 +128,14 @@ export default function ContentViewer({ content }) {
                     {children}
                   </ul>
                 );
+              },
+              strong(props) {
+                const { children, ...rest } = props;
+                return <strong className="font-bold" {...rest}>{children}</strong>;
+              },
+              em(props) {
+                const { children, ...rest } = props;
+                return <em className="italic" {...rest}>{children}</em>;
               },
             }}
           >

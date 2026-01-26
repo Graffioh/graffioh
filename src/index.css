@@ -90,7 +90,7 @@ a[href="/"]:hover {
     font-size: 15px;
     /* color: rgba(255, 255, 255, 0.87); */
     /* background-color: #181818; */
-    font-synthesis: none;
+    font-synthesis: weight style;
     text-rendering: optimizeLegibility;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -109,6 +109,11 @@ p, li {
 blockquote p {
     padding: 12px;
     border-left: 3px solid var(--blockquote-border-color);
+}
+
+.markdown pre {
+    overflow-x: auto;
+    max-width: 100%;
 }
 a {
 }
