@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Markdown from "react-markdown";
+import ImageLightbox from "./ImageLightbox";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeRaw from "rehype-raw";
@@ -73,7 +74,10 @@ function remarkInlineDisplayMath() {
   };
 }
 
-export default function ContentViewer({ content, centered = false }) {
+export default function ContentViewer({ content, centered = false, zoomable = true }) {
+  // Image clicked to open in the zoomable lightbox overlay ({ src, alt } | null)
+  const [lightbox, setLightbox] = useState(null);
+
   // Add anchor scroll handling for smooth navigation
   useEffect(() => {
     // Handle hash changes for table of contents navigation
@@ -109,9 +113,47 @@ export default function ContentViewer({ content, centered = false }) {
             rehypePlugins={[rehypeRaw, rehypeRemoveComments, rehypeSlug, rehypeKatex]}
             components={{
               img(props) {
-                const { node, alt, ...rest } = props;
-                const className = alt === "griffith-castle" ? "" : "w-8/12";
-                return <img className={`${className} ${centered ? "mx-auto" : ""}`} alt={alt} {...rest} />;
+                const { node, alt, width, height, style, ...rest } = props;
+                // Tailwind's preflight sets `img { height: auto; max-width: 100% }`,
+                // which overrides the HTML width/height *attributes*. Promote any
+                // explicit dimensions to inline styles (which win over the
+                // stylesheet rule) so sizes set in the markdown actually apply.
+                const toCss = (v) =>
+                  v != null && /^\d+$/.test(String(v)) ? `${v}px` : v;
+                const sizeStyle = {};
+                if (width != null) sizeStyle.width = toCss(width);
+                if (height != null) sizeStyle.height = toCss(height);
+                const hasExplicitSize =
+                  width != null ||
+                  height != null ||
+                  (style && (style.width || style.height));
+                // The zoom cursor must be set inline, not via a class: raw-HTML
+                // images render as direct children of `.markdown`, where the
+                // `.markdown > * { all: revert }` rule (index.css) wipes any
+                // class-applied `cursor`. Inline styles outrank that rule.
+                const mergedStyle = {
+                  ...sizeStyle,
+                  ...style,
+                  ...(zoomable ? { cursor: "zoom-in" } : {}),
+                };
+                const className = hasExplicitSize
+                  ? ""
+                  : alt === "griffith-castle"
+                    ? ""
+                    : "w-8/12";
+                return (
+                  <img
+                    className={`${className} ${centered ? "mx-auto" : ""}`}
+                    alt={alt}
+                    style={Object.keys(mergedStyle).length ? mergedStyle : undefined}
+                    onClick={
+                      zoomable
+                        ? () => setLightbox({ src: rest.src, alt })
+                        : undefined
+                    }
+                    {...rest}
+                  />
+                );
               },
               a(props) {
                 const { node, ref, href, children, ...rest } = props;
@@ -224,12 +266,42 @@ export default function ContentViewer({ content, centered = false }) {
                 const { children, ...rest } = props;
                 return <em className="italic" {...rest}>{children}</em>;
               },
+              // Small caption / reference line, e.g. an image source under a
+              // figure. Inline-styled so it survives `.markdown > * {all:revert}`.
+              small(props) {
+                const { node, children, style, ...rest } = props;
+                return (
+                  <small
+                    {...rest}
+                    style={{
+                      display: "block",
+                      marginTop: "-0.4rem",
+                      marginBottom: "1.5rem",
+                      fontSize: "0.78em",
+                      fontStyle: "italic",
+                      opacity: 0.55,
+                      textAlign: centered ? "center" : "left",
+                      ...style,
+                    }}
+                  >
+                    {children}
+                  </small>
+                );
+              },
             }}
           >
             {content}
           </Markdown>
         </div>
       </div>
+      {lightbox && (
+        <ImageLightbox
+          key={lightbox.src}
+          src={lightbox.src}
+          alt={lightbox.alt}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </>
   );
 }
