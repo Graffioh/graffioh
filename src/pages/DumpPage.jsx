@@ -7,6 +7,8 @@ const ORB_SIZE = 34; // px — small
 const R = ORB_SIZE / 2;
 const SLOW_RADIUS = 160; // px — cursor influence: orbs slow down within this
 const MIN_FACTOR = 0.1; // how much speed remains right under the cursor
+const BORDER_MARGIN = 90; // px — orbs start curving away this far from the edge
+const BORDER_TURN = 1500; // px/s² — inward push that bends their path back in
 
 export default function DumpPage() {
   const { theme } = useContext(ThemeContext);
@@ -152,10 +154,22 @@ export default function DumpPage() {
         s.x += s.vx * dt * factor;
         s.y += s.vy * dt * factor;
 
-        if (s.x <= 0) { s.x = 0; s.vx = Math.abs(s.vx); }
-        else if (s.x >= maxX) { s.x = maxX; s.vx = -Math.abs(s.vx); }
-        if (s.y <= 0) { s.y = 0; s.vy = Math.abs(s.vy); }
-        else if (s.y >= maxY) { s.y = maxY; s.vy = -Math.abs(s.vy); }
+        // soft border: curve away when nearing the invisible edge instead of
+        // bouncing. The inward push grows the closer the orb gets to the wall,
+        // so its path bends smoothly back toward the center.
+        const cx = s.x + R;
+        const cy = s.y + R;
+        if (cx < BORDER_MARGIN) s.vx += BORDER_TURN * (1 - cx / BORDER_MARGIN) * dt;
+        else if (cx > width - BORDER_MARGIN) s.vx -= BORDER_TURN * (1 - (width - cx) / BORDER_MARGIN) * dt;
+        if (cy < BORDER_MARGIN) s.vy += BORDER_TURN * (1 - cy / BORDER_MARGIN) * dt;
+        else if (cy > height - BORDER_MARGIN) s.vy -= BORDER_TURN * (1 - (height - cy) / BORDER_MARGIN) * dt;
+
+        // hard safety clamp — never reverse (no bounce), just stop any outward
+        // drift at the very edge and let the border push ease them back in.
+        if (s.x < 0) { s.x = 0; if (s.vx < 0) s.vx = 0; }
+        else if (s.x > maxX) { s.x = maxX; if (s.vx > 0) s.vx = 0; }
+        if (s.y < 0) { s.y = 0; if (s.vy < 0) s.vy = 0; }
+        else if (s.y > maxY) { s.y = maxY; if (s.vy > 0) s.vy = 0; }
       });
 
       // 2) rigid orb-orb collisions (equal-mass elastic) + particle burst
@@ -321,7 +335,7 @@ export default function DumpPage() {
 
       <div
         ref={boxRef}
-        className="relative overflow-hidden h-[80vh] w-full"
+        className="relative overflow-hidden h-[80vh] w-full md:w-8/12 mx-auto"
       >
         {topics.map((topic, i) => {
           const isHot = hoveredId === topic.id;
