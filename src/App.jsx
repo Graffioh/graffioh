@@ -5,6 +5,8 @@ import NotePage from "./pages/NotePage";
 import ProjectsPage from "./pages/ProjectsPage";
 import BlogPage from "./pages/BlogPage";
 import PostPage from "./pages/PostPage";
+import DumpPage from "./pages/DumpPage";
+import DumpTopicPage from "./pages/DumpTopicPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import MoneyToolPage from "./pages/MoneyToolPage";
 import BertologiesPage from "./pages/BertologiesPage";
@@ -24,6 +26,8 @@ function App() {
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/blog/post/:id" element={<PostPage />} />
           <Route path="/blog" element={<BlogPage />} />
+          <Route path="/dump" element={<DumpPage />} />
+          <Route path="/dump/:id" element={<DumpTopicPage />} />
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/notes" element={<NotesPage />} />
           <Route path="/notes/note/:id" element={<NotePage />} />
@@ -51,11 +55,19 @@ function Header() {
       </Link>
       <div>
         <ThemeToggle />
-        <Link to={"/projects"} className="px-2">
+        <a
+          href={"https://github.com/Graffioh"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-2"
+        >
           projects
-        </Link>
+        </a>
         <Link to={"/blog"} className="px-2">
           blog
+        </Link>
+        <Link to={"/dump"} className="px-2">
+          dump
         </Link>
         {/*
         <Link to={"/bertologies"} className="px-2">
