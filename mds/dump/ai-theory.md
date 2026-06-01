@@ -1,2 +1,4 @@
 # ai theory
 
+## RoPE
+

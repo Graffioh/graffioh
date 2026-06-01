@@ -1,15 +1,79 @@
-import React, { useEffect, useContext } from "react";
+import React, { useEffect } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import rehypeRaw from "rehype-raw";
 import rehypeRemoveComments from "rehype-remove-comments";
 import rehypeSlug from "rehype-slug";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
-import { ThemeContext } from "./ThemeContext";
+
+// Obsidian-style display math: remark-math only treats $$…$$ as a block when it
+// sits alone on its own line. This plugin detects $$ used inline (the delimiter
+// isn't kept in the AST, so we read it back from the source position), splits the
+// surrounding paragraph, and promotes it to a real block `math` node — rendering
+// it as a centered block on its own line instead of inline.
+function remarkInlineDisplayMath() {
+  return (tree, file) => {
+    const src = String(file);
+    const isDisplay = (n) => {
+      if (n.type !== "inlineMath" || !n.position) return false;
+      const { start, end } = n.position;
+      if (start.offset == null || end.offset == null) return false;
+      const raw = src.slice(start.offset, end.offset);
+      return raw.startsWith("$$") && raw.endsWith("$$");
+    };
+    const toMathBlock = (n) => ({
+      type: "math",
+      value: n.value,
+      data: {
+        hName: "pre",
+        hChildren: [
+          {
+            type: "element",
+            tagName: "code",
+            properties: { className: ["language-math", "math-display"] },
+            children: [{ type: "text", value: n.value }],
+          },
+        ],
+      },
+    });
+    const split = (parent) => {
+      if (!parent.children) return;
+      const out = [];
+      for (const child of parent.children) {
+        if (child.type === "paragraph" && child.children.some(isDisplay)) {
+          let buf = [];
+          const flush = () => {
+            const meaningful = buf.some(
+              (c) => !(c.type === "text" && !c.value.trim())
+            );
+            if (meaningful) out.push({ type: "paragraph", children: buf });
+            buf = [];
+          };
+          for (const c of child.children) {
+            if (isDisplay(c)) {
+              flush();
+              out.push(toMathBlock(c));
+            } else {
+              buf.push(c);
+            }
+          }
+          flush();
+        } else {
+          split(child); // recurse into containers (blockquote, list items, …)
+          out.push(child);
+        }
+      }
+      parent.children = out;
+    };
+    split(tree);
+  };
+}
 
 export default function ContentViewer({ content, centered = false }) {
-  const { theme } = useContext(ThemeContext);
   // Add anchor scroll handling for smooth navigation
   useEffect(() => {
     // Handle hash changes for table of contents navigation
@@ -41,8 +105,8 @@ export default function ContentViewer({ content, centered = false }) {
         <div className="md:w-7/12 w-full px-4 mx-auto">
           <Markdown
             className={`markdown ${centered ? "text-center" : ""}`}
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw, rehypeRemoveComments, rehypeSlug]}
+            remarkPlugins={[remarkGfm, remarkMath, remarkInlineDisplayMath]}
+            rehypePlugins={[rehypeRaw, rehypeRemoveComments, rehypeSlug, rehypeKatex]}
             components={{
               img(props) {
                 const { node, alt, ...rest } = props;
@@ -99,14 +163,37 @@ export default function ContentViewer({ content, centered = false }) {
                     style={vscDarkPlus}
                     className="text-sm my-4"
                     wrapLongLines={false}
-                    customStyle={{ overflowX: 'auto' }}
+                    // black-matter slab — same event-horizon glow as the orbs,
+                    // syntax colors untouched so it stays readable
+                    customStyle={{
+                      overflowX: "auto",
+                      borderRadius: "0.7em",
+                      border: "1px solid rgba(150,150,185,0.22)",
+                      boxShadow:
+                        "0 0 18px 1px rgba(120,110,190,0.16), inset 0 0 30px rgba(0,0,0,0.55)",
+                      background:
+                        "radial-gradient(130% 160% at 50% 0%, #16161e 0%, #0b0b10 55%, #050507 100%)",
+                      padding: "1em 1.1em",
+                    }}
                   />
                 ) : (
                   <code
                     {...rest}
-                    className={`border-2 ${
-                      theme === "dark" ? "border-white" : "border-black"
-                    } px-1 pb-0.5 rounded`}
+                    // inline "black hole": faded translucent-black core with a
+                    // faint purple rim glow, crisp light text — small + stays
+                    // in the line flow
+                    className="rounded-[0.35em] px-[0.36em] py-[0.04em] mx-[0.05em]"
+                    style={{
+                      fontSize: "0.88em",
+                      background:
+                        "radial-gradient(120% 135% at 50% 28%, #131316 0%, #181818 65%, #1d1d22 100%)",
+                      color: "#ededf5",
+                      border: "1px solid rgba(150,150,185,0.22)",
+                      boxShadow:
+                        "0 0 6px 0 rgba(120,110,190,0.25), inset 0 0 5px rgba(0,0,0,0.6)",
+                      boxDecorationBreak: "clone",
+                      WebkitBoxDecorationBreak: "clone",
+                    }}
                   >
                     {children}
                   </code>

@@ -17,7 +17,14 @@ export default function DumpPage() {
   const stateRef = useRef([]); // [{x, y, vx, vy, phase}]
   const partsRef = useRef([]); // collision particles
   const ringsRef = useRef([]); // collision shock rings
+  const flashesRef = useRef([]); // collision impact flashes
   const pointerRef = useRef({ x: -9999, y: -9999, inside: false });
+
+  // keep the latest theme reachable from inside the rAF loop
+  const themeRef = useRef(theme);
+  useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
 
   // which orb is highlighted from the title list
   const [hoveredId, setHoveredId] = useState(null);
@@ -67,23 +74,33 @@ export default function DumpPage() {
     sizeCanvas();
     init();
 
-    // emit a burst at a collision point (box-local coords)
-    const burst = (x, y, impact) => {
-      const n = 10 + Math.floor(Math.min(impact / 60, 1) * 12);
+    // emit a burst at a collision point (box-local coords).
+    // nx,ny = the collision normal; sparks spray out sideways along the
+    // tangent (perpendicular to the impact line) like a real impact splash.
+    const burst = (x, y, nx, ny, impact) => {
+      const strength = Math.min(impact / 140, 1); // 0..1 normalized impact
+      const n = 14 + Math.floor(strength * 16);
+      const tx = -ny;
+      const ty = nx; // tangent direction
       for (let k = 0; k < n; k++) {
-        const a = Math.random() * Math.PI * 2;
-        const sp = 60 + Math.random() * (120 + impact * 0.6);
+        // alternate the two sides of the impact line, with a soft fan spread
+        const side = k % 2 === 0 ? 1 : -1;
+        const a = Math.atan2(ty * side, tx * side) + (Math.random() - 0.5) * 1.6;
+        const sp = 60 + Math.random() * (150 + impact);
         partsRef.current.push({
           x, y,
+          px: x, py: y,
           vx: Math.cos(a) * sp,
           vy: Math.sin(a) * sp,
-          life: 0.35 + Math.random() * 0.4,
+          life: 0.4 + Math.random() * 0.5,
           age: 0,
-          size: 1 + Math.random() * 2,
+          size: 0.8 + Math.random() * 2.4,
+          heat: Math.random(), // 0 cool .. 1 hot core
         });
       }
-      ringsRef.current.push({ x, y, life: 0.4, age: 0 });
-      if (partsRef.current.length > 500) partsRef.current.splice(0, partsRef.current.length - 500);
+      ringsRef.current.push({ x, y, life: 0.55, age: 0, max: 26 + strength * 34 });
+      flashesRef.current.push({ x, y, life: 0.16, age: 0, r: 12 + strength * 20 });
+      if (partsRef.current.length > 600) partsRef.current.splice(0, partsRef.current.length - 600);
     };
 
     // Track the cursor in canvas-local coordinates.
@@ -162,7 +179,7 @@ export default function DumpPage() {
               a.vx -= along * nx; a.vy -= along * ny;
               b.vx += along * nx; b.vy += along * ny;
               // spark burst at the contact point
-              burst((a.x + R + b.x + R) / 2, (a.y + R + b.y + R) / 2, Math.abs(along));
+              burst((a.x + R + b.x + R) / 2, (a.y + R + b.y + R) / 2, nx, ny, Math.abs(along));
             }
           }
         }
@@ -174,38 +191,91 @@ export default function DumpPage() {
         if (el) el.style.transform = `translate(${s.x}px, ${s.y}px)`;
       });
 
-      // 4) update + draw particles/rings on the overlay canvas
+      // 4) update + draw flashes / rings / particles on the overlay canvas
       ctx.clearRect(0, 0, width, height);
+      const dark = themeRef.current === "dark";
+      // additive glow on dark backgrounds; plain blending on light ones
+      ctx.globalCompositeOperation = dark ? "lighter" : "source-over";
 
+      // impact flashes — a quick bright pop right at the contact point
+      const flashes = flashesRef.current;
+      for (let i = flashes.length - 1; i >= 0; i--) {
+        const f = flashes[i];
+        f.age += dt;
+        const p = f.age / f.life;
+        if (p >= 1) { flashes.splice(i, 1); continue; }
+        const a = 1 - p;
+        const rad = f.r * (0.6 + p * 0.5);
+        const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, rad);
+        if (dark) {
+          g.addColorStop(0, `rgba(255,255,255,${a})`);
+          g.addColorStop(0.4, `rgba(180,190,255,${a * 0.7})`);
+          g.addColorStop(1, "rgba(120,130,255,0)");
+        } else {
+          g.addColorStop(0, `rgba(80,55,150,${a * 0.9})`);
+          g.addColorStop(0.5, `rgba(45,30,95,${a * 0.5})`);
+          g.addColorStop(1, "rgba(30,20,70,0)");
+        }
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, rad, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // shock rings — ease-out expansion, crisp thinning stroke
       const rings = ringsRef.current;
       for (let i = rings.length - 1; i >= 0; i--) {
         const rg = rings[i];
         rg.age += dt;
         const p = rg.age / rg.life;
         if (p >= 1) { rings.splice(i, 1); continue; }
-        const rad = 6 + p * 34;
+        const ease = 1 - (1 - p) * (1 - p); // easeOutQuad
+        const rad = 5 + ease * rg.max;
+        const a = (1 - p) * 0.75;
         ctx.beginPath();
         ctx.arc(rg.x, rg.y, rad, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(190,200,255,${(1 - p) * 0.6})`;
-        ctx.lineWidth = 2 * (1 - p) + 0.5;
+        ctx.strokeStyle = dark
+          ? `rgba(190,200,255,${a})`
+          : `rgba(60,45,120,${a})`;
+        ctx.lineWidth = 2.4 * (1 - p) + 0.4;
         ctx.stroke();
       }
 
+      // spark particles — glowing streaks that arc with gravity + drag
       const parts = partsRef.current;
+      ctx.lineCap = "round";
       for (let i = parts.length - 1; i >= 0; i--) {
         const p = parts[i];
         p.age += dt;
         if (p.age >= p.life) { parts.splice(i, 1); continue; }
-        p.vx *= 0.94;
-        p.vy *= 0.94;
+        p.px = p.x;
+        p.py = p.y;
+        p.vy += 120 * dt; // gentle gravity so sparks arc downward
+        p.vx *= 0.95;
+        p.vy *= 0.95; // air drag
         p.x += p.vx * dt;
         p.y += p.vy * dt;
         const a = 1 - p.age / p.life;
+        if (dark) {
+          // white-hot core cooling to indigo as it fades
+          const r = 170 + Math.floor(85 * p.heat * a);
+          const gch = 180 + Math.floor(70 * p.heat * a);
+          ctx.strokeStyle = `rgba(${r},${gch},255,${a})`;
+        } else {
+          // dark violet matter flung out of the black holes
+          const r = 75 - Math.floor(35 * p.heat);
+          const gch = 48 - Math.floor(22 * p.heat);
+          const b = 130 - Math.floor(45 * p.heat);
+          ctx.strokeStyle = `rgba(${r},${gch},${b},${a})`;
+        }
+        ctx.lineWidth = p.size * a + 0.3;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * a + 0.3, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${200 + Math.floor(55 * a)},${210},255,${a})`;
-        ctx.fill();
+        ctx.moveTo(p.px, p.py);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
       }
+
+      ctx.globalCompositeOperation = "source-over";
     };
     raf = requestAnimationFrame(loop);
 
@@ -221,7 +291,7 @@ export default function DumpPage() {
   }, []);
 
   return (
-    <div className="md:w-8/12 mx-auto p-4">
+    <div className="p-4">
       <h1 className="text-2xl font-bold text-center pt-4 pb-3">dump</h1>
 
       {/* title list — hover to highlight the matching orb, click to open */}
@@ -251,7 +321,7 @@ export default function DumpPage() {
 
       <div
         ref={boxRef}
-        className="relative overflow-hidden border-2 border-stone-500 rounded-lg h-[70vh] w-full"
+        className="relative overflow-hidden h-[80vh] w-full"
       >
         {topics.map((topic, i) => {
           const isHot = hoveredId === topic.id;

@@ -70,7 +70,12 @@ body {
     all: revert;
 }
 .markdown strong {
-    font-weight: bold !important;
+    /* Commit Mono ships only a regular (400) weight, and webkit browsers
+       won't reliably synthesize faux-bold for it — so reinforce the weight
+       with a sub-pixel stroke that thickens the glyphs on any font. */
+    font-weight: 700 !important;
+    -webkit-text-stroke: 0.6px currentColor;
+    text-stroke: 0.6px currentColor;
 }
 .markdown em {
     font-style: italic !important;
