@@ -324,7 +324,7 @@ export default function DumpPage() {
                   ? theme === "dark"
                     ? "text-white"
                     : "text-black"
-                  : "text-stone-400"
+                  : "text-stone-500"
               }`}
             >
               {topic.title}
@@ -383,11 +383,12 @@ export default function DumpPage() {
                       }
                 }
               />
-              {/* title always shown just below the orb; drops lower on hover
-                  so the scaled-up orb doesn't crowd it */}
+              {/* title hidden by default; fades in (and drops lower so the
+                  scaled-up orb doesn't crowd it) only while this orb is hot —
+                  i.e. hovering the orb itself or its entry in the title list */}
               <span
                 className={`absolute left-1/2 top-full whitespace-nowrap text-center font-bold text-[10px] leading-tight pointer-events-none transition-all duration-200 ${
-                  isHot ? "text-white" : "text-stone-300"
+                  isHot ? "text-white opacity-100" : "text-stone-300 opacity-0"
                 }`}
                 style={{
                   transform: `translateX(-50%) translateY(${isHot ? 14 : 3}px)`,

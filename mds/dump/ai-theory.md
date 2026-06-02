@@ -1,5 +1,11 @@
 # ai theory
 
+## Transformer
+
+<img src="/dump/img/bumblebee.png" alt="bumblebee" width="200" />
+
+[[formulas#Attention]]
+
 ## RoPE
 
 Attention is *permutation invariant* (e.g. position 1 and position 69 are "the same"), that means the position of the token is not taken in count by attention mechanism.
