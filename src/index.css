@@ -52,7 +52,7 @@
   
   /* Dark theme */
   body.dark {
-    --bg-color: #282424; /* deep warm charcoal */
+    --bg-color: #181818; /* near-black charcoal */
     --text-color: rgba(255, 255, 255, 0.88); /* soft white */
     --border-color: #3a3636; /* muted warm border */
     --hover-text-color: #ffffff; /* white hover text */

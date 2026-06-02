@@ -299,7 +299,7 @@ function WikiLink({ href, children, theme }) {
   const [pop, setPop] = useState(null);
   const isDark = theme === "dark";
   const accent = isDark ? "135,145,65" : "120,110,190"; // olive / purple
-  const inner = isDark ? "255,255,255" : "0,0,0";
+  const glow = isDark ? "255,255,255" : "0,0,0"; // neutral halo — white on dark, black on light
 
   const [noteId, slug] = useMemo(() => {
     const m = href.match(/\/dump\/([^#]+)(?:#(.*))?$/) || [];
@@ -399,40 +399,25 @@ function WikiLink({ href, children, theme }) {
         textDecoration: "none",
         textShadow: "none",
         borderRadius: "999px",
-        padding: "0.22em 0.72em 0.22em 0.28em",
-        fontSize: "0.9em",
+        padding: "0.22em 0.72em",
+        fontSize: "0.85em",
         lineHeight: 1.25,
         cursor: "pointer",
-        color: isDark ? "#12120a" : "#ededf5",
+        // Theme-matching text: black in light mode, white in dark.
+        color: isDark ? "#ededf5" : "#12120a",
+        // Fill sits slightly darker than the page in both themes: a faint black
+        // tint over the light off-white, a deeper charcoal over the dark page.
         background: isDark
-          ? "radial-gradient(120% 135% at 50% 28%, #ecece9 0%, #e2e2dd 100%)"
-          : "radial-gradient(120% 135% at 50% 28%, #131316 0%, #1d1d22 100%)",
-        border: `1px solid rgba(${accent},0.38)`,
+          ? "#0f0f0f"
+          : "rgba(0,0,0,0.07)",
+        border: `1px solid rgba(${accent},0.3)`,
         boxShadow: lit
-          ? `0 5px 18px -2px rgba(${accent},0.5), inset 0 0 6px rgba(${inner},0.55)`
-          : `0 0 9px 0 rgba(${accent},0.3), inset 0 0 5px rgba(${inner},0.55)`,
+          ? `0 3px 12px -4px rgba(${accent},0.4)`
+          : `0 0 6px 0 rgba(${accent},0.18)`,
         transform: lit ? "translateY(-1px)" : "none",
         transition: "transform 0.18s ease, box-shadow 0.18s ease",
       }}
     >
-      <span
-        aria-hidden="true"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: "1.55em",
-          height: "1.55em",
-          borderRadius: "999px",
-          fontStyle: "italic",
-          fontWeight: 700,
-          fontSize: "0.95em",
-          background: `rgba(${accent},${isDark ? 0.2 : 0.34})`,
-          color: isDark ? "#2f2f18" : "#d6cdff",
-        }}
-      >
-        ƒ
-      </span>
       <span style={{ fontWeight: 600 }}>{children}</span>
       <span aria-hidden="true" style={{ opacity: 0.7 }}>
         ↗
@@ -462,7 +447,7 @@ function WikiLink({ href, children, theme }) {
             backdropFilter: "blur(8px)",
             WebkitBackdropFilter: "blur(8px)",
             color: isDark ? "#e9e9ec" : "#1a1a1f",
-            boxShadow: `0 14px 44px -10px rgba(0,0,0,${isDark ? 0.65 : 0.28}), 0 0 20px -3px rgba(${accent},0.4)`,
+            boxShadow: `0 14px 44px -10px rgba(0,0,0,${isDark ? 0.65 : 0.28}), 0 0 20px -3px rgba(${glow},${isDark ? 0.22 : 0.35})`,
             padding: "11px 13px",
             // fade/rise in
             animation: "wikipop-in 0.14s ease-out",
