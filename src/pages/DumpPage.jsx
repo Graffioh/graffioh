@@ -357,17 +357,31 @@ export default function DumpPage() {
                 className={`w-full h-full rounded-full select-none transition-transform duration-200 hover:scale-150 active:scale-95 ${
                   isHot ? "scale-150" : ""
                 }`}
-                style={{
-                  // black-matter / black-hole: dead black core, faint event-horizon rim
-                  background:
-                    "radial-gradient(circle at 50% 50%, #000 60%, #050505 74%, rgba(0,0,0,0) 100%)",
-                  boxShadow: isHot
-                    ? "0 0 12px 3px rgba(0,0,0,0.6), 0 0 40px 7px rgba(150,150,210,0.55), inset 0 0 10px rgba(0,0,0,1)"
-                    : "0 0 12px 3px rgba(0,0,0,0.55), 0 0 26px 2px rgba(90,90,130,0.22), inset 0 0 8px rgba(0,0,0,1)",
-                  border: isHot
-                    ? "1px solid rgba(190,190,230,0.9)"
-                    : "1px solid rgba(140,140,170,0.35)",
-                }}
+                style={
+                  theme === "dark"
+                    ? {
+                        // white-matter: glowing white core, soft luminous halo
+                        background:
+                          "radial-gradient(circle at 50% 50%, #fff 60%, #fafafa 74%, rgba(255,255,255,0) 100%)",
+                        boxShadow: isHot
+                          ? "0 0 12px 3px rgba(255,255,255,0.65), 0 0 40px 7px rgba(200,205,255,0.55), inset 0 0 10px rgba(255,255,255,0.6)"
+                          : "0 0 12px 3px rgba(255,255,255,0.5), 0 0 26px 2px rgba(180,185,225,0.28), inset 0 0 8px rgba(255,255,255,0.5)",
+                        border: isHot
+                          ? "1px solid rgba(255,255,255,0.95)"
+                          : "1px solid rgba(220,220,240,0.55)",
+                      }
+                    : {
+                        // black-matter / black-hole: dead black core, faint event-horizon rim
+                        background:
+                          "radial-gradient(circle at 50% 50%, #000 60%, #050505 74%, rgba(0,0,0,0) 100%)",
+                        boxShadow: isHot
+                          ? "0 0 12px 3px rgba(0,0,0,0.6), 0 0 40px 7px rgba(150,150,210,0.55), inset 0 0 10px rgba(0,0,0,1)"
+                          : "0 0 12px 3px rgba(0,0,0,0.55), 0 0 26px 2px rgba(90,90,130,0.22), inset 0 0 8px rgba(0,0,0,1)",
+                        border: isHot
+                          ? "1px solid rgba(190,190,230,0.9)"
+                          : "1px solid rgba(140,140,170,0.35)",
+                      }
+                }
               />
               {/* title always shown just below the orb; drops lower on hover
                   so the scaled-up orb doesn't crowd it */}

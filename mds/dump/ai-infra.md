@@ -8,7 +8,7 @@ So our great researchers found some ways to optimize this process:
 
 ### Data parallelism
 
-Divide inputs in batches, each batch goes into a different GPU, each GPU contains a copy of the Model.
+(Divide inputs in batches, each batch goes into a different GPU, each GPU contains a copy of the Model)
 
 <img src="../../data-parallelism.png" alt="data-parallelism" style="width:100%" />
 

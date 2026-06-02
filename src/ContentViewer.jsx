@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Markdown from "react-markdown";
 import ImageLightbox from "./ImageLightbox";
+import { ThemeContext } from "./ThemeContext";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeRaw from "rehype-raw";
@@ -9,7 +10,59 @@ import rehypeSlug from "rehype-slug";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import {
+  vscDarkPlus,
+  oneLight,
+} from "react-syntax-highlighter/dist/esm/styles/prism";
+
+// Prism themes paint their own background on the <pre>/<code>/token elements.
+// Layered over our custom slab gradient, that shows up as per-line white "bands".
+// Strip every background so our `customStyle` slab is the only one that renders.
+function stripBackgrounds(style) {
+  const out = {};
+  for (const selector in style) {
+    const rule = style[selector];
+    if (rule && typeof rule === "object") {
+      const { background, backgroundColor, backgroundImage, ...rest } = rule;
+      out[selector] = rest;
+    } else {
+      out[selector] = rule;
+    }
+  }
+  return out;
+}
+const ONE_LIGHT_NO_BG = stripBackgrounds(oneLight);
+const VSC_DARK_PLUS_NO_BG = stripBackgrounds(vscDarkPlus);
+
+// Flatten a React children tree down to its plain text (raw-HTML inline markup
+// can split a string across nested nodes — we want the whole run as one string).
+function flattenText(node) {
+  if (node == null || node === false) return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(flattenText).join("");
+  if (React.isValidElement(node)) return flattenText(node.props.children);
+  return "";
+}
+
+// RGB bracket-pair coloring, keyed by bracket *type*: {} = red, [] = green,
+// () = blue. Brighter hues in dark mode so they read against the dark page.
+// Triggered by `<span class="rgb">…</span>` in the markdown.
+const BRACKET_HUES = {
+  dark: { "{": "#ff6b6b", "}": "#ff6b6b", "[": "#5fd95f", "]": "#5fd95f", "(": "#6ba8ff", ")": "#6ba8ff" },
+  light: { "{": "#cc2626", "}": "#cc2626", "[": "#1a8a1a", "]": "#1a8a1a", "(": "#1846dd", ")": "#1846dd" },
+};
+function colorizeBrackets(text, theme) {
+  const hues = BRACKET_HUES[theme === "dark" ? "dark" : "light"];
+  return [...text].map((ch, i) =>
+    hues[ch] ? (
+      <span key={i} style={{ color: hues[ch], fontWeight: 600 }}>
+        {ch}
+      </span>
+    ) : (
+      ch
+    )
+  );
+}
 
 // Obsidian-style display math: remark-math only treats $$…$$ as a block when it
 // sits alone on its own line. This plugin detects $$ used inline (the delimiter
@@ -74,7 +127,27 @@ function remarkInlineDisplayMath() {
   };
 }
 
+// Render a plain-text `->` as a real arrow (→). It only rewrites `text` nodes, so
+// arrows inside code / inline-code (e.g. C++ `ptr->member`) and math are untouched
+// — those are separate node types whose content never lives in a `text` child.
+function remarkArrows() {
+  return (tree) => {
+    const visit = (node) => {
+      if (!node.children) return;
+      for (const child of node.children) {
+        if (child.type === "text") {
+          child.value = child.value.replace(/->/g, "→");
+        } else {
+          visit(child);
+        }
+      }
+    };
+    visit(tree);
+  };
+}
+
 export default function ContentViewer({ content, centered = false, zoomable = true }) {
+  const { theme } = useContext(ThemeContext);
   // Image clicked to open in the zoomable lightbox overlay ({ src, alt } | null)
   const [lightbox, setLightbox] = useState(null);
 
@@ -109,7 +182,7 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
         <div className="md:w-7/12 w-full px-4 mx-auto">
           <Markdown
             className={`markdown ${centered ? "text-center" : ""}`}
-            remarkPlugins={[remarkGfm, remarkMath, remarkInlineDisplayMath]}
+            remarkPlugins={[remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows]}
             rehypePlugins={[rehypeRaw, rehypeRemoveComments, rehypeSlug, rehypeKatex]}
             components={{
               img(props) {
@@ -177,6 +250,23 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
                   </a>
                 );
               },
+              span(props) {
+                const { children, className, node, ...rest } = props;
+                // `<span class="rgb">…</span>` → RGB bracket-pair coloring.
+                // Any other span passes through untouched.
+                if (/\brgb\b/.test(className || "")) {
+                  return (
+                    <span className={className} {...rest}>
+                      {colorizeBrackets(flattenText(children), theme)}
+                    </span>
+                  );
+                }
+                return (
+                  <span className={className} {...rest}>
+                    {children}
+                  </span>
+                );
+              },
               h2(props) {
                 const { children, ...rest } = props;
                 return (
@@ -196,26 +286,45 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
               code(props) {
                 const { children, className, node, ...rest } = props;
                 const match = /language-(\w+)/.exec(className || "");
-                return match ? (
+                const text = String(children);
+                // A fenced block (multiline) with no language must still render as a
+                // unified block. Otherwise it falls through to the inline `<code>`
+                // pill styling below, whose `box-decoration-break: clone` repaints
+                // the background/border on every wrapped line ("split pills").
+                const isBlock = match || text.includes("\n");
+                return isBlock ? (
                   <SyntaxHighlighter
                     {...rest}
                     PreTag="div"
-                    children={String(children).replace(/\n$/, "")}
-                    language={match[1]}
-                    style={vscDarkPlus}
+                    children={text.replace(/\n$/, "")}
+                    language={match ? match[1] : "text"}
+                    // Mirror the inline-code "photographic negative": dark slab in
+                    // light mode, white slab in dark mode (syntax theme flips too).
+                    style={theme === "dark" ? ONE_LIGHT_NO_BG : VSC_DARK_PLUS_NO_BG}
                     className="text-sm my-4"
                     wrapLongLines={false}
-                    // black-matter slab — same event-horizon glow as the orbs,
-                    // syntax colors untouched so it stays readable
                     customStyle={{
                       overflowX: "auto",
                       borderRadius: "0.7em",
-                      border: "1px solid rgba(150,150,185,0.22)",
-                      boxShadow:
-                        "0 0 18px 1px rgba(120,110,190,0.16), inset 0 0 30px rgba(0,0,0,0.55)",
-                      background:
-                        "radial-gradient(130% 160% at 50% 0%, #16161e 0%, #0b0b10 55%, #050507 100%)",
                       padding: "1em 1.1em",
+                      ...(theme === "dark"
+                        ? {
+                            // white-matter slab — olive rim glow + soft inner light
+                            color: "#12120a",
+                            border: "1px solid rgba(105,105,70,0.22)",
+                            boxShadow:
+                              "0 0 18px 1px rgba(135,145,65,0.16), inset 0 0 30px rgba(255,255,255,0.6)",
+                            background:
+                              "radial-gradient(130% 160% at 50% 0%, #f1f1ee 0%, #eaeae6 55%, #e2e2dd 100%)",
+                          }
+                        : {
+                            // black-matter slab — event-horizon glow like the orbs
+                            border: "1px solid rgba(150,150,185,0.22)",
+                            boxShadow:
+                              "0 0 18px 1px rgba(120,110,190,0.16), inset 0 0 30px rgba(0,0,0,0.55)",
+                            background:
+                              "radial-gradient(130% 160% at 50% 0%, #16161e 0%, #0b0b10 55%, #050507 100%)",
+                          }),
                     }}
                   />
                 ) : (
@@ -223,16 +332,24 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
                     {...rest}
                     // inline "black hole": faded translucent-black core with a
                     // faint purple rim glow, crisp light text — small + stays
-                    // in the line flow
+                    // in the line flow. In dark mode it flips to the exact
+                    // photographic negative: white core, black text.
                     className="rounded-[0.35em] px-[0.36em] py-[0.04em] mx-[0.05em]"
                     style={{
                       fontSize: "0.88em",
                       background:
-                        "radial-gradient(120% 135% at 50% 28%, #131316 0%, #181818 65%, #1d1d22 100%)",
-                      color: "#ededf5",
-                      border: "1px solid rgba(150,150,185,0.22)",
+                        theme === "dark"
+                          ? "radial-gradient(120% 135% at 50% 28%, #ecece9 0%, #e7e7e7 65%, #e2e2dd 100%)"
+                          : "radial-gradient(120% 135% at 50% 28%, #131316 0%, #181818 65%, #1d1d22 100%)",
+                      color: theme === "dark" ? "#12120a" : "#ededf5",
+                      border:
+                        theme === "dark"
+                          ? "1px solid rgba(105,105,70,0.22)"
+                          : "1px solid rgba(150,150,185,0.22)",
                       boxShadow:
-                        "0 0 6px 0 rgba(120,110,190,0.25), inset 0 0 5px rgba(0,0,0,0.6)",
+                        theme === "dark"
+                          ? "0 0 6px 0 rgba(135,145,65,0.25), inset 0 0 5px rgba(255,255,255,0.6)"
+                          : "0 0 6px 0 rgba(120,110,190,0.25), inset 0 0 5px rgba(0,0,0,0.6)",
                       boxDecorationBreak: "clone",
                       WebkitBoxDecorationBreak: "clone",
                     }}
