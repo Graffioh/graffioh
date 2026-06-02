@@ -2,9 +2,16 @@
 
 ## Transformer
 
+<div style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; margin:1.2rem 0;">
 <img src="/dump/img/bumblebee.png" alt="bumblebee" width="200" />
+<img src="/dump/img/transformer-residual.png" alt="transformer residual stream" style="width:440px; max-width:100%;" />
+</div>
 
 [[formulas#Attention]]
+
+[[https://arxiv.org/abs/1706.03762|Attention Is All You Need]]
+
+- Before each residual stream, we need to normalize (usually LayerNorm or [[formulas#RMS Norm]])
 
 ## RoPE
 

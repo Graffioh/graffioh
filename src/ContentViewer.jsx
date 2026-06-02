@@ -5,7 +5,7 @@ import Markdown from "react-markdown";
 import GithubSlugger from "github-slugger";
 import ImageLightbox from "./ImageLightbox";
 import { ThemeContext } from "./ThemeContext";
-import { dumpContent, backlinks } from "./dumps";
+import { dumpContent, references } from "./dumps";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeRaw from "rehype-raw";
@@ -150,12 +150,46 @@ function remarkArrows() {
   };
 }
 
+// Classify an external reference so its orb shows the right logo: arXiv papers,
+// PDFs, or any other link (blog post / misc → a globe). arXiv wins over .pdf
+// since arXiv pdf URLs are still papers.
+function refKind(url) {
+  if (/arxiv\.org\//i.test(url)) return "arxiv";
+  if (/\.pdf($|[?#])/i.test(url)) return "pdf";
+  return "web";
+}
+
+// Fallback label for a reference with no `|Title`, used for the orb tooltip: the
+// arXiv id, else the URL's last path segment (sans `.pdf`), else the hostname.
+function refLabel(url) {
+  const ax = url.match(/arxiv\.org\/(?:abs|pdf)\/([^?#]+)/i);
+  if (ax) return `arXiv:${ax[1].replace(/\.pdf$/i, "")}`;
+  try {
+    const u = new URL(url);
+    const last = u.pathname.split("/").filter(Boolean).pop();
+    return last ? decodeURIComponent(last).replace(/\.pdf$/i, "") : u.hostname;
+  } catch {
+    return url;
+  }
+}
+
+// Strip [[<url>|Title]] reference links out of raw markdown before rendering —
+// they don't appear inline; they're hoisted to logo orbs on the section heading
+// (see `references` in dumps.js). Collapses the blank lines left behind.
+function stripReferences(md) {
+  if (!md) return md;
+  return md
+    .replace(/\[\[\s*https?:\/\/[^\]]+?\s*\]\]/gi, "")
+    .replace(/\n{3,}/g, "\n\n");
+}
+
 // Obsidian-style wiki links: [[note]], [[note#heading]], [[note#heading|label]].
 // Rewrites the bare `[[…]]` run inside a text node into a real mdast link aimed
 // at the dump route (/dump/<note>, plus #<slug> for a section) and tags it
 // `wikilink` so the `a` renderer can paint it as a cross-reference chip. The
 // section slug is built with the same github-slugger that rehype-slug uses to id
-// headings, so the anchors line up exactly.
+// headings, so the anchors line up exactly. (External [[<url>]] references are
+// stripped upstream by stripReferences and surfaced as heading orbs instead.)
 function remarkWikiLinks() {
   const slug = (s) => new GithubSlugger().slug(s);
   const WIKI = /\[\[([^\]]+?)\]\]/g;
@@ -255,6 +289,7 @@ const PREVIEW_REHYPE = [rehypeRaw, rehypeKatex];
 // leaving the page.
 function WikiLink({ href, children, theme }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const anchorRef = useRef(null);
   const popRef = useRef(null);
   const showTimer = useRef(null);
@@ -342,7 +377,9 @@ function WikiLink({ href, children, theme }) {
       onClick={(e) => {
         e.preventDefault();
         setPop(null);
-        navigate(href);
+        // Remember the page this link sits on so the target's back-link can
+        // return here (the note that contained the link) instead of the orbs.
+        navigate(href, { state: { from: location.pathname + location.hash } });
       }}
       onMouseEnter={() => {
         setHover(true);
@@ -490,7 +527,7 @@ function WikiLink({ href, children, theme }) {
             }}
           >
             <Markdown remarkPlugins={PREVIEW_REMARK} rehypePlugins={PREVIEW_REHYPE}>
-              {section.body || "_(empty section)_"}
+              {stripReferences(section.body) || "_(empty section)_"}
             </Markdown>
           </div>
         </div>,
@@ -500,72 +537,175 @@ function WikiLink({ href, children, theme }) {
   );
 }
 
-// Tiny "backlink" orbs rendered next to a heading — one per inbound wiki-link
-// reference. Mirrors the /dump orb look (white-matter in dark mode, black-hole
-// in light mode), shrunk to heading scale. Each orb jumps to the note the
-// reference lives in. Unnamed by design; a title tooltip names the source.
-function BacklinkOrbs({ refs, theme }) {
-  const navigate = useNavigate();
+// The official arXiv wordmark (2022 primary logo), inlined so it can be themed:
+// the letters take `ink` (the orb's contrast color) and the crossed X takes
+// `red`, instead of the logo's fixed tan/#aa142d so it reads on either orb.
+function ArxivLogo({ ink, red, height = 12 }) {
+  return (
+    <svg
+      height={height}
+      viewBox="0 0 246.978 111.119"
+      fill="none"
+      aria-hidden="true"
+      style={{ display: "block" }}
+    >
+      <g transform="translate(-358.165 -222.27)">
+        <path fill={ink} d="M427.571,255.154c1.859,0,3.1,1.24,3.985,3.453,1.062-2.213,2.568-3.453,4.694-3.453h14.878a4.062,4.062,0,0,1,4.074,4.074v7.828c0,2.656-1.327,4.074-4.074,4.074-2.656,0-4.074-1.418-4.074-4.074V263.3H436.515a2.411,2.411,0,0,0-2.656,2.745v27.188h10.007c2.658,0,4.074,1.329,4.074,4.074s-1.416,4.074-4.074,4.074h-26.39c-2.659,0-3.986-1.328-3.986-4.074s1.327-4.074,3.986-4.074h8.236V263.3h-7.263c-2.656,0-3.985-1.329-3.985-4.074,0-2.658,1.329-4.074,3.985-4.074Z" />
+        <path fill={ink} d="M539.233,255.154c2.656,0,4.074,1.416,4.074,4.074v34.007h10.1c2.746,0,4.074,1.329,4.074,4.074s-1.328,4.074-4.074,4.074H524.8c-2.656,0-4.074-1.328-4.074-4.074s1.418-4.074,4.074-4.074h10.362V263.3h-8.533c-2.744,0-4.073-1.329-4.073-4.074,0-2.658,1.329-4.074,4.073-4.074Zm4.22-17.615a5.859,5.859,0,1,1-5.819-5.819A5.9,5.9,0,0,1,543.453,237.539Z" />
+        <path fill={ink} d="M605.143,259.228a4.589,4.589,0,0,1-.267,1.594L590,298.9a3.722,3.722,0,0,1-3.721,2.48h-5.933a3.689,3.689,0,0,1-3.808-2.48l-15.055-38.081a3.23,3.23,0,0,1-.355-1.594,4.084,4.084,0,0,1,4.164-4.074,3.8,3.8,0,0,1,3.718,2.656l14.348,36.134,13.9-36.134a3.8,3.8,0,0,1,3.72-2.656A4.084,4.084,0,0,1,605.143,259.228Z" />
+        <path fill={red} d="M486.149,277.877l-32.741,38.852c-1.286,1.372-2.084,3.777-1.365,5.5a4.705,4.705,0,0,0,4.4,2.914,4.191,4.191,0,0,0,3.16-1.563l40.191-42.714a4.417,4.417,0,0,0,.042-6.042Z" />
+        <path fill={ink} d="M486.149,277.877l31.187-38.268c1.492-1.989,2.2-3.03,1.492-4.723a5.142,5.142,0,0,0-4.481-3.161h0a4.024,4.024,0,0,0-3.008,1.108L472.711,274.6a4.769,4.769,0,0,0,.015,6.53L520.512,332.2a3.913,3.913,0,0,0,3.137,1.192,4.394,4.394,0,0,0,4.027-2.818c.719-1.727-.076-3.438-1.4-5.23l-40.124-47.464" />
+        <path fill={red} d="M499.833,274.828,453.169,224.4s-1.713-2.08-3.524-2.124a4.607,4.607,0,0,0-4.338,2.788c-.705,1.692-.2,2.88,1.349,5.1l40.093,48.422" />
+        <path fill={ink} d="M390.61,255.154c5.018,0,8.206,3.312,8.206,8.4v37.831H363.308a4.813,4.813,0,0,1-5.143-4.929V283.427a8.256,8.256,0,0,1,7-8.148l25.507-3.572v-8.4H362.306a4.014,4.014,0,0,1-4.141-4.074c0-2.87,2.143-4.074,4.355-4.074Zm.059,38.081V279.942l-24.354,3.4v9.9Z" />
+      </g>
+    </svg>
+  );
+}
+
+// One reference orb: the /dump orb material (white-matter in dark mode, black-hole
+// in light) carrying a logo for its link kind. arXiv papers get the real arXiv
+// wordmark, so that one stretches into a glowing pill; PDFs (document glyph) and
+// any other link (globe) stay round. Opens in a new tab; hovering lifts it and
+// pops the title.
+function RefOrb({ url, label, theme }) {
+  const [hover, setHover] = useState(false);
   const isDark = theme === "dark";
   const orb = isDark
     ? {
-        background:
-          "radial-gradient(circle at 50% 50%, #fff 60%, #fafafa 74%, rgba(255,255,255,0) 100%)",
+        // round orbs fade to transparent (soft glowing ball); the wide arXiv pill
+        // needs a solid slab instead, or its rounded ends turn fuzzy/gray.
+        bg: "radial-gradient(circle at 50% 50%, #fff 62%, #fafafa 78%, rgba(255,255,255,0) 100%)",
+        pill: "radial-gradient(125% 140% at 50% 30%, #fff 0%, #f4f4f1 72%, #ececea 100%)",
         border: "1px solid rgba(220,220,240,0.55)",
         rest: "0 0 6px 1px rgba(255,255,255,0.5), 0 0 12px 1px rgba(180,185,225,0.3)",
         hot: "0 0 9px 2px rgba(255,255,255,0.7), 0 0 20px 3px rgba(200,205,255,0.55)",
       }
     : {
-        background:
-          "radial-gradient(circle at 50% 50%, #000 60%, #050505 74%, rgba(0,0,0,0) 100%)",
+        bg: "radial-gradient(circle at 50% 50%, #000 62%, #050505 78%, rgba(0,0,0,0) 100%)",
+        pill: "radial-gradient(125% 140% at 50% 30%, #0c0c10 0%, #060608 72%, #000 100%)",
         border: "1px solid rgba(140,140,170,0.4)",
         rest: "0 0 6px 1px rgba(0,0,0,0.5), 0 0 12px 1px rgba(90,90,130,0.25)",
         hot: "0 0 9px 2px rgba(0,0,0,0.6), 0 0 20px 3px rgba(150,150,210,0.55)",
       };
+  const kind = refKind(url);
+  const isArxiv = kind === "arxiv";
+  const red = isDark ? "#b31b1b" : "#ff6b6b"; // arXiv / PDF red, tuned per orb
+  const ink = isDark ? "#15150d" : "#f0f0f0"; // letters / glyph on the orb core
+  const glyph = isArxiv ? (
+    <ArxivLogo ink={ink} red={red} height={12} />
+  ) : kind === "pdf" ? (
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={red}
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+    </svg>
+  ) : (
+    <svg
+      width="11.5"
+      height="11.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={ink}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9.5" />
+      <line x1="2.5" y1="12" x2="21.5" y2="12" />
+      <path d="M12 2.5a14 14 0 0 1 3.8 9.5 14 14 0 0 1-3.8 9.5 14 14 0 0 1-3.8-9.5 14 14 0 0 1 3.8-9.5z" />
+    </svg>
+  );
+  return (
+    <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        title={label}
+        aria-label={label}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: 22,
+          width: isArxiv ? "auto" : 22,
+          padding: isArxiv ? "0 9px" : 0,
+          flex: "0 0 auto",
+          borderRadius: "999px",
+          textDecoration: "none",
+          background: isArxiv ? orb.pill : orb.bg,
+          border: orb.border,
+          boxShadow: hover ? orb.hot : orb.rest,
+          transform: hover ? "scale(1.22)" : "none",
+          transition: "transform 0.18s ease, box-shadow 0.18s ease",
+          cursor: "pointer",
+        }}
+      >
+        {glyph}
+      </a>
+      {hover && (
+        <span
+          role="tooltip"
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: "50%",
+            transform: "translateX(-50%)",
+            marginTop: 9,
+            whiteSpace: "nowrap",
+            pointerEvents: "none",
+            zIndex: 30,
+            fontFamily: "system-ui, sans-serif",
+            fontSize: 11,
+            fontWeight: 600,
+            padding: "3px 8px",
+            borderRadius: 7,
+            background: isDark ? "rgba(250,250,248,0.97)" : "rgba(18,18,24,0.97)",
+            color: isDark ? "#1a1a1f" : "#e9e9ec",
+            border: `1px solid rgba(${isDark ? "135,145,65" : "120,110,190"},0.4)`,
+            boxShadow: `0 10px 26px -10px rgba(0,0,0,${isDark ? 0.55 : 0.3})`,
+          }}
+        >
+          {label}
+        </span>
+      )}
+    </span>
+  );
+}
+
+// Reference orbs next to a heading — one per external link cited in that section
+// ([[<url>|Title]]), each carrying its link-kind logo (arXiv / PDF / web).
+function RefOrbs({ refs, theme }) {
   return (
     <span
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: "6px",
-        marginLeft: "0.6em",
+        gap: "7px",
+        marginLeft: "0.55em",
         verticalAlign: "middle",
       }}
     >
-      {refs.map((b, i) => {
-        const title = noteTitle(dumpContent[b.source], b.source);
-        return (
-          <button
-            key={`${b.source}#${b.anchor}#${i}`}
-            type="button"
-            title={`referenced in ${title}`}
-            aria-label={`referenced in ${title}`}
-            onClick={() =>
-              navigate(`/dump/${b.source}${b.anchor ? `#${b.anchor}` : ""}`)
-            }
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "scale(1.55)";
-              e.currentTarget.style.boxShadow = orb.hot;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "none";
-              e.currentTarget.style.boxShadow = orb.rest;
-            }}
-            style={{
-              width: 10,
-              height: 10,
-              padding: 0,
-              flex: "0 0 auto",
-              borderRadius: "999px",
-              cursor: "pointer",
-              background: orb.background,
-              border: orb.border,
-              boxShadow: orb.rest,
-              transition: "transform 0.18s ease, box-shadow 0.18s ease",
-            }}
-          />
-        );
-      })}
+      {refs.map((r, i) => (
+        <RefOrb
+          key={`${r.url}#${i}`}
+          url={r.url}
+          label={r.title || refLabel(r.url)}
+          theme={theme}
+        />
+      ))}
     </span>
   );
 }
@@ -574,27 +714,26 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
   const { theme } = useContext(ThemeContext);
   const location = useLocation();
   const params = useParams();
-  // Which dump note this is (for backlink-orb lookup); null off /dump/:id.
+  // Which dump note this is (for reference-orb lookup); null off /dump/:id.
   const currentNoteId = location.pathname.startsWith("/dump/") ? params.id : null;
   // Image clicked to open in the zoomable lightbox overlay ({ src, alt } | null)
   const [lightbox, setLightbox] = useState(null);
+  // Strip [[<url>]] reference links out of the body — they render as heading orbs.
+  const cleaned = useMemo(() => stripReferences(content), [content]);
 
-  // Heading renderer factory: applies the level's styling and appends a backlink
-  // orb per inbound reference to that heading (whole-note refs hang off the h1).
+  // Heading renderer factory: applies the level's styling and appends a logo orb
+  // per external reference cited in that heading's section.
   const heading = (level, className) =>
     function Heading(props) {
       const { node, children, ...rest } = props;
       const id = props.id;
       const Tag = `h${level}`;
-      const refs = [];
-      if (currentNoteId && id && backlinks[`${currentNoteId}#${id}`])
-        refs.push(...backlinks[`${currentNoteId}#${id}`]);
-      if (level === 1 && currentNoteId && backlinks[currentNoteId])
-        refs.push(...backlinks[currentNoteId]);
+      const refs =
+        (currentNoteId && id && references[`${currentNoteId}#${id}`]) || [];
       return (
         <Tag className={className} {...rest}>
           {children}
-          {refs.length > 0 && <BacklinkOrbs refs={refs} theme={theme} />}
+          {refs.length > 0 && <RefOrbs refs={refs} theme={theme} />}
         </Tag>
       );
     };
@@ -844,7 +983,7 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
               },
             }}
           >
-            {content}
+            {cleaned}
           </Markdown>
         </div>
       </div>
