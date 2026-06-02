@@ -23,3 +23,10 @@ $$
 
 ## RMS Norm
 
+$$
+\text{RMSNorm}(x_i) = \frac{x_i}{RMS(x)} \cdot \gamma_i
+$$
+
+$$
+RMS(x) = \sqrt{\frac{1}{D} \sum_{j=1}^D x_j^2 + \epsilon}
+$$

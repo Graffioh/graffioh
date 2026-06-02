@@ -10,7 +10,7 @@ Some strategies to encode positional informations directly into the attention me
 
 ### wtf?
 
-I think this is actually the most used word after glancing at RoPE:
+I think this is actually the most used word after glancing at RoPE.
 
 [[formulas#RoPE]]
 

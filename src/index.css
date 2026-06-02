@@ -131,6 +131,17 @@ blockquote p {
     overflow-x: auto;
     max-width: 100%;
 }
+
+/* display math ($$…$$): the `.markdown > * { all: revert }` reset above strips
+   KaTeX's own `.katex-display` rules (it renders as a direct child here),
+   reverting it to an inline span — which silently ignores vertical margins.
+   Restore block layout + centering, then add the breathing room. */
+.markdown .katex-display {
+    display: block;
+    text-align: center;
+    margin-top: 2em;
+    margin-bottom: 2em;
+}
 a {
 }
 p a {
