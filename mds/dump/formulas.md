@@ -10,7 +10,7 @@ $$
 \text{attn\_score} = \text{softmax}({\frac{QK^T}{\sqrt{d_{head}}}})
 $$
 
-- we need to apply a *causal mask* on attn_score (so during training, we avoid looking at future tokens and cheating)
+- we need to apply a *causal mask* on attn_score before softmax (so during training, we avoid looking at future tokens and cheating)
 
 ## RoPE
 
