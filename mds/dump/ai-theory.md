@@ -11,7 +11,7 @@
 
 [[https://arxiv.org/abs/1706.03762|Attention Is All You Need]]
 
-- Before each residual stream, we need to normalize (usually LayerNorm or [[formulas#RMS Norm]])
+- Before each sublayer (attn, mlp and such), we need to normalize, usually with LayerNorm or [[formulas#RMS Norm]] otherwise gradients go *fiuuu* or *booom*
 
 ## RoPE
 
