@@ -1,7 +1,11 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import Markdown from "react-markdown";
+import GithubSlugger from "github-slugger";
 import ImageLightbox from "./ImageLightbox";
 import { ThemeContext } from "./ThemeContext";
+import { dumpContent, backlinks } from "./dumps";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeRaw from "rehype-raw";
@@ -146,35 +150,472 @@ function remarkArrows() {
   };
 }
 
+// Obsidian-style wiki links: [[note]], [[note#heading]], [[note#heading|label]].
+// Rewrites the bare `[[…]]` run inside a text node into a real mdast link aimed
+// at the dump route (/dump/<note>, plus #<slug> for a section) and tags it
+// `wikilink` so the `a` renderer can paint it as a cross-reference chip. The
+// section slug is built with the same github-slugger that rehype-slug uses to id
+// headings, so the anchors line up exactly.
+function remarkWikiLinks() {
+  const slug = (s) => new GithubSlugger().slug(s);
+  const WIKI = /\[\[([^\]]+?)\]\]/g;
+  return (tree) => {
+    const visit = (node) => {
+      if (!node.children) return;
+      const out = [];
+      for (const child of node.children) {
+        if (child.type !== "text" || !child.value.includes("[[")) {
+          visit(child); // recurse into containers (paragraphs, list items, …)
+          out.push(child);
+          continue;
+        }
+        const text = child.value;
+        let last = 0;
+        let m;
+        WIKI.lastIndex = 0;
+        while ((m = WIKI.exec(text))) {
+          if (m.index > last)
+            out.push({ type: "text", value: text.slice(last, m.index) });
+          const [target, label] = m[1].split("|");
+          const [note, heading] = target.split("#");
+          let url = `/dump/${note.trim()}`;
+          if (heading) url += `#${slug(heading.trim())}`;
+          out.push({
+            type: "link",
+            url,
+            data: { hProperties: { className: ["wikilink"] } },
+            children: [{ type: "text", value: (label ?? heading ?? note).trim() }],
+          });
+          last = m.index + m[0].length;
+        }
+        if (last < text.length)
+          out.push({ type: "text", value: text.slice(last) });
+      }
+      node.children = out;
+    };
+    visit(tree);
+  };
+}
+
+const HEADING_RE = /^(#{1,6})\s+(.+?)\s*$/;
+
+// Pull the slice of a dump file that a wiki-link points at, so it can be shown in
+// a hover preview. With a section slug → that heading's body (down to the next
+// same-or-higher heading); without one → the whole note (after its title).
+// Returns { title, body } or null when the target/section can't be found.
+function sectionForSlug(raw, slug) {
+  if (!raw) return null;
+  const lines = raw.split("\n");
+  if (!slug) {
+    const ti = lines.findIndex((l) => HEADING_RE.test(l));
+    if (ti === -1) return { title: "", body: raw.trim() };
+    return { title: HEADING_RE.exec(lines[ti])[2], body: lines.slice(ti + 1).join("\n").trim() };
+  }
+  let start = -1;
+  let level = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const m = HEADING_RE.exec(lines[i]);
+    if (m && new GithubSlugger().slug(m[2]) === slug) {
+      start = i;
+      level = m[1].length;
+      break;
+    }
+  }
+  if (start === -1) return null;
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    const m = HEADING_RE.exec(lines[i]);
+    if (m && m[1].length <= level) {
+      end = i;
+      break;
+    }
+  }
+  return {
+    title: HEADING_RE.exec(lines[start])[2],
+    body: lines.slice(start + 1, end).join("\n").trim(),
+  };
+}
+
+// A dump note's display title — its first "# heading", else a de-kebab'd id.
+function noteTitle(raw, id) {
+  const m = raw && raw.match(/^#\s+(.+)$/m);
+  return m ? m[1].trim() : (id || "").replace(/-/g, " ");
+}
+
+// Plugin set for the small preview render — same math/arrow handling as the page,
+// minus rehypeSlug (no ids needed) and remarkWikiLinks (no nested chips/popovers).
+const PREVIEW_REMARK = [remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows];
+const PREVIEW_REHYPE = [rehypeRaw, rehypeKatex];
+
+// Cross-reference chip for a wiki-link — a small "portal" pill that mirrors the
+// site's inline-code negative-space motif (dark slab + purple glow in light mode,
+// light slab + olive glow in dark mode). Navigates in-app so the target page's
+// hash-scroll effect lands on the linked section. Hovering (or focusing) it pops
+// an Obsidian-style preview of the referenced section so you can glance without
+// leaving the page.
+function WikiLink({ href, children, theme }) {
+  const navigate = useNavigate();
+  const anchorRef = useRef(null);
+  const popRef = useRef(null);
+  const showTimer = useRef(null);
+  const hideTimer = useRef(null);
+  const [hover, setHover] = useState(false);
+  // null when closed; otherwise the resolved fixed-position box for the popover.
+  const [pop, setPop] = useState(null);
+  const isDark = theme === "dark";
+  const accent = isDark ? "135,145,65" : "120,110,190"; // olive / purple
+  const inner = isDark ? "255,255,255" : "0,0,0";
+
+  const [noteId, slug] = useMemo(() => {
+    const m = href.match(/\/dump\/([^#]+)(?:#(.*))?$/) || [];
+    return [m[1] || "", m[2] || ""];
+  }, [href]);
+  const section = useMemo(() => sectionForSlug(dumpContent[noteId], slug), [noteId, slug]);
+  const source = useMemo(() => noteTitle(dumpContent[noteId], noteId), [noteId]);
+  const canPreview = !!(section && (section.body || section.title));
+
+  // Anchor the popover to the chip in viewport coords. We pin the edge nearest the
+  // chip (bottom when placed above, top when below) so the box grows away from the
+  // chip without us needing to measure its height first; the cross-axis is clamped
+  // to stay on-screen and the caret tracks the chip's center.
+  const openPop = () => {
+    const el = anchorRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const gap = 10;
+    const margin = 12;
+    const width = Math.min(440, vw - margin * 2);
+    const center = r.left + r.width / 2;
+    const left = Math.max(margin, Math.min(center - width / 2, vw - width - margin));
+    const above = r.top > vh - r.bottom; // pick the side with more room
+    const arrow = Math.max(18, Math.min(center - left, width - 18));
+    setPop({
+      width,
+      left,
+      arrow,
+      placement: above ? "above" : "below",
+      ...(above
+        ? { bottom: vh - r.top + gap, maxHeight: r.top - gap - margin }
+        : { top: r.bottom + gap, maxHeight: vh - r.bottom - gap - margin }),
+    });
+  };
+
+  const show = () => {
+    clearTimeout(hideTimer.current);
+    if (canPreview) showTimer.current = setTimeout(openPop, 130);
+  };
+  const hide = () => {
+    clearTimeout(showTimer.current);
+    hideTimer.current = setTimeout(() => setPop(null), 160);
+  };
+
+  // Clear pending timers on unmount; close the popover on scroll/resize (its fixed
+  // position would otherwise drift away from the chip).
+  useEffect(() => () => {
+    clearTimeout(showTimer.current);
+    clearTimeout(hideTimer.current);
+  }, []);
+  useEffect(() => {
+    if (!pop) return;
+    // Close on page scroll/resize, but ignore scrolling *within* the popover body.
+    const close = (e) => {
+      if (e?.type === "scroll" && popRef.current && popRef.current.contains(e.target))
+        return;
+      setPop(null);
+    };
+    window.addEventListener("scroll", close, true);
+    window.addEventListener("resize", close);
+    return () => {
+      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("resize", close);
+    };
+  }, [pop]);
+
+  const lit = hover || !!pop;
+  return (
+    <>
+    <a
+      ref={anchorRef}
+      href={href}
+      onClick={(e) => {
+        e.preventDefault();
+        setPop(null);
+        navigate(href);
+      }}
+      onMouseEnter={() => {
+        setHover(true);
+        show();
+      }}
+      onMouseLeave={() => {
+        setHover(false);
+        hide();
+      }}
+      onFocus={show}
+      onBlur={hide}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "0.5em",
+        verticalAlign: "baseline",
+        textDecoration: "none",
+        textShadow: "none",
+        borderRadius: "999px",
+        padding: "0.22em 0.72em 0.22em 0.28em",
+        fontSize: "0.9em",
+        lineHeight: 1.25,
+        cursor: "pointer",
+        color: isDark ? "#12120a" : "#ededf5",
+        background: isDark
+          ? "radial-gradient(120% 135% at 50% 28%, #ecece9 0%, #e2e2dd 100%)"
+          : "radial-gradient(120% 135% at 50% 28%, #131316 0%, #1d1d22 100%)",
+        border: `1px solid rgba(${accent},0.38)`,
+        boxShadow: lit
+          ? `0 5px 18px -2px rgba(${accent},0.5), inset 0 0 6px rgba(${inner},0.55)`
+          : `0 0 9px 0 rgba(${accent},0.3), inset 0 0 5px rgba(${inner},0.55)`,
+        transform: lit ? "translateY(-1px)" : "none",
+        transition: "transform 0.18s ease, box-shadow 0.18s ease",
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "1.55em",
+          height: "1.55em",
+          borderRadius: "999px",
+          fontStyle: "italic",
+          fontWeight: 700,
+          fontSize: "0.95em",
+          background: `rgba(${accent},${isDark ? 0.2 : 0.34})`,
+          color: isDark ? "#2f2f18" : "#d6cdff",
+        }}
+      >
+        ƒ
+      </span>
+      <span style={{ fontWeight: 600 }}>{children}</span>
+      <span aria-hidden="true" style={{ opacity: 0.7 }}>
+        ↗
+      </span>
+    </a>
+    {pop &&
+      createPortal(
+        <div
+          ref={popRef}
+          role="tooltip"
+          onMouseEnter={() => clearTimeout(hideTimer.current)}
+          onMouseLeave={hide}
+          style={{
+            position: "fixed",
+            left: pop.left,
+            width: pop.width,
+            ...(pop.placement === "above"
+              ? { bottom: pop.bottom }
+              : { top: pop.top }),
+            maxHeight: pop.maxHeight,
+            zIndex: 9999,
+            display: "flex",
+            flexDirection: "column",
+            borderRadius: "12px",
+            border: `1px solid rgba(${accent},0.4)`,
+            background: isDark ? "rgba(18,18,24,0.97)" : "rgba(250,250,248,0.98)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            color: isDark ? "#e9e9ec" : "#1a1a1f",
+            boxShadow: `0 14px 44px -10px rgba(0,0,0,${isDark ? 0.65 : 0.28}), 0 0 20px -3px rgba(${accent},0.4)`,
+            padding: "11px 13px",
+            // fade/rise in
+            animation: "wikipop-in 0.14s ease-out",
+          }}
+        >
+          {/* caret pointing back at the chip */}
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: pop.arrow - 6,
+              [pop.placement === "above" ? "bottom" : "top"]: -6,
+              width: 11,
+              height: 11,
+              background: isDark ? "rgba(18,18,24,0.97)" : "rgba(250,250,248,0.98)",
+              borderRight: `1px solid rgba(${accent},0.4)`,
+              borderBottom: `1px solid rgba(${accent},0.4)`,
+              transform:
+                pop.placement === "above" ? "rotate(45deg)" : "rotate(-135deg)",
+            }}
+          />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: "10px",
+              marginBottom: "7px",
+              flex: "0 0 auto",
+            }}
+          >
+            <span style={{ fontWeight: 700, fontSize: "0.92em" }}>
+              {section.title || source}
+            </span>
+            <span
+              style={{
+                opacity: 0.5,
+                fontSize: "0.74em",
+                whiteSpace: "nowrap",
+                flex: "0 0 auto",
+              }}
+            >
+              {source} ↗
+            </span>
+          </div>
+          <div
+            style={{
+              height: 1,
+              background: `rgba(${accent},0.22)`,
+              margin: "0 -13px 9px",
+              flex: "0 0 auto",
+            }}
+          />
+          <div
+            className="markdown"
+            style={{
+              flex: "1 1 auto",
+              minHeight: 0,
+              overflow: "auto",
+              fontSize: "0.86em",
+              lineHeight: 1.5,
+            }}
+          >
+            <Markdown remarkPlugins={PREVIEW_REMARK} rehypePlugins={PREVIEW_REHYPE}>
+              {section.body || "_(empty section)_"}
+            </Markdown>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+}
+
+// Tiny "backlink" orbs rendered next to a heading — one per inbound wiki-link
+// reference. Mirrors the /dump orb look (white-matter in dark mode, black-hole
+// in light mode), shrunk to heading scale. Each orb jumps to the note the
+// reference lives in. Unnamed by design; a title tooltip names the source.
+function BacklinkOrbs({ refs, theme }) {
+  const navigate = useNavigate();
+  const isDark = theme === "dark";
+  const orb = isDark
+    ? {
+        background:
+          "radial-gradient(circle at 50% 50%, #fff 60%, #fafafa 74%, rgba(255,255,255,0) 100%)",
+        border: "1px solid rgba(220,220,240,0.55)",
+        rest: "0 0 6px 1px rgba(255,255,255,0.5), 0 0 12px 1px rgba(180,185,225,0.3)",
+        hot: "0 0 9px 2px rgba(255,255,255,0.7), 0 0 20px 3px rgba(200,205,255,0.55)",
+      }
+    : {
+        background:
+          "radial-gradient(circle at 50% 50%, #000 60%, #050505 74%, rgba(0,0,0,0) 100%)",
+        border: "1px solid rgba(140,140,170,0.4)",
+        rest: "0 0 6px 1px rgba(0,0,0,0.5), 0 0 12px 1px rgba(90,90,130,0.25)",
+        hot: "0 0 9px 2px rgba(0,0,0,0.6), 0 0 20px 3px rgba(150,150,210,0.55)",
+      };
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "6px",
+        marginLeft: "0.6em",
+        verticalAlign: "middle",
+      }}
+    >
+      {refs.map((b, i) => {
+        const title = noteTitle(dumpContent[b.source], b.source);
+        return (
+          <button
+            key={`${b.source}#${b.anchor}#${i}`}
+            type="button"
+            title={`referenced in ${title}`}
+            aria-label={`referenced in ${title}`}
+            onClick={() =>
+              navigate(`/dump/${b.source}${b.anchor ? `#${b.anchor}` : ""}`)
+            }
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "scale(1.55)";
+              e.currentTarget.style.boxShadow = orb.hot;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "none";
+              e.currentTarget.style.boxShadow = orb.rest;
+            }}
+            style={{
+              width: 10,
+              height: 10,
+              padding: 0,
+              flex: "0 0 auto",
+              borderRadius: "999px",
+              cursor: "pointer",
+              background: orb.background,
+              border: orb.border,
+              boxShadow: orb.rest,
+              transition: "transform 0.18s ease, box-shadow 0.18s ease",
+            }}
+          />
+        );
+      })}
+    </span>
+  );
+}
+
 export default function ContentViewer({ content, centered = false, zoomable = true }) {
   const { theme } = useContext(ThemeContext);
+  const location = useLocation();
+  const params = useParams();
+  // Which dump note this is (for backlink-orb lookup); null off /dump/:id.
+  const currentNoteId = location.pathname.startsWith("/dump/") ? params.id : null;
   // Image clicked to open in the zoomable lightbox overlay ({ src, alt } | null)
   const [lightbox, setLightbox] = useState(null);
 
-  // Add anchor scroll handling for smooth navigation
-  useEffect(() => {
-    // Handle hash changes for table of contents navigation
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      if (hash) {
-        const id = hash.replace("#", "");
-        const element = document.getElementById(id);
-        if (element) {
-          // Smooth scroll to element
-          element.scrollIntoView({ behavior: "smooth" });
-        }
-      }
+  // Heading renderer factory: applies the level's styling and appends a backlink
+  // orb per inbound reference to that heading (whole-note refs hang off the h1).
+  const heading = (level, className) =>
+    function Heading(props) {
+      const { node, children, ...rest } = props;
+      const id = props.id;
+      const Tag = `h${level}`;
+      const refs = [];
+      if (currentNoteId && id && backlinks[`${currentNoteId}#${id}`])
+        refs.push(...backlinks[`${currentNoteId}#${id}`]);
+      if (level === 1 && currentNoteId && backlinks[currentNoteId])
+        refs.push(...backlinks[currentNoteId]);
+      return (
+        <Tag className={className} {...rest}>
+          {children}
+          {refs.length > 0 && <BacklinkOrbs refs={refs} theme={theme} />}
+        </Tag>
+      );
     };
 
-    // Handle initial hash if present
-    handleHashChange();
+  // Smooth-scroll to the hash target (table of contents + wiki-link sections).
+  // Re-runs on route/hash/content change so an in-app jump to another dump page
+  // (e.g. a [[formulas#RoPE]] wiki-link) lands on the section once it's rendered,
+  // and keeps reacting to manual hashchange events.
+  useEffect(() => {
+    const scrollToHash = () => {
+      const hash = window.location.hash;
+      if (!hash) return;
+      const id = decodeURIComponent(hash.slice(1));
+      const element = document.getElementById(id);
+      if (element) element.scrollIntoView({ behavior: "smooth" });
+    };
 
-    // Add event listener for hash changes
-    window.addEventListener("hashchange", handleHashChange);
-
-    // Clean up
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, []);
+    scrollToHash();
+    window.addEventListener("hashchange", scrollToHash);
+    return () => window.removeEventListener("hashchange", scrollToHash);
+  }, [location.pathname, location.hash, content]);
 
   return (
     <>
@@ -182,7 +623,7 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
         <div className="md:w-7/12 w-full px-4 mx-auto">
           <Markdown
             className={`markdown ${centered ? "text-center" : ""}`}
-            remarkPlugins={[remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows]}
+            remarkPlugins={[remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows, remarkWikiLinks]}
             rehypePlugins={[rehypeRaw, rehypeRemoveComments, rehypeSlug, rehypeKatex]}
             components={{
               img(props) {
@@ -230,6 +671,14 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
               },
               a(props) {
                 const { node, ref, href, children, ...rest } = props;
+                // Obsidian-style wiki-link → cross-reference chip (SPA navigation).
+                if (/\bwikilink\b/.test(rest.className || "")) {
+                  return (
+                    <WikiLink href={href} theme={theme}>
+                      {children}
+                    </WikiLink>
+                  );
+                }
                 // Handle internal links properly
                 if (href && href.startsWith("#")) {
                   return (
@@ -267,22 +716,10 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
                   </span>
                 );
               },
-              h2(props) {
-                const { children, ...rest } = props;
-                return (
-                  <h2 className="text-2xl font-bold mt-8 mb-4" {...rest}>
-                    {children}
-                  </h2>
-                );
-              },
-              h3(props) {
-                const { children, ...rest } = props;
-                return (
-                  <h3 className="text-xl font-bold mt-6 mb-3" {...rest}>
-                    {children}
-                  </h3>
-                );
-              },
+              h1: heading(1),
+              h2: heading(2, "text-2xl font-bold mt-8 mb-4"),
+              h3: heading(3, "text-xl font-bold mt-6 mb-3"),
+              h4: heading(4, "text-lg font-bold mt-5 mb-2"),
               code(props) {
                 const { children, className, node, ...rest } = props;
                 const match = /language-(\w+)/.exec(className || "");

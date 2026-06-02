@@ -12,9 +12,7 @@ Some strategies to encode positional informations directly into the attention me
 
 I think this is actually the most used word after glancing at RoPE:
 
-$$\langle R_m q, R_n k \rangle = q^T R_m^T R_n k = q^T R_{n-m}k$$
-
-where $q$ and $k$ are single heads.
+[[formulas#RoPE]]
 
 > The $q, k$ heads, individually, get paired up two by two ($\frac{d_{\text{head}}}{2}$) and each pair is rotated by *frequency*: $\theta_i = base^{\frac{-2i}{d_{\text{head}}}}$ via the rotation matrix $R$
 

@@ -69,6 +69,17 @@ body {
 .markdown > * {
     all: revert;
 }
+/* wiki-link hover preview popover entrance */
+@keyframes wikipop-in {
+    from {
+        opacity: 0;
+        transform: translateY(2px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
 .markdown strong {
     /* Commit Mono ships only a regular (400) weight, and webkit browsers
        won't reliably synthesize faux-bold for it — so reinforce the weight

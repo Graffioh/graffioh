@@ -1,6 +1,6 @@
 # About me
 
-I'm Umberto, 23 years old from Italy, I like computers and AI. Ex sde intern at amazon.
+I'm berto, 23 years old from Italy, I like computers and AI.
 
 I'll be sharing my journey, my personal thoughts and technical stuffs.
 
