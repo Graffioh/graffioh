@@ -9,6 +9,12 @@ const SLOW_RADIUS = 160; // px — cursor influence: orbs slow down within this
 const MIN_FACTOR = 0.1; // how much speed remains right under the cursor
 const BORDER_MARGIN = 90; // px — orbs start curving away this far from the edge
 const BORDER_TURN = 1500; // px/s² — inward push that bends their path back in
+const ENTER_MS = 720; // dive-into-orb animation length (< 1s)
+
+// Orb positions persist across navigation (changing section, or entering an
+// orb and coming back) — module-scoped so they survive DumpPage unmount and
+// the orbs resume exactly where the page was left.
+let savedOrbs = null;
 
 export default function DumpPage() {
   const { theme } = useContext(ThemeContext);
@@ -22,6 +28,11 @@ export default function DumpPage() {
   const flashesRef = useRef([]); // collision impact flashes
   const pointerRef = useRef({ x: -9999, y: -9999, inside: false });
 
+  // dive-into-orb state: the rAF loop reads enteringRef, the JSX reads `entering`
+  const enteringRef = useRef(null); // {ci, cx, cy, start} while diving in
+  const enterTimer = useRef(0);
+  const [entering, setEntering] = useState(null); // {x, y} viewport center for the bloom
+
   // keep the latest theme reachable from inside the rAF loop
   const themeRef = useRef(theme);
   useEffect(() => {
@@ -34,6 +45,30 @@ export default function DumpPage() {
   const setHover = (id) => {
     hoveredRef.current = id;
     setHoveredId(id);
+  };
+
+  // Begin the zoom into a given orb, then navigate. We snapshot the current
+  // positions first so coming back resumes from here.
+  const enterOrb = (topic, i) => {
+    if (enteringRef.current) return;
+    const s = stateRef.current[i];
+    if (!s) {
+      navigate(`/dump/${topic.id}`);
+      return;
+    }
+    savedOrbs = stateRef.current.map((o) => ({ ...o })); // resume here on return
+    setHover(null);
+    const cx = s.x + R;
+    const cy = s.y + R; // chosen orb's center, box-local — the zoom focal point
+    enteringRef.current = { ci: i };
+    // the big scale would briefly push content past the viewport — hide the
+    // scrollbars it would spawn (restored when DumpPage unmounts on navigate)
+    document.body.style.overflow = "hidden";
+    setEntering({ cx, cy });
+    enterTimer.current = window.setTimeout(
+      () => navigate(`/dump/${topic.id}`),
+      ENTER_MS
+    );
   };
 
   useEffect(() => {
@@ -54,10 +89,10 @@ export default function DumpPage() {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
 
-    // Seed positions/velocities, spread across the canvas.
-    const init = () => {
+    // Fresh layout: spread the orbs across the canvas with zippy velocities.
+    const seed = () => {
       const { width, height } = rect();
-      stateRef.current = topics.map((_, i) => {
+      return topics.map((_, i) => {
         const cols = Math.ceil(Math.sqrt(topics.length));
         const rows = Math.ceil(topics.length / cols);
         const cx = ((i % cols) + 0.5) * (width / cols);
@@ -73,8 +108,27 @@ export default function DumpPage() {
         };
       });
     };
+
+    // Clamp every orb back inside the current bounds (after resize / on resume).
+    const clampAll = () => {
+      const { width, height } = rect();
+      const mX = width - ORB_SIZE;
+      const mY = height - ORB_SIZE;
+      stateRef.current.forEach((s) => {
+        s.x = Math.min(Math.max(s.x, 0), mX);
+        s.y = Math.min(Math.max(s.y, 0), mY);
+      });
+    };
+
     sizeCanvas();
-    init();
+    // Resume where we left off if possible, otherwise seed a fresh layout.
+    if (savedOrbs && savedOrbs.length === topics.length) {
+      stateRef.current = savedOrbs;
+      clampAll();
+    } else {
+      stateRef.current = seed();
+      savedOrbs = stateRef.current; // keep the live array as the persisted one
+    }
 
     // emit a burst at a collision point (box-local coords).
     // nx,ny = the collision normal; sparks spray out sideways along the
@@ -133,9 +187,14 @@ export default function DumpPage() {
       const maxY = height - ORB_SIZE;
       const ptr = pointerRef.current;
       const orbs = stateRef.current;
+      const en = enteringRef.current; // non-null while diving into an orb
 
       // 1) integrate each orb (steer, slow near cursor, move, bounce off walls)
       orbs.forEach((s, i) => {
+        // while zooming, the focal orb holds perfectly still so the view stays
+        // locked onto it; the rest keep drifting as the scene scales up.
+        if (en && i === en.ci) return;
+
         const steer = Math.sin(t * 0.0004 + s.phase) * 0.9 * dt;
         const cos = Math.cos(steer);
         const sin = Math.sin(steer);
@@ -172,34 +231,37 @@ export default function DumpPage() {
         else if (s.y > maxY) { s.y = maxY; if (s.vy > 0) s.vy = 0; }
       });
 
-      // 2) rigid orb-orb collisions (equal-mass elastic) + particle burst
-      for (let i = 0; i < orbs.length; i++) {
-        for (let j = i + 1; j < orbs.length; j++) {
-          const a = orbs[i];
-          const b = orbs[j];
-          let nx = (b.x + R) - (a.x + R);
-          let ny = (b.y + R) - (a.y + R);
-          let dist = Math.hypot(nx, ny);
-          if (dist === 0) { nx = 1; ny = 0; dist = 0.001; }
-          if (dist < ORB_SIZE) {
-            nx /= dist; ny /= dist;
-            // push apart so they never overlap (rigid)
-            const overlap = ORB_SIZE - dist;
-            a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
-            b.x += nx * overlap / 2; b.y += ny * overlap / 2;
-            // relative velocity along the collision normal
-            const along = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
-            if (along > 0) {
-              a.vx -= along * nx; a.vy -= along * ny;
-              b.vx += along * nx; b.vy += along * ny;
-              // spark burst at the contact point
-              burst((a.x + R + b.x + R) / 2, (a.y + R + b.y + R) / 2, nx, ny, Math.abs(along));
+      // 2) rigid orb-orb collisions (equal-mass elastic) + particle burst.
+      // Skipped while zooming so nothing jostles the locked focal orb.
+      if (!en) {
+        for (let i = 0; i < orbs.length; i++) {
+          for (let j = i + 1; j < orbs.length; j++) {
+            const a = orbs[i];
+            const b = orbs[j];
+            let nx = (b.x + R) - (a.x + R);
+            let ny = (b.y + R) - (a.y + R);
+            let dist = Math.hypot(nx, ny);
+            if (dist === 0) { nx = 1; ny = 0; dist = 0.001; }
+            if (dist < ORB_SIZE) {
+              nx /= dist; ny /= dist;
+              // push apart so they never overlap (rigid)
+              const overlap = ORB_SIZE - dist;
+              a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
+              b.x += nx * overlap / 2; b.y += ny * overlap / 2;
+              // relative velocity along the collision normal
+              const along = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+              if (along > 0) {
+                a.vx -= along * nx; a.vy -= along * ny;
+                b.vx += along * nx; b.vy += along * ny;
+                // spark burst at the contact point
+                burst((a.x + R + b.x + R) / 2, (a.y + R + b.y + R) / 2, nx, ny, Math.abs(along));
+              }
             }
           }
         }
       }
 
-      // 3) write orb positions
+      // 3) write orb positions — the zoom itself is a CSS scale on the box
       orbs.forEach((s, i) => {
         const el = orbRefs.current[i];
         if (el) el.style.transform = `translate(${s.x}px, ${s.y}px)`;
@@ -293,11 +355,17 @@ export default function DumpPage() {
     };
     raf = requestAnimationFrame(loop);
 
-    const onResize = () => { sizeCanvas(); init(); };
+    const onResize = () => {
+      sizeCanvas();
+      // keep the persisted positions, just nudge them back inside the new bounds
+      clampAll();
+    };
     window.addEventListener("resize", onResize);
 
     return () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(enterTimer.current);
+      document.body.style.overflow = ""; // undo the zoom's scrollbar lock
       window.removeEventListener("resize", onResize);
       window.removeEventListener("pointermove", onMove);
       box.removeEventListener("pointerleave", onLeave);
@@ -305,109 +373,134 @@ export default function DumpPage() {
   }, []);
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold text-center pt-4 pb-3">dump</h1>
-
-      {/* title list — hover to highlight the matching orb, click to open */}
-      <ul className="flex flex-wrap justify-center gap-x-2 gap-y-1 pb-4 text-xs">
-        {topics.map((topic, idx) => (
-          <li key={topic.id} className="flex items-center gap-x-2">
-            {idx > 0 && (
-              <span className="text-stone-500 select-none">-</span>
-            )}
-            <button
-              onClick={() => navigate(`/dump/${topic.id}`)}
-              onMouseEnter={() => setHover(topic.id)}
-              onMouseLeave={() => setHover(null)}
-              className={`transition-colors hover:underline ${
-                hoveredId === topic.id
-                  ? theme === "dark"
-                    ? "text-white"
-                    : "text-black"
-                  : "text-stone-500"
-              }`}
-            >
-              {topic.title}
-            </button>
-          </li>
-        ))}
-      </ul>
-
+    <>
       <div
-        ref={boxRef}
-        className="relative overflow-hidden h-[80vh] w-full md:w-8/12 mx-auto"
+        className="p-4 dump-fade-in"
+        style={
+          entering
+            ? {
+                animation: "orb-dive-fade 0.72s ease-in both",
+                pointerEvents: "none",
+              }
+            : undefined
+        }
       >
-        {topics.map((topic, i) => {
-          const isHot = hoveredId === topic.id;
-          return (
-            // outer wrapper: JS drives its translate (position) every frame
-            <div
-              key={topic.id}
-              ref={(el) => (orbRefs.current[i] = el)}
-              className="absolute top-0 left-0 will-change-transform"
-              style={{ width: ORB_SIZE, height: ORB_SIZE }}
-            >
-              {/* inner button: owns hover/scale — no conflict with the translate above */}
+        <h1 className="text-2xl font-bold text-center pt-4 pb-3">dump</h1>
+
+        {/* title list — hover to highlight the matching orb, click to dive in */}
+        <ul className="flex flex-wrap justify-center gap-x-2 gap-y-1 pb-4 text-xs">
+          {topics.map((topic, idx) => (
+            <li key={topic.id} className="flex items-center gap-x-2">
+              {idx > 0 && (
+                <span className="text-stone-500 select-none">-</span>
+              )}
               <button
-                onClick={() => navigate(`/dump/${topic.id}`)}
+                onClick={() => enterOrb(topic, idx)}
                 onMouseEnter={() => setHover(topic.id)}
                 onMouseLeave={() => setHover(null)}
-                title={topic.title}
-                aria-label={topic.title}
-                className={`w-full h-full rounded-full select-none transition-transform duration-200 hover:scale-150 active:scale-95 ${
-                  isHot ? "scale-150" : ""
+                className={`transition-colors hover:underline ${
+                  hoveredId === topic.id
+                    ? theme === "dark"
+                      ? "text-white"
+                      : "text-black"
+                    : "text-stone-500"
                 }`}
-                style={
-                  theme === "dark"
-                    ? {
-                        // white-matter: glowing white core, soft luminous halo
-                        background:
-                          "radial-gradient(circle at 50% 50%, #fff 60%, #fafafa 74%, rgba(255,255,255,0) 100%)",
-                        boxShadow: isHot
-                          ? "0 0 12px 3px rgba(255,255,255,0.65), 0 0 40px 7px rgba(200,205,255,0.55), inset 0 0 10px rgba(255,255,255,0.6)"
-                          : "0 0 12px 3px rgba(255,255,255,0.5), 0 0 26px 2px rgba(180,185,225,0.28), inset 0 0 8px rgba(255,255,255,0.5)",
-                        border: isHot
-                          ? "1px solid rgba(255,255,255,0.95)"
-                          : "1px solid rgba(220,220,240,0.55)",
-                      }
-                    : {
-                        // black-matter / black-hole: dead black core, faint event-horizon rim
-                        background:
-                          "radial-gradient(circle at 50% 50%, #000 60%, #050505 74%, rgba(0,0,0,0) 100%)",
-                        boxShadow: isHot
-                          ? "0 0 12px 3px rgba(0,0,0,0.6), 0 0 40px 7px rgba(150,150,210,0.55), inset 0 0 10px rgba(0,0,0,1)"
-                          : "0 0 12px 3px rgba(0,0,0,0.55), 0 0 26px 2px rgba(90,90,130,0.22), inset 0 0 8px rgba(0,0,0,1)",
-                        border: isHot
-                          ? "1px solid rgba(190,190,230,0.9)"
-                          : "1px solid rgba(140,140,170,0.35)",
-                      }
-                }
-              />
-              {/* title hidden by default; fades in (and drops lower so the
-                  scaled-up orb doesn't crowd it) only while this orb is hot —
-                  i.e. hovering the orb itself or its entry in the title list */}
-              <span
-                className={`absolute left-1/2 top-full whitespace-nowrap text-center font-bold text-[10px] leading-tight pointer-events-none transition-all duration-200 ${
-                  isHot ? "text-white opacity-100" : "text-stone-300 opacity-0"
-                }`}
-                style={{
-                  transform: `translateX(-50%) translateY(${isHot ? 14 : 3}px)`,
-                  textShadow:
-                    "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
-                }}
               >
                 {topic.title}
-              </span>
-            </div>
-          );
-        })}
+              </button>
+            </li>
+          ))}
+        </ul>
 
-        {/* particle overlay — sits above the orbs, never blocks clicks */}
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 pointer-events-none"
-        />
+        <div
+          ref={boxRef}
+          className="relative overflow-hidden h-[80vh] w-full md:w-8/12 mx-auto"
+          style={
+            entering
+              ? {
+                  // scale the whole field up around the chosen orb's center so
+                  // the view flies into it; overflow opens up so it fills the
+                  // screen instead of being clipped to the field.
+                  transformOrigin: `${entering.cx}px ${entering.cy}px`,
+                  animation:
+                    "orb-zoom-in 0.72s cubic-bezier(0.45,0,0.85,0.45) forwards",
+                  overflow: "visible",
+                }
+              : undefined
+          }
+        >
+          {topics.map((topic, i) => {
+            const isHot = hoveredId === topic.id;
+            return (
+              // outer wrapper: JS drives its translate (position) every frame
+              <div
+                key={topic.id}
+                ref={(el) => (orbRefs.current[i] = el)}
+                className="absolute top-0 left-0 will-change-transform"
+                style={{ width: ORB_SIZE, height: ORB_SIZE }}
+              >
+                {/* inner button: owns hover/scale — no conflict with the translate above */}
+                <button
+                  onClick={() => enterOrb(topic, i)}
+                  onMouseEnter={() => setHover(topic.id)}
+                  onMouseLeave={() => setHover(null)}
+                  title={topic.title}
+                  aria-label={topic.title}
+                  className={`w-full h-full rounded-full select-none transition-transform duration-200 hover:scale-150 active:scale-95 ${
+                    isHot ? "scale-150" : ""
+                  }`}
+                  style={
+                    theme === "dark"
+                      ? {
+                          // white-matter: glowing white core, soft luminous halo
+                          background:
+                            "radial-gradient(circle at 50% 50%, #fff 60%, #fafafa 74%, rgba(255,255,255,0) 100%)",
+                          boxShadow: isHot
+                            ? "0 0 12px 3px rgba(255,255,255,0.65), 0 0 40px 7px rgba(200,205,255,0.55), inset 0 0 10px rgba(255,255,255,0.6)"
+                            : "0 0 12px 3px rgba(255,255,255,0.5), 0 0 26px 2px rgba(180,185,225,0.28), inset 0 0 8px rgba(255,255,255,0.5)",
+                          border: isHot
+                            ? "1px solid rgba(255,255,255,0.95)"
+                            : "1px solid rgba(220,220,240,0.55)",
+                        }
+                      : {
+                          // black-matter / black-hole: dead black core, faint event-horizon rim
+                          background:
+                            "radial-gradient(circle at 50% 50%, #000 60%, #050505 74%, rgba(0,0,0,0) 100%)",
+                          boxShadow: isHot
+                            ? "0 0 12px 3px rgba(0,0,0,0.6), 0 0 40px 7px rgba(150,150,210,0.55), inset 0 0 10px rgba(0,0,0,1)"
+                            : "0 0 12px 3px rgba(0,0,0,0.55), 0 0 26px 2px rgba(90,90,130,0.22), inset 0 0 8px rgba(0,0,0,1)",
+                          border: isHot
+                            ? "1px solid rgba(190,190,230,0.9)"
+                            : "1px solid rgba(140,140,170,0.35)",
+                        }
+                  }
+                />
+                {/* title hidden by default; fades in (and drops lower so the
+                    scaled-up orb doesn't crowd it) only while this orb is hot —
+                    i.e. hovering the orb itself or its entry in the title list */}
+                <span
+                  className={`absolute left-1/2 top-full whitespace-nowrap text-center font-bold text-[10px] leading-tight pointer-events-none transition-all duration-200 ${
+                    isHot ? "text-white opacity-100" : "text-stone-300 opacity-0"
+                  }`}
+                  style={{
+                    transform: `translateX(-50%) translateY(${isHot ? 14 : 3}px)`,
+                    textShadow:
+                      "-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000",
+                  }}
+                >
+                  {topic.title}
+                </span>
+              </div>
+            );
+          })}
+
+          {/* particle overlay — sits above the orbs, never blocks clicks */}
+          <canvas
+            ref={canvasRef}
+            className="absolute inset-0 pointer-events-none"
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }

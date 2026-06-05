@@ -23,7 +23,7 @@ export default function DumpTopicPage() {
     : { to: "/dump", label: "← back to orbs" };
 
   return (
-    <div>
+    <div className="page-fade-in">
       <div className="md:w-7/12 w-full px-4 mx-auto pt-4">
         <Link to={back.to} className="text-sm text-stone-400">
           {back.label}

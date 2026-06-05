@@ -4,3 +4,66 @@
   padding: 2rem;
   text-align: center;
 } */
+
+/* dive-into-orb transition (DumpPage) ------------------------------------- */
+
+/* the view scales up around the chosen orb's center, flying into it */
+@keyframes orb-zoom-in {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(24);
+  }
+}
+
+/* the field stays fully visible through most of the zoom, then fades to the
+   shared background in the last stretch so the handoff has no harsh cut */
+@keyframes orb-dive-fade {
+  0% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* gentle entrances so navigating to/from a dump page eases through the shared
+   background instead of cutting */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dump-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+.page-fade-in {
+  animation: page-fade-in 0.45s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dump-fade-in,
+  .page-fade-in {
+    animation: none;
+  }
+}
