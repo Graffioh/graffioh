@@ -13,17 +13,17 @@
     transform: scale(1);
   }
   to {
-    transform: scale(24);
+    transform: scale(28);
   }
 }
 
-/* the field stays fully visible through most of the zoom, then fades to the
-   shared background in the last stretch so the handoff has no harsh cut */
+/* the field stays fully visible through the warp, then snaps out to the shared
+   background in the final frames so the handoff has no harsh cut */
 @keyframes orb-dive-fade {
   0% {
     opacity: 1;
   }
-  60% {
+  68% {
     opacity: 1;
   }
   100% {
@@ -42,14 +42,18 @@
   }
 }
 
+/* destination "file" lands out of the warp: a quick de-blur + settle, so it
+   reads as one continuous motion with the dive rather than a separate fade */
 @keyframes page-fade-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(8px);
+    filter: blur(6px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
+    filter: blur(0);
   }
 }
 
@@ -58,7 +62,7 @@
 }
 
 .page-fade-in {
-  animation: page-fade-in 0.45s ease-out both;
+  animation: page-fade-in 0.28s ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {

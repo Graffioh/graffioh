@@ -9,7 +9,7 @@ const SLOW_RADIUS = 160; // px — cursor influence: orbs slow down within this
 const MIN_FACTOR = 0.1; // how much speed remains right under the cursor
 const BORDER_MARGIN = 90; // px — orbs start curving away this far from the edge
 const BORDER_TURN = 1500; // px/s² — inward push that bends their path back in
-const ENTER_MS = 720; // dive-into-orb animation length (< 1s)
+const ENTER_MS = 340; // dive-into-orb animation length — snappy warp-in
 
 // Orb positions persist across navigation (changing section, or entering an
 // orb and coming back) — module-scoped so they survive DumpPage unmount and
@@ -379,7 +379,7 @@ export default function DumpPage() {
         style={
           entering
             ? {
-                animation: "orb-dive-fade 0.72s ease-in both",
+                animation: "orb-dive-fade 0.34s ease-in both",
                 pointerEvents: "none",
               }
             : undefined
@@ -423,7 +423,7 @@ export default function DumpPage() {
                   // screen instead of being clipped to the field.
                   transformOrigin: `${entering.cx}px ${entering.cy}px`,
                   animation:
-                    "orb-zoom-in 0.72s cubic-bezier(0.45,0,0.85,0.45) forwards",
+                    "orb-zoom-in 0.34s cubic-bezier(0.32,0,0.67,0) forwards",
                   overflow: "visible",
                 }
               : undefined

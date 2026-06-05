@@ -27,3 +27,18 @@ So our great researchers found some ways to optimize this process:
 <small>Reference: <a href="https://www.youtube.com/watch?v=4i76hmmnJEo">Simon Oz (YouTube)</a></small>
 
 ### Expert parallelism (MoE)
+
+...
+
+## GGUF
+
+from the god [Georgi Gerganov](https://github.com/ggerganov)
+
+it's a convenient file that act as a "container" for model weights and config. It contains data (weights actual values, quantized) and metadata (e.g. the model config: layers and such).
+
+<img src="/dump/img/gguf-spec.png" alt="gguf-spec" style="width:60%" />
+
+<small>Reference: <a href="https://huggingface.co/docs/hub/gguf">GGUF (Hugging Face)</a></small>
+
+
+

@@ -972,14 +972,21 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
           </Markdown>
         </div>
       </div>
-      {lightbox && (
-        <ImageLightbox
-          key={lightbox.src}
-          src={lightbox.src}
-          alt={lightbox.alt}
-          onClose={() => setLightbox(null)}
-        />
-      )}
+      {lightbox &&
+        createPortal(
+          <ImageLightbox
+            key={lightbox.src}
+            src={lightbox.src}
+            alt={lightbox.alt}
+            onClose={() => setLightbox(null)}
+          />,
+          // Portal to <body> so the `fixed inset-0` overlay covers the viewport.
+          // The dump page's `.page-fade-in` wrapper keeps a `transform` (animation
+          // fill-mode: both), which would otherwise become the containing block for
+          // the fixed overlay — positioning it over the whole document instead, so
+          // a scrolled-open lightbox lands off-screen and just dims the page.
+          document.body
+        )}
     </>
   );
 }
