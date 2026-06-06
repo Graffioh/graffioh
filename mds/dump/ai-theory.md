@@ -1,6 +1,8 @@
 # ai theory
 
-## Derivatives & Jacobians
+## Basics
+
+### Derivatives & Jacobians
 
 with $\delta \rightarrow 0$:
 
@@ -19,7 +21,7 @@ $$
 - rows = outputs -> each row, tell us how output $i$ respond to all the inputs
 - columns = inputs -> each column, tell us how input $j$ respond to all the outputs
 
-## Backward Pass
+### Backward Pass
 
 composed of two sibling operations:
 - gradients passing
@@ -57,16 +59,36 @@ flowchart LR
     a1 -. "W₁ᵀ g₁ = ∂L/∂x" .-> x
 ```
 
-## Activations vs Gradients
+### Activations vs Gradients
 
 - **Activations**: input -> output, forward pass, matmul
 - **Gradients**: output -> input, backward pass, chain rule
 
-## Regularization vs Normalization
+### Regularization vs Normalization
 
 - **Regularization**: prevent model overfitting, *regularize it* (dropout, weight decay)
     - funny note: dropout has been dropped out from modern LLM, because it was originally used to not make the model overfit on **smaller datasets** -> a lot of epochs, model saw training examples a lot of times, leading to overfitting. But now with frontier pretraining, the epochs are fewer but much bigger datasets
 - **Normalization**: matmul can make activations grow or shrink, so it's better to normalize them and keeping them stable, to prevent the gradient go fiuuuu or booom.
+
+### Tokenizer
+
+a tokenizer is composed of a round-trip constructed as follows:
+- `encode()` -> convert string into tokens (vocabulary indices) 
+- `decode()` -> convert tokens back into the string
+
+other than making strings to be computable by the LLM, it also introduces *compression*, useful for fitting more tokens in the same context window!
+
+we'll not use a char-level/byte-level tokenizer (no compression), instead, nowadays a *byte-pair (BPE)* tokenizer is often used ([tiktoken by openai](https://github.com/openai/tiktoken))
+
+larger the *compression ratio*, the better it is: `compression_ratio() = bytes(token) / num_tokens`
+
+to increase compression we need to increase the `vocab_size`...why? because if we encounter frequently the same multi-character chunk, that chunk will be represented by one token, as an optimization! but instead if the vocab budget is limited, and we don't have repetitions of chunks, then spending a token for a chunk like this is wasteful and instead what we do is split the chunk in smaller pieces -> incrementing the num of tokens.
+
+#### Byte-pair encoding
+
+> common sequences of bytes are represented by a single token, rare sequences are represented by many tokens
+
+a byte is one UTF-8 common ASCII char, so multiple common bytes means common char chunks: e.g. `the` -> 1 token, `xqzj` -> 4 tokens, `funny 😂` -> 2 tokens
 
 ## Transformer
 
