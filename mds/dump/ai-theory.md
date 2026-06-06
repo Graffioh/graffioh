@@ -1,5 +1,73 @@
 # ai theory
 
+## Derivatives & Jacobians
+
+with $\delta \rightarrow 0$:
+
+$$
+f(x + \delta) = f(x) + f'(x) \cdot \delta
+$$
+
+approximate a local function behavior: how the function behaves after a small nudge $\delta$
+
+since with NN we go from $\mathbb{R} \rightarrow \mathbb{R}$ space, to $\mathbb{R}^n \rightarrow \mathbb{R}^m$, we must use *Jacobians* (holding derivatives for every outputs $\leftrightarrow$ inputs)
+
+$$
+J[i, j] = \frac{df_i}{dx_j}
+$$
+
+- rows = outputs -> each row, tell us how output $i$ respond to all the inputs
+- columns = inputs -> each column, tell us how input $j$ respond to all the outputs
+
+## Backward Pass
+
+composed of two sibling operations:
+- gradients passing
+- gradients for optimizing
+
+taken layers $l_k$ and $l_{k-1}$:
+
+$$
+g_{k-1} = (\frac{dy}{dx})^T g_k = W^T g_k
+$$
+to pass the gradient backward
+
+and at the same time we do:
+
+$$
+g_{\text{update}} = g_k (\frac{dy}{dW})^T = g_k x^T
+$$
+
+to calculate the gradient used during optimization phase: $W \leftarrow W - \eta \cdot g_{\text{update}}$
+
+### Chain rule
+
+If we do the backward pass on $k$ layers, the operations above, stacked together lead to the *chain-rule* $\frac{dL}{dW}$
+ 
+```mermaid
+flowchart LR
+    x["x = a₀"] -- "W₁" --> a1["a₁"]
+    a1 -- "W₂" --> a2["a₂"]
+    a2 -- "W₃" --> a3["a₃"]
+    a3 --> L["L = ℓ(a₃)"]
+ 
+    L  -. "g₃ = ∂L/∂a₃" .-> a3
+    a3 -. "W₃ᵀ g₃" .-> a2
+    a2 -. "W₂ᵀ g₂" .-> a1
+    a1 -. "W₁ᵀ g₁ = ∂L/∂x" .-> x
+```
+
+## Activations vs Gradients
+
+- **Activations**: input -> output, forward pass, matmul
+- **Gradients**: output -> input, backward pass, chain rule
+
+## Regularization vs Normalization
+
+- **Regularization**: prevent model overfitting, *regularize it* (dropout, weight decay)
+    - funny note: dropout has been dropped out from modern LLM, because it was originally used to not make the model overfit on **smaller datasets** -> a lot of epochs, model saw training examples a lot of times, leading to overfitting. But now with frontier pretraining, the epochs are fewer but much bigger datasets
+- **Normalization**: matmul can make activations grow or shrink, so it's better to normalize them and keeping them stable, to prevent the gradient go fiuuuu or booom.
+
 ## Transformer
 
 <div style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; margin:1.2rem 0;">
@@ -10,8 +78,6 @@
 [[formulas#Attention]]
 
 [[https://arxiv.org/abs/1706.03762|Attention Is All You Need]]
-
-- Before each sublayer (attn, mlp and such), we need to normalize, usually with LayerNorm or [[formulas#RMS Norm]] otherwise gradients go *fiuuu* or *booom*
 
 ## RoPE
 

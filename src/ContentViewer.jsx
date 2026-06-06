@@ -4,6 +4,7 @@ import { useNavigate, useLocation, useParams } from "react-router-dom";
 import Markdown from "react-markdown";
 import GithubSlugger from "github-slugger";
 import ImageLightbox from "./ImageLightbox";
+import Mermaid from "./Mermaid";
 import { ThemeContext } from "./ThemeContext";
 import { dumpContent, references } from "./dumps";
 import remarkGfm from "remark-gfm";
@@ -848,6 +849,11 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
                 const { children, className, node, ...rest } = props;
                 const match = /language-(\w+)/.exec(className || "");
                 const text = String(children);
+                // ```mermaid → render an actual diagram instead of highlighting
+                // the source (theme-aware, lazy-loaded — see Mermaid.jsx).
+                if (match && match[1] === "mermaid") {
+                  return <Mermaid code={text.replace(/\n$/, "")} theme={theme} />;
+                }
                 // A fenced block (multiline) with no language must still render as a
                 // unified block. Otherwise it falls through to the inline `<code>`
                 // pill styling below, whose `box-decoration-break: clone` repaints
