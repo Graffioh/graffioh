@@ -671,6 +671,46 @@ function RefOrb({ url, label, theme }) {
   );
 }
 
+// Section marker for a `##` heading — a small glowing orb in the same material
+// as the reference orbs (white-matter in dark mode, black-hole in light), minus
+// the logo. It hangs just left of the heading text as a quiet "section starts
+// here" cue, so top-level sections read as distinct units without a heavy `---`
+// rule. Sized in `em` so it scales with the heading. Decorative only.
+function SectionOrb({ theme }) {
+  const isDark = theme === "dark";
+  const mat = isDark
+    ? {
+        bg: "radial-gradient(circle at 50% 42%, #fff 55%, #fafafa 74%, rgba(255,255,255,0) 100%)",
+        border: "1px solid rgba(220,220,240,0.55)",
+        glow: "0 0 6px 1px rgba(255,255,255,0.5), 0 0 12px 1px rgba(180,185,225,0.3)",
+      }
+    : {
+        bg: "radial-gradient(circle at 50% 42%, #000 55%, #050505 74%, rgba(0,0,0,0) 100%)",
+        border: "1px solid rgba(140,140,170,0.4)",
+        glow: "0 0 6px 1px rgba(0,0,0,0.5), 0 0 12px 1px rgba(90,90,130,0.25)",
+      };
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        display: "inline-block",
+        verticalAlign: "middle",
+        flex: "0 0 auto",
+        width: "0.46em",
+        height: "0.46em",
+        marginRight: "0.55em",
+        // nudge up so the dot sits on the cap-height middle, not the x-height
+        position: "relative",
+        top: "-0.08em",
+        borderRadius: "999px",
+        background: mat.bg,
+        border: mat.border,
+        boxShadow: mat.glow,
+      }}
+    />
+  );
+}
+
 // Reference orbs next to a heading — one per external link cited in that section
 // ([[<url>|Title]]), each carrying its link-kind logo (arXiv / PDF / web).
 function RefOrbs({ refs, theme }) {
@@ -718,6 +758,8 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
         (currentNoteId && id && references[`${currentNoteId}#${id}`]) || [];
       return (
         <Tag className={className} {...rest}>
+          {/* `##` sections get a quiet orb marker to separate them as units */}
+          {level === 2 && <SectionOrb theme={theme} />}
           {children}
           {refs.length > 0 && <RefOrbs refs={refs} theme={theme} />}
         </Tag>
