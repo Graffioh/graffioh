@@ -44,3 +44,33 @@ There are various reasons:
 in my [toy inference engine](https://github.com/Graffioh/magi-engine), everything is a class (no special struct memory optim), and each tensor, to access weights, had to hold the mmap'd file pointer via a `shared_ptr` (through an additional RAII class).
 
 this ptr construct bundled with the RAII class, will give the capability of de-allocation (`munmap` to delete mmap) only on last reference object destruction and not at each single object destruction.
+
+## Unicode & UTF-8
+
+A Unicode is a text encoding standard that maps characters to *integer code points*: `U+<hexadecimal_value>`
+
+UTF-8 is a form of Unicode encoding, where multiple Unicode code points are converted in one byte (0-255).
+
+with tokenizers, we use UTF-8 encoding, because first of all, using Unicode would mean a big vocab size (and it's not really an issue [[ai-theory#Tokenizer]]) composed of a big amount of rare characters (wasteful)
+
+we don't use UTF-16, UTF-32 (other for general compatibility with web standards) because we would be using 16 and 32 bits per code point, that means adding a lot of noise for common "few words" strings to fit these bits space
+
+### wrong UTF-8 decoding
+
+```python
+def decode_utf8_bytes_to_str_wrong(str_bytes: bytes):
+    return "".join([bytes([b]).decode("utf-8") for b in str_bytes])
+
+print(decode_utf8_bytes_to_str_wrong("😂".encode("utf-8")))
+```
+
+this is wrong for multi-byte characters e.g. 😂, because their bytes are composed of: a *leading* byte and n-1 *continuations* bytes. Either we pick n leader bytes alone without continuations (or only continuations), the code will throw an exception!
+
+the fix is:
+
+```python
+def decode_utf8_bytes_to_str(str_bytes: bytes):
+    return str_bytes.decode("utf-8")
+
+print(decode_utf8_bytes_to_str("😂".encode("utf-8")))
+```

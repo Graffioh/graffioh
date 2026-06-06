@@ -5,6 +5,7 @@ import Markdown from "react-markdown";
 import GithubSlugger from "github-slugger";
 import ImageLightbox from "./ImageLightbox";
 import Mermaid from "./Mermaid";
+import PythonRunner from "./PythonRunner";
 import { ThemeContext } from "./ThemeContext";
 import { dumpContent, references } from "./dumps";
 import remarkGfm from "remark-gfm";
@@ -895,6 +896,13 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
                 // the source (theme-aware, lazy-loaded — see Mermaid.jsx).
                 if (match && match[1] === "mermaid") {
                   return <Mermaid code={text.replace(/\n$/, "")} theme={theme} />;
+                }
+                // ```python / ```py → a live, runnable & steppable block
+                // (lazy CPython-in-WASM via Pyodide — see PythonRunner.jsx).
+                if (match && (match[1] === "python" || match[1] === "py")) {
+                  return (
+                    <PythonRunner code={text.replace(/\n$/, "")} theme={theme} />
+                  );
                 }
                 // A fenced block (multiline) with no language must still render as a
                 // unified block. Otherwise it falls through to the inline `<code>`

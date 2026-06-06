@@ -5,6 +5,10 @@
         <link rel="icon" type="image/svg+xml" href="/orb.svg" />
         <link rel="alternate icon" type="image/png" href="/orb.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- Pyodide (CPython-in-WASM for runnable code blocks) streams from
+             jsDelivr on demand. Open the connection early so the eventual
+             ~5 MB fetch isn't gated behind a cold DNS/TLS handshake. -->
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
         <title>graffioh</title>
         <link href="./output.css" rel="stylesheet" />
         <link href="./src/cs16.css" rel="stylesheet" />
