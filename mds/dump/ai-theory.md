@@ -84,11 +84,24 @@ larger the *compression ratio*, the better it is: `compression_ratio() = bytes(t
 
 to increase compression we need to increase the `vocab_size`...why? because if we encounter frequently the same multi-character chunk, that chunk will be represented by one token, as an optimization! but instead if the vocab budget is limited, and we don't have repetitions of chunks, then spending a token for a chunk like this is wasteful and instead what we do is split the chunk in smaller pieces -> incrementing the num of tokens.
 
-#### Byte-pair encoding
+#### BPE Tokenizer
+
+byte-pair encoding is used to have an efficient subword-level tokenization
 
 > common sequences of bytes are represented by a single token, rare sequences are represented by many tokens
 
-a byte is one UTF-8 common ASCII char, so multiple common bytes means common char chunks: e.g. `the` -> 1 token, `xqzj` -> 4 tokens, `funny 😂` -> 2 tokens
+[[ai-coding#Unicode & UTF-8]]
+
+a **pre-tokenizer** is used to optimize the BPE tokenization:
+- avoiding contamination (e.g. dog! vs dog. , the adjacent bytes differs by punctuation. with pre-tokenization, we'll chunk the text via some heuristic, and we'll get 'dog', '!', '.' as different chunks, then merging will be allowed only per-chunk and thanks to this we'll have 'dog' and '!/.' as different adjacent bytes) 
+- avoiding a full pass over text corpus for every merge (when we split in chunks, we compute a chunk <-> count mapping (smaller than whole text corpus), that will be consulted every merge)
+
+regex-based is the most used pre-tokenizer: [from tiktoken](https://github.com/openai/tiktoken/pull/234/changes)
+
+after pre-tokenization, we must **merge** the highest frequency bytes: every occurrence of the same most frequent pair is merged and become one token -> this token will be added to the vocabulary (together with the already existing 'base' tokens e.g. in UTF-8 the base vocabulary is composed of 0-256 bytes)
+
+> [!note]
+> to break ties between pairs, lexicographically greater pair is the one picked.
 
 ## Transformer
 
@@ -123,6 +136,6 @@ I think this is actually the most used word after glancing at RoPE.
 - It's important to differentiate between $q/k$ pairs and *token pairs*. $q/k$ pairs are pair of dimensions in the same token.
 - We work on pairs interleaved: $(q_i, q_{i+1})$ or other convention: $(q_i, q_{i+\frac{d}{2}})$ (same with $k$), so we can actually rotate the vector (otherwise we would be unable to do so on a 1D vector)
 - The frequency varies based on the token's pair positions: taken $t_m$ and $t_n$ with positions $m,n$, then each $q/k$ pair shift $\Delta \cdot \theta_i$, where $\Delta$ is the deciding factor for the phase (how much each pair has rotated): <- *need to revise/explore this a bit more, but for now g2g*
-    - $\Delta$ high (far-apart tokens): the fast pairs have wrapped, so the \textbf{slow} pairs carry the clean positional signal.
+    - $\Delta$ high (far-apart tokens): the fast pairs have wrapped, so the slow pairs carry the clean positional signal.
     - $\Delta$ low (nearby tokens): the fast pairs give a large, sharp phase difference, cleanly differentiating neighbors (slow pairs barely move).
 

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import Markdown from "react-markdown";
@@ -152,6 +152,50 @@ function remarkArrows() {
   };
 }
 
+// GitHub/Obsidian-style callouts authored as blockquotes:
+//   > [!note]
+//   > body… (plain markdown — bullets inside still become bullet cards)
+// Detects the `[!type]` marker on the first line of a blockquote (optionally
+// followed by a custom title on the same line), strips it, and retags the
+// blockquote as a `<div class="callout callout-<type>">` carrying the title.
+// The `div` renderer then paints it; everything inside stays normal markdown,
+// so nested lists / bold / links flow through their usual components.
+const CALLOUT_RE = /^\[!(\w+)\]\s*(.*)$/;
+function remarkCallouts() {
+  return (tree) => {
+    const visit = (node) => {
+      if (node.children) node.children.forEach(visit);
+      if (node.type !== "blockquote" || !node.children?.length) return;
+      const first = node.children[0];
+      if (first.type !== "paragraph" || !first.children.length) return;
+      const lead = first.children[0];
+      if (lead.type !== "text") return;
+      // The marker sits on its own line; remark joins that line and the first
+      // body line into one paragraph with a soft `break` between them, so the
+      // marker is the lead text node up to any embedded newline.
+      const nl = lead.value.indexOf("\n");
+      const head = (nl === -1 ? lead.value : lead.value.slice(0, nl)).trim();
+      const m = CALLOUT_RE.exec(head);
+      if (!m) return;
+      const type = m[1].toLowerCase();
+      const title = m[2].trim();
+      if (nl === -1) {
+        first.children.shift(); // drop the "[!type]" text
+        if (first.children[0]?.type === "break") first.children.shift();
+        if (first.children.length === 0) node.children.shift(); // empty lead para
+      } else {
+        lead.value = lead.value.slice(nl + 1); // marker shared a node with body
+      }
+      node.data = node.data || {};
+      node.data.hName = "div";
+      const hProperties = { className: ["callout", `callout-${type}`] };
+      if (title) hProperties["data-callout-title"] = title;
+      node.data.hProperties = hProperties;
+    };
+    visit(tree);
+  };
+}
+
 // Classify an external reference so its orb shows the right logo: arXiv papers,
 // PDFs, or any other link (blog post / misc → a globe). arXiv wins over .pdf
 // since arXiv pdf URLs are still papers.
@@ -280,7 +324,7 @@ function noteTitle(raw, id) {
 
 // Plugin set for the small preview render — same math/arrow handling as the page,
 // minus rehypeSlug (no ids needed) and remarkWikiLinks (no nested chips/popovers).
-const PREVIEW_REMARK = [remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows];
+const PREVIEW_REMARK = [remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows, remarkCallouts];
 const PREVIEW_REHYPE = [rehypeRaw, rehypeKatex];
 
 // Cross-reference chip for a wiki-link — a small "portal" pill that mirrors the
@@ -289,7 +333,7 @@ const PREVIEW_REHYPE = [rehypeRaw, rehypeKatex];
 // hash-scroll effect lands on the linked section. Hovering (or focusing) it pops
 // an Obsidian-style preview of the referenced section so you can glance without
 // leaving the page.
-function WikiLink({ href, children, theme }) {
+function DocLink({ href, children, theme }) {
   const navigate = useNavigate();
   const location = useLocation();
   const anchorRef = useRef(null);
@@ -300,7 +344,9 @@ function WikiLink({ href, children, theme }) {
   // null when closed; otherwise the resolved fixed-position box for the popover.
   const [pop, setPop] = useState(null);
   const isDark = theme === "dark";
-  const accent = isDark ? "135,145,65" : "120,110,190"; // olive / purple
+  // Neutral grey rim + glow (was olive/purple): black on the light chip, white
+  // on the dark one, matching the bullet orbs and the rest of the orb motif.
+  const accent = isDark ? "255,255,255" : "0,0,0";
   const glow = isDark ? "255,255,255" : "0,0,0"; // neutral halo — white on dark, black on light
 
   const [noteId, slug] = useMemo(() => {
@@ -407,11 +453,11 @@ function WikiLink({ href, children, theme }) {
         cursor: "pointer",
         // Theme-matching text: black in light mode, white in dark.
         color: isDark ? "#ededf5" : "#12120a",
-        // Fill sits slightly darker than the page in both themes: a faint black
-        // tint over the light off-white, a deeper charcoal over the dark page.
+        // Fill matches the bullet cards: a faint grey panel — a touch darker
+        // than the light page, a touch lighter than the dark page.
         background: isDark
-          ? "#0f0f0f"
-          : "rgba(0,0,0,0.07)",
+          ? "rgba(255,255,255,0.06)"
+          : "rgba(0,0,0,0.06)",
         border: `1px solid rgba(${accent},0.3)`,
         boxShadow: lit
           ? `0 3px 12px -4px rgba(${accent},0.4)`
@@ -421,7 +467,8 @@ function WikiLink({ href, children, theme }) {
       }}
     >
       <span style={{ fontWeight: 600 }}>{children}</span>
-      <span aria-hidden="true" style={{ opacity: 0.7 }}>
+      {/* arrow stays pure black (light) / white (dark), not the chip's accent */}
+      <span aria-hidden="true" style={{ color: isDark ? "#ffffff" : "#000000", opacity: 0.8 }}>
         ↗
       </span>
     </a>
@@ -712,6 +759,191 @@ function SectionOrb({ theme }) {
   );
 }
 
+// GitHub/Obsidian-style callout types — just a label each. The accent is neutral
+// for every type (black on the light page, white on the dark one), matching the
+// site's black-hole / white-matter orb motif — no hue per type. `note` is the
+// everyday aside; the others are here so `> [!warning]` etc. just work. `toc`
+// wears the same chrome but renders its nested list as a quiet, indented outline
+// (see TocContext + the ul/li renderers) rather than the heavy bullet-panels.
+const CALLOUTS = {
+  note: { label: "Note" },
+  toc: { label: "Contents" },
+  tip: { label: "Tip" },
+  important: { label: "Important" },
+  warning: { label: "Warning" },
+  caution: { label: "Caution" },
+};
+
+// True inside a `> [!toc]` callout. The list renderers read this to drop the
+// bullet-panel cards (grey fill + orbs + dividers) and lay the nested anchor
+// list out as a plain, indented table-of-contents outline instead.
+const TocContext = createContext(false);
+
+// Per-type glyph (feather/lucide line icons), stroked in the callout's accent.
+function CalloutIcon({ type, color }) {
+  const common = {
+    width: 13,
+    height: 13,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: color,
+    strokeWidth: 2.3,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    "aria-hidden": true,
+    style: { flex: "0 0 auto" },
+  };
+  switch (type) {
+    case "toc": // list (lines with leading dots)
+      return (
+        <svg {...common}>
+          <line x1="8" y1="6" x2="21" y2="6" />
+          <line x1="8" y1="12" x2="21" y2="12" />
+          <line x1="8" y1="18" x2="21" y2="18" />
+          <line x1="3" y1="6" x2="3.01" y2="6" />
+          <line x1="3" y1="12" x2="3.01" y2="12" />
+          <line x1="3" y1="18" x2="3.01" y2="18" />
+        </svg>
+      );
+    case "tip": // lightbulb
+      return (
+        <svg {...common}>
+          <path d="M9 18h6" />
+          <path d="M10 21h4" />
+          <path d="M12 3a6 6 0 0 0-4 10.4c.6.6 1 1.3 1 2.1v.5h6v-.5c0-.8.4-1.5 1-2.1A6 6 0 0 0 12 3z" />
+        </svg>
+      );
+    case "warning": // alert triangle
+      return (
+        <svg {...common}>
+          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      );
+    case "caution": // alert octagon
+      return (
+        <svg {...common}>
+          <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      );
+    case "important": // speech bubble
+      return (
+        <svg {...common}>
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      );
+    default: // note — info circle
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="11" x2="12" y2="16" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+      );
+  }
+}
+
+// A callout card: a soft neutral-grey panel set apart from the body, its label
+// up top and the body markdown underneath. note/toc wear a quiet "folder-tab"
+// label notched into the top border (no glyph, no left rail); the louder types
+// (tip/warning/…) keep an in-flow icon + label and the accent left rail.
+// Authored as a `> [!note]` blockquote (see remarkCallouts) or a raw
+// `<div class="note">`. Inline-styled because the card is a direct child of
+// `.markdown`, where the `> * { all: revert }` reset (index.css) would wipe it.
+function Callout({ type = "note", title, children, theme }) {
+  const isDark = theme === "dark";
+  const spec = CALLOUTS[type] || CALLOUTS.note;
+  // Neutral accent only: white on the dark page, black on the light one.
+  const accent = isDark ? "255,255,255" : "0,0,0";
+  const label = title || spec.label;
+  const tab = type === "note" || type === "toc";
+  const body =
+    type === "toc" ? (
+      <TocContext.Provider value={true}>{children}</TocContext.Provider>
+    ) : (
+      children
+    );
+  return (
+    <div
+      style={{
+        position: "relative",
+        margin: "1.25em 0",
+        // Extra top padding on the tab variant so the first body line clears the
+        // label that straddles the top border.
+        padding: tab ? "0.72em 0.9em 0.62em 0.9em" : "0.55em 0.9em 0.62em 0.9em",
+        borderRadius: "0.6em",
+        // Match the bullet list panel: same neutral-grey fill + uniform border
+        // (no glow), and the same 0.9em body text.
+        fontSize: "0.9em",
+        lineHeight: 1.55,
+        background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+        border: `1px solid ${
+          isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.13)"
+        }`,
+        // The louder types keep the left rail as their one color cue; note/toc
+        // drop it (the tab label is their only marker).
+        ...(tab ? {} : { borderLeft: `3px solid rgba(${accent},0.85)` }),
+      }}
+    >
+      {tab ? (
+        // The label straddles the top border, masking it with the page bg →
+        // it reads as a tab cut into the border (fieldset/legend style).
+        <span
+          style={{
+            position: "absolute",
+            top: 0,
+            left: "0.85em",
+            transform: "translateY(-50%)",
+            padding: "0 0.4em",
+            background: "var(--bg-color)",
+            fontSize: "0.8em",
+            fontWeight: 700,
+            letterSpacing: "0.11em",
+            textTransform: "uppercase",
+            color: `rgba(${accent},1)`,
+          }}
+        >
+          {label}
+        </span>
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.42em",
+            marginBottom: "0.4em",
+            fontSize: "0.8em",
+            fontWeight: 700,
+            letterSpacing: "0.11em",
+            textTransform: "uppercase",
+            color: `rgba(${accent},1)`,
+          }}
+        >
+          <CalloutIcon type={type} color={`rgba(${accent},1)`} />
+          {label}
+        </div>
+      )}
+      {body}
+    </div>
+  );
+}
+
+// Resolve a `<div>`'s className to a callout type, or null for a plain div.
+// `callout-<type>` (from remarkCallouts) wins; a bare `note` class supports the
+// legacy raw `<div class="note">` authoring.
+function calloutTypeFor(className) {
+  const cn = className || "";
+  const m = cn.match(/\bcallout-(\w+)\b/);
+  if (m) return m[1];
+  if (/\b(callout|note)\b/.test(cn)) return "note";
+  return null;
+}
+
 // Reference orbs next to a heading — one per external link cited in that section
 // ([[<url>|Title]]), each carrying its link-kind logo (arXiv / PDF / web).
 function RefOrbs({ refs, theme }) {
@@ -791,9 +1023,33 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
         <div className="md:w-7/12 w-full px-4 mx-auto">
           <Markdown
             className={`markdown ${centered ? "text-center" : ""}`}
-            remarkPlugins={[remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows, remarkWikiLinks]}
+            remarkPlugins={[remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows, remarkCallouts, remarkWikiLinks]}
             rehypePlugins={[rehypeRaw, rehypeRemoveComments, rehypeSlug, rehypeKatex]}
             components={{
+              // A callout div — from a `> [!note]` blockquote (remarkCallouts) or
+              // a raw `<div class="note">` — becomes a styled Callout card. Any
+              // other raw `<div>` (e.g. the image flex rows) passes through with
+              // its inline styles intact.
+              div(props) {
+                const { node, children, className, ...rest } = props;
+                const type = calloutTypeFor(className);
+                if (type) {
+                  return (
+                    <Callout
+                      type={type}
+                      title={rest["data-callout-title"]}
+                      theme={theme}
+                    >
+                      {children}
+                    </Callout>
+                  );
+                }
+                return (
+                  <div className={className} {...rest}>
+                    {children}
+                  </div>
+                );
+              },
               img(props) {
                 const { node, alt, width, height, style, ...rest } = props;
                 // Tailwind's preflight sets `img { height: auto; max-width: 100% }`,
@@ -842,9 +1098,9 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
                 // Obsidian-style wiki-link → cross-reference chip (SPA navigation).
                 if (/\bwikilink\b/.test(rest.className || "")) {
                   return (
-                    <WikiLink href={href} theme={theme}>
+                    <DocLink href={href} theme={theme}>
                       {children}
-                    </WikiLink>
+                    </DocLink>
                   );
                 }
                 // Handle internal links properly
@@ -895,7 +1151,13 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
                 // ```mermaid → render an actual diagram instead of highlighting
                 // the source (theme-aware, lazy-loaded — see Mermaid.jsx).
                 if (match && match[1] === "mermaid") {
-                  return <Mermaid code={text.replace(/\n$/, "")} theme={theme} />;
+                  return (
+                    <Mermaid
+                      code={text.replace(/\n$/, "")}
+                      theme={theme}
+                      zoomable={zoomable}
+                    />
+                  );
                 }
                 // ```python / ```py → a live, runnable & steppable block
                 // (lazy CPython-in-WASM via Pyodide — see PythonRunner.jsx).
@@ -975,21 +1237,139 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
                   </code>
                 );
               },
+              // A whole list → ONE soft tinted panel (the bullets share a single
+              // merged background instead of each being its own floating card), so
+              // a list reads as a grouped unit. Inline-styled because a top-level
+              // `<ul>` is a direct child of `.markdown`, where the `> * { all:
+              // revert }` rule (index.css) would wipe class-applied layout; inline
+              // styles outrank it. A nested `<ul>` recurses through here too, so it
+              // becomes an inset sub-panel inside its parent bullet row (its outer
+              // margins are trimmed in index.css via `!important`, which is the only
+              // thing that can beat the inline margin).
               ul(props) {
-                const { children, ...rest } = props;
-                // Add special styling for table of contents lists
-                if (props.node.position?.start.line < 30) {
-                  // Assuming TOC is at the top
+                const { children, node, className, ...rest } = props;
+                const isDark = theme === "dark";
+                const inToc = useContext(TocContext);
+                // Inside a `> [!toc]` callout, skip the panel and lay the list
+                // out as a quiet, indented outline (styled by `.toc-list` in
+                // index.css — these sit inside the callout, so `all: revert`
+                // doesn't reach them and class CSS applies cleanly).
+                if (inToc) {
                   return (
-                    <ul className="toc-list list-disc pl-5 space-y-1" {...rest}>
+                    <ul {...rest} className={`toc-list ${className || ""}`.trim()}>
                       {children}
                     </ul>
                   );
                 }
                 return (
-                  <ul className="list-disc pl-5 my-3" {...rest}>
+                  <ul
+                    {...rest}
+                    className={className}
+                    style={{
+                      listStyle: "none",
+                      margin: "0.85em 0",
+                      padding: "0.1em 0.9em",
+                      display: "flex",
+                      flexDirection: "column",
+                      borderRadius: "0.6em",
+                      background: isDark
+                        ? "rgba(255,255,255,0.06)"
+                        : "rgba(0,0,0,0.06)",
+                      border: `1px solid ${
+                        isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.13)"
+                      }`,
+                    }}
+                  >
                     {children}
                   </ul>
+                );
+              },
+              // One bullet → a row *inside* the shared list panel (no card of its
+              // own). Consecutive rows are split by a hairline divider so they stay
+              // legible while the background reads as one continuous group — that
+              // divider is a CSS `li + li` rule (index.css), NOT done here: react-
+              // markdown v9 doesn't pass a list `index` to this component, so an
+              // inline first-row check can't work. The orb marker uses the site's
+              // black-hole / white-matter material (black orb in light mode, white
+              // in dark); orb + content sit in a flex row so wrapped lines hang
+              // past it.
+              li(props) {
+                const { children, node, ordered, index, checked, ...rest } = props;
+                const isDark = theme === "dark";
+                const inToc = useContext(TocContext);
+                // TOC row: a small neutral dot + the anchor link, no panel /
+                // glow / divider. `borderTop: 0` cancels the `.markdown li + li`
+                // hairline (an inline value beats that non-important CSS rule).
+                if (inToc) {
+                  return (
+                    <li
+                      {...rest}
+                      style={{
+                        listStyle: "none",
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "0.55em",
+                        margin: 0,
+                        padding: "0.16em 0",
+                        borderTop: 0,
+                        fontSize: "0.9em",
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      <span
+                        aria-hidden="true"
+                        style={{
+                          flex: "0 0 auto",
+                          width: "0.32em",
+                          height: "0.32em",
+                          marginTop: "0.5em",
+                          borderRadius: "999px",
+                          background: isDark
+                            ? "rgba(255,255,255,0.5)"
+                            : "rgba(0,0,0,0.45)",
+                        }}
+                      />
+                      <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+                        {children}
+                      </div>
+                    </li>
+                  );
+                }
+                return (
+                  <li
+                    {...rest}
+                    style={{
+                      listStyle: "none",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "0.6em",
+                      margin: 0,
+                      padding: "0.5em 0",
+                      fontSize: "0.9em",
+                      lineHeight: 1.55,
+                    }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        flex: "0 0 auto",
+                        width: "0.4em",
+                        height: "0.4em",
+                        marginTop: "0.5em",
+                        borderRadius: "999px",
+                        background: isDark
+                          ? "radial-gradient(circle at 50% 42%, #fff 58%, #fafafa 78%, rgba(255,255,255,0) 100%)"
+                          : "radial-gradient(circle at 50% 42%, #000 58%, #050505 78%, rgba(0,0,0,0) 100%)",
+                        border: isDark
+                          ? "1px solid rgba(255,255,255,0.55)"
+                          : "1px solid rgba(0,0,0,0.35)",
+                        boxShadow: isDark
+                          ? "0 0 5px 0 rgba(255,255,255,0.45)"
+                          : "0 0 5px 0 rgba(0,0,0,0.35)",
+                      }}
+                    />
+                    <div style={{ flex: "1 1 auto", minWidth: 0 }}>{children}</div>
+                  </li>
                 );
               },
               strong(props) {

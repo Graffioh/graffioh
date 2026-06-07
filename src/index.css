@@ -132,6 +132,80 @@ blockquote p {
     max-width: 100%;
 }
 
+/* Mermaid diagram opened in the lightbox: fill the (definite-width) wrapper,
+   and cap the height so a tall diagram stays in-viewport — preserveAspectRatio
+   keeps it undistorted. */
+.mermaid-zoom svg {
+    width: 100%;
+    height: auto;
+    max-height: 84vh;
+}
+
+/* Loose-list items wrap their content in <p>; keep those flush inside the
+   bullet card (the card supplies the padding) but allow a small gap when an
+   item genuinely holds more than one paragraph. */
+.markdown li p {
+    margin: 0;
+}
+.markdown li p + p {
+    margin-top: 0.55em;
+}
+
+/* A nested list is the tail of its parent bullet row: trim its (inline-styled)
+   outer margins so the inset sub-panel hugs the row instead of leaving a large
+   gap before the next divider. `!important` is the only thing that beats the
+   inline margin set by the `ul` renderer. */
+.markdown li ul {
+    margin-top: 0.5em !important;
+    margin-bottom: 0 !important;
+}
+
+/* Hairline divider between consecutive bullet rows that share one list panel
+   (see the `ul`/`li` renderers). Done in CSS, not inline, because react-markdown
+   v9 gives the `li` component no list index to test "is this the first row?".
+   `li` isn't a direct child of `.markdown`, so `all: revert` doesn't touch it. */
+.markdown li + li {
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+body.dark .markdown li + li {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Callout body: the markdown inside a `> [!note]` blockquote (or a raw
+   `<div class="note">`) is parsed as paragraph(s)/lists nested inside the
+   (inline-styled) callout card. Strip the browser's default p margins so the body
+   sits flush under the label, and restore a small gap between stacked paragraphs. */
+.markdown .callout p,
+.markdown .note p {
+    margin: 0;
+}
+.markdown .callout p + p,
+.markdown .note p + p {
+    margin-top: 0.6em;
+}
+
+/* `> [!toc]` callout: its nested anchor list (the `ul` renderer tags it
+   `.toc-list` inside a TOC) renders as a quiet outline rather than the heavy
+   bullet panels. These live inside the callout, so `all: revert` doesn't reach
+   them and class CSS styles them directly — only the inherited `.markdown li ul`
+   margin needs `!important` to override. The rows + dot are inline-styled in the
+   `li` renderer; here we reset the list box and indent each nested level. */
+.markdown .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.markdown .toc-list .toc-list {
+    margin: 0.1em 0 0 0 !important;
+    padding-left: 1.2em;
+}
+.markdown .toc-list a {
+    text-decoration: none;
+}
+.markdown .toc-list a:hover {
+    text-decoration: underline;
+}
+
 /* display math ($$…$$): the `.markdown > * { all: revert }` reset above strips
    KaTeX's own `.katex-display` rules (it renders as a direct child here),
    reverting it to an inline span — which silently ignores vertical margins.

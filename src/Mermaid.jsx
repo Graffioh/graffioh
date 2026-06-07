@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import ImageLightbox from "./ImageLightbox";
 
 // Mermaid is heavy (~500kb), so it's pulled in on demand the first time a
 // diagram actually shows up — the import is cached as a module-level promise so
@@ -40,11 +42,13 @@ function slab(isDark) {
 }
 
 // Render a ```mermaid fenced block as an actual diagram. `code` is the raw
-// mermaid source; `theme` is the app's "dark" | "light".
-export default function Mermaid({ code, theme }) {
+// mermaid source; `theme` is the app's "dark" | "light". When `zoomable`, the
+// diagram opens in the shared lightbox on click — same as images.
+export default function Mermaid({ code, theme, zoomable = true }) {
   const isDark = theme === "dark";
   const [svg, setSvg] = useState("");
   const [failed, setFailed] = useState(false);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,22 +112,46 @@ export default function Mermaid({ code, theme }) {
     );
   }
 
+  const canZoom = zoomable && !!svg;
+  // Mermaid sizes the SVG with width="100%" + an inline max-width = its natural
+  // width. The lightbox box is shrink-to-fit (no basis for width:100%), so pass
+  // that natural width through and let the lightbox give its wrapper a definite
+  // `min(95vw, naturalPx)`; the SVG then fills it and scales down on smaller
+  // screens, never past natural size — just like an <img>.
+  const naturalMatch = svg.match(/max-width:\s*([\d.]+)px/i);
+  const naturalWidth = naturalMatch ? Math.ceil(parseFloat(naturalMatch[1])) : null;
   return (
-    <div
-      className="my-4"
-      style={{
-        ...slab(isDark),
-        borderRadius: "0.7em",
-        padding: "1em 1.1em",
-        overflowX: "auto",
-        display: "flex",
-        justifyContent: "center",
-        // reserve a little height while mermaid loads so the page doesn't jump
-        minHeight: svg ? undefined : "3rem",
-      }}
-      // mermaid output is a trusted, self-generated SVG (securityLevel: strict
-      // sanitizes the labels), so injecting it directly is safe here.
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <>
+      <div
+        className="my-4"
+        onClick={canZoom ? () => setExpanded(true) : undefined}
+        style={{
+          ...slab(isDark),
+          borderRadius: "0.7em",
+          padding: "1em 1.1em",
+          overflowX: "auto",
+          display: "flex",
+          justifyContent: "center",
+          // reserve a little height while mermaid loads so the page doesn't jump
+          minHeight: svg ? undefined : "3rem",
+          cursor: canZoom ? "zoom-in" : undefined,
+        }}
+        // mermaid output is a trusted, self-generated SVG (securityLevel: strict
+        // sanitizes the labels), so injecting it directly is safe here.
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+      {expanded &&
+        createPortal(
+          <ImageLightbox
+            key={svg}
+            svg={svg}
+            slabStyle={slab(isDark)}
+            maxWidthPx={naturalWidth}
+            alt="diagram"
+            onClose={() => setExpanded(false)}
+          />,
+          document.body
+        )}
+    </>
   );
 }

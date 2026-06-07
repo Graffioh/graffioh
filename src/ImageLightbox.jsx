@@ -10,9 +10,12 @@ const touchMidpoint = (t) => ({
   y: (t[0].clientY + t[1].clientY) / 2,
 });
 
-// Full-screen image viewer with wheel/pinch zoom and drag-to-pan.
-// Mounted per-image (keyed on src) so each open starts fresh at scale 1.
-export default function ImageLightbox({ src, alt, onClose }) {
+// Full-screen viewer with wheel/pinch zoom and drag-to-pan. Shows either a
+// raster image (`src`) or an inline SVG (`svg`, e.g. a rendered Mermaid
+// diagram) carrying its themed slab background (`slabStyle`) so the diagram ink
+// keeps its contrast over the dim backdrop. Mounted per-target (keyed on the
+// src/svg) so each open starts fresh at scale 1.
+export default function ImageLightbox({ src, alt, svg, slabStyle, maxWidthPx, onClose }) {
   const [view, setView] = useState({ scale: 1, tx: 0, ty: 0 });
   const [active, setActive] = useState(false); // pointer down → kill transition
 
@@ -178,6 +181,15 @@ export default function ImageLightbox({ src, alt, onClose }) {
 
   const zoomed = view.scale > 1;
 
+  // Shared zoom/pan transform — applied to the <img> or the SVG wrapper.
+  const transformStyle = {
+    transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`,
+    transition: active ? "none" : "transform 0.12s ease-out",
+    userSelect: "none",
+    willChange: "transform",
+    cursor: zoomed ? "grab" : "zoom-in",
+  };
+
   return (
     <div
       ref={surfaceRef}
@@ -206,21 +218,43 @@ export default function ImageLightbox({ src, alt, onClose }) {
         ×
       </button>
 
-      <img
-        src={src}
-        alt={alt}
-        draggable={false}
-        className="relative"
-        style={{
-          transform: `translate(${view.tx}px, ${view.ty}px) scale(${view.scale})`,
-          transition: active ? "none" : "transform 0.12s ease-out",
-          maxWidth: "95vw",
-          maxHeight: "92vh",
-          userSelect: "none",
-          willChange: "transform",
-          cursor: zoomed ? "grab" : "zoom-in",
-        }}
-      />
+      {svg ? (
+        // Diagram: drop the rendered SVG onto its themed slab so the ink reads,
+        // then zoom/pan the whole slab. `mermaid-zoom` (index.css) caps the SVG
+        // height so a tall diagram stays within the viewport.
+        <div
+          className="relative mermaid-zoom"
+          draggable={false}
+          style={{
+            ...slabStyle,
+            ...transformStyle,
+            borderRadius: "0.7em",
+            padding: "1.3em 1.5em",
+            boxSizing: "border-box",
+            // Definite width so the SVG's width:100% has a basis; capped to the
+            // viewport so a wide diagram scales down to fit.
+            width: maxWidthPx ? `min(95vw, ${maxWidthPx}px)` : "min(95vw, 1100px)",
+            maxHeight: "92vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            overflow: "hidden",
+          }}
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          draggable={false}
+          className="relative"
+          style={{
+            ...transformStyle,
+            maxWidth: "95vw",
+            maxHeight: "92vh",
+          }}
+        />
+      )}
     </div>
   );
 }
