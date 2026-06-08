@@ -873,6 +873,10 @@ function Callout({ type = "note", title, children, theme }) {
       style={{
         position: "relative",
         margin: "1.25em 0",
+        // Hug the body text instead of stretching the full content width; long
+        // lines still wrap rather than overflow (capped at the container).
+        width: "fit-content",
+        maxWidth: "100%",
         // Extra top padding on the tab variant so the first body line clears the
         // label that straddles the top border.
         padding: tab ? "0.72em 0.9em 0.62em 0.9em" : "0.55em 0.9em 0.62em 0.9em",
@@ -1268,9 +1272,14 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
                     style={{
                       listStyle: "none",
                       margin: "0.85em 0",
-                      padding: "0.1em 0.9em",
+                      // Hug the longest bullet row instead of stretching full
+                      // width, and leave a wide right gutter for the fade tail
+                      // to dissolve into.
+                      padding: "0.1em 4.5em 0.1em 0.9em",
                       display: "flex",
                       flexDirection: "column",
+                      width: "fit-content",
+                      maxWidth: "100%",
                       borderRadius: "0.6em",
                       background: isDark
                         ? "rgba(255,255,255,0.06)"
@@ -1278,6 +1287,14 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
                       border: `1px solid ${
                         isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.13)"
                       }`,
+                      // Keep fill + border + dividers fully solid up to just
+                      // past the last word of the longest row, then dissolve the
+                      // whole panel (bg, border, rounded corner) rightward into
+                      // the page background.
+                      WebkitMaskImage:
+                        "linear-gradient(to right, #000 calc(100% - 4em), transparent 100%)",
+                      maskImage:
+                        "linear-gradient(to right, #000 calc(100% - 4em), transparent 100%)",
                     }}
                   >
                     {children}
