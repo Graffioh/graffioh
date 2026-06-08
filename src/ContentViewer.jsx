@@ -6,6 +6,7 @@ import GithubSlugger from "github-slugger";
 import ImageLightbox from "./ImageLightbox";
 import Mermaid from "./Mermaid";
 import PythonRunner from "./PythonRunner";
+import CodeFile from "./CodeFile";
 import { ThemeContext } from "./ThemeContext";
 import { dumpContent, references } from "./dumps";
 import remarkGfm from "remark-gfm";
@@ -1169,6 +1170,12 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
                   return (
                     <PythonRunner code={text.replace(/\n$/, "")} theme={theme} />
                   );
+                }
+                // ```github / ```codefile → fetch a linked source file (the fence
+                // body is its GitHub blob URL) and show it scrollable, highlighted,
+                // with a link back out (see CodeFile.jsx).
+                if (match && (match[1] === "github" || match[1] === "codefile")) {
+                  return <CodeFile url={text.trim()} theme={theme} />;
                 }
                 // A fenced block (multiline) with no language must still render as a
                 // unified block. Otherwise it falls through to the inline `<code>`

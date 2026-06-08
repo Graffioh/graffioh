@@ -98,10 +98,14 @@ a **pre-tokenizer** is used to optimize the BPE tokenization:
 
 regex-based is the most used pre-tokenizer: [from tiktoken](https://github.com/openai/tiktoken/pull/234/changes)
 
-after pre-tokenization, we must **merge** the highest frequency bytes: every occurrence of the same most frequent pair is merged and become one token -> this token will be added to the vocabulary (together with the already existing 'base' tokens e.g. in UTF-8 the base vocabulary is composed of 0-256 bytes)
+after pre-tokenization, we must **merge** the highest frequency bytes: every occurrence of the same most frequent pair is merged (n-merges times) and become one token -> this token will be added to the vocabulary (together with the already existing 'base' tokens e.g. in UTF-8 the base vocabulary is composed of 0-256 bytes)
 
 > [!note]
-> to break ties between pairs, lexicographically greater pair is the one picked.
+> to break ties between pairs, lexicographically greater pair ( `ord('b') > ord('a')` ) is the one picked.
+
+```github
+https://github.com/Graffioh/lmfromscratch/blob/main/assignment1-basics/cs336_basics/bpe_example.py
+```
 
 ## Transformer
 
