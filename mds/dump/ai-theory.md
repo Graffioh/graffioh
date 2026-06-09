@@ -108,7 +108,7 @@ after pre-tokenization, we must **merge** the highest frequency adjacent pair of
 > to break ties between pairs, lexicographically greater pair ( `ord('b') > ord('a')` ) is the one picked.
 
 ```github
-https://github.com/Graffioh/lmfromscratch/blob/main/assignment1-basics/cs336_basics/bpe_example.py
+https://github.com/Graffioh/lmfromscratch/blob/main/assignment1-basics/cs336_basics/bpe_sequential.py
 ```
 
 ## Transformer
