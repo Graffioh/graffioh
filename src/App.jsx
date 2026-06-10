@@ -7,6 +7,8 @@ import BlogPage from "./pages/BlogPage";
 import PostPage from "./pages/PostPage";
 import DumpPage from "./pages/DumpPage";
 import DumpTopicPage from "./pages/DumpTopicPage";
+import ChroniclesPage from "./pages/ChroniclesPage";
+import ChroniclePage from "./pages/ChroniclePage";
 import ResourcesPage from "./pages/ResourcesPage";
 import MoneyToolPage from "./pages/MoneyToolPage";
 import BertologiesPage from "./pages/BertologiesPage";
@@ -28,6 +30,8 @@ function App() {
           <Route path="/blog" element={<BlogPage />} />
           <Route path="/dump" element={<DumpPage />} />
           <Route path="/dump/:id" element={<DumpTopicPage />} />
+          <Route path="/chronicles" element={<ChroniclesPage />} />
+          <Route path="/chronicles/:id" element={<ChroniclePage />} />
           <Route path="/resources" element={<ResourcesPage />} />
           <Route path="/notes" element={<NotesPage />} />
           <Route path="/notes/note/:id" element={<NotePage />} />
@@ -68,6 +72,9 @@ function Header() {
         </Link>
         <Link to={"/dump"} className="px-2">
           dump
+        </Link>
+        <Link to={"/chronicles"} className="px-2">
+          chronicles
         </Link>
         {/*
         <Link to={"/bertologies"} className="px-2">
