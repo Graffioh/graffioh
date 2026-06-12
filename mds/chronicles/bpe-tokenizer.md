@@ -64,11 +64,11 @@ index_pair_to_word_slots: defaultdict[tuple[bytes, ...], set[int]] = defaultdict
 
 ### gone wrong
 
-parallelizing on small examples is not beneficial (process startup overhead)
+parallelizing pretokenize on small examples is not beneficial (it will be with large corpus of data tho)
+
+the pretokenize time is only ~2s across the total time spent in the `train_bpe` function
+
+`merge` is the one to optimize in this case
 
 ![bpe-parallel-timeline](../bpe-parallel-timeline.png)
-
-### with dynamic num_processes
-
-...
 
