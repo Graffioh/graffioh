@@ -101,15 +101,11 @@ regex-based is the most used pre-tokenizer: [from tiktoken](https://github.com/o
 after pre-tokenization, we must **merge** the highest frequency adjacent pair of tokens, where every occurrence of the same most frequent pair is merged (n-merges times) and become one single token:
 - this token will be added to the vocabulary (together with the already existing 'base' tokens e.g. in UTF-8 the base vocabulary is composed of 0-255 bytes)
 - the merge procedure will produce an **ordered merges list** that will be constructed during *training* and used when calling `encode()` on new text!
-    - why *ordered*? because we'll exactly follow the same construction graph as per training, on the new word, by scanning for same adjacent pairs by following earliest-highest priority and merging, e.g for "lower" and "lowest": 'l' + 'o' -> 'lo', 'w' + 'e' -> 'we' and then finally 'lo' + 'we' -> 'lowe'
+    - why *ordered*? because we'll exactly follow the same construction graph as per training, on the new word, by scanning for same adjacent pairs by following earliest-highest priority and merging, so we avoid losing precious pairs! e.g for "lower" and "lowest": 'l' + 'o' -> 'lo', 'w' + 'e' -> 'we' and then finally 'lo' + 'we' -> 'lowe'
 - n-merges, in case of byte-level BPE, is = `target_vocab_size - 256 - num_of_special_tokens`
 
 > [!note]
 > to break ties between pairs, lexicographically greater pair ( `ord('b') > ord('a')` ) is the one picked.
-
-```github
-https://github.com/Graffioh/lmfromscratch/blob/main/assignment1-basics/cs336_basics/bpe_sequential.py
-```
 
 ## Transformer
 

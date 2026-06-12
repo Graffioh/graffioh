@@ -1,7 +1,7 @@
 # bpe tokenizer
 
 ```github
-https://github.com/Graffioh/lmfromscratch/blob/main/assignment1-basics/cs336_basics/bpe_parallel.py
+https://github.com/Graffioh/lmfromscratch/blob/main/assignment1-basics/cs336_basics/bpe_tokenizer/bpe_parallel.py
 ```
 
 **test_train_bpe.py**
