@@ -1512,11 +1512,11 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
         );
       },
       strong(props) {
-        const { children, ...rest } = props;
+        const { children, node, ...rest } = props;
         return <strong className="font-bold" {...rest}>{children}</strong>;
       },
       em(props) {
-        const { children, ...rest } = props;
+        const { children, node, ...rest } = props;
         return <em className="italic" {...rest}>{children}</em>;
       },
       // Small caption / reference line, e.g. an image source under a
