@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import ImageLightbox from "./ImageLightbox";
+import { slabCss } from "./codeSlab";
 
 // Mermaid is heavy (~500kb), so it's pulled in on demand the first time a
 // diagram actually shows up — the import is cached as a module-level promise so
@@ -16,30 +17,12 @@ function loadMermaid() {
 // re-renders without needing Math.random / Date.now.
 let seq = 0;
 
-// Same "photographic negative" slab as the code blocks in ContentViewer: in dark
-// mode the page goes light (white-matter slab + olive glow), in light mode it
-// goes dark (event-horizon slab + purple glow). The diagram ink therefore has to
-// invert the *opposite* way to the app theme — a dark slab wants the light-ink
-// "dark" mermaid theme, a light slab wants the dark-ink "neutral" one.
-function slab(isDark) {
-  return isDark
-    ? {
-        color: "#12120a",
-        border: "1px solid rgba(105,105,70,0.22)",
-        boxShadow:
-          "0 0 18px 1px rgba(135,145,65,0.16), inset 0 0 30px rgba(255,255,255,0.6)",
-        background:
-          "radial-gradient(130% 160% at 50% 0%, #f1f1ee 0%, #eaeae6 55%, #e2e2dd 100%)",
-      }
-    : {
-        color: "#ededf5",
-        border: "1px solid rgba(150,150,185,0.22)",
-        boxShadow:
-          "0 0 18px 1px rgba(120,110,190,0.16), inset 0 0 30px rgba(0,0,0,0.55)",
-        background:
-          "radial-gradient(130% 160% at 50% 0%, #16161e 0%, #0b0b10 55%, #050507 100%)",
-      };
-}
+// The shared "photographic negative" slab (codeSlab.js): in dark mode the page
+// goes light (white-matter slab + olive glow), in light mode it goes dark
+// (event-horizon slab + purple glow). The diagram ink therefore has to invert
+// the *opposite* way to the app theme — a dark slab wants the light-ink "dark"
+// mermaid theme, a light slab wants the dark-ink "neutral" one.
+const slab = slabCss;
 
 // Render a ```mermaid fenced block as an actual diagram. `code` is the raw
 // mermaid source; `theme` is the app's "dark" | "light". When `zoomable`, the

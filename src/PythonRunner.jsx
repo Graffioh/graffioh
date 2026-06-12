@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
-  vscDarkPlus,
-  oneLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
+  SyntaxHighlighter,
+  ONE_LIGHT_NO_BG,
+  VSC_DARK_PLUS_NO_BG,
+  slab,
+} from "./codeSlab";
 
 // ── Pyodide worker manager ───────────────────────────────────────────────────
 // All Pyodide work (the ~5 MB load, WASM compile, and every execution) happens
@@ -97,51 +98,8 @@ function execute(code) {
   });
 }
 
-// ── Styling (mirrors the code-block slab in ContentViewer/Mermaid) ───────────
-function stripBackgrounds(style) {
-  const out = {};
-  for (const sel in style) {
-    const rule = style[sel];
-    if (rule && typeof rule === "object") {
-      const { background, backgroundColor, backgroundImage, ...rest } = rule;
-      out[sel] = rest;
-    } else out[sel] = rule;
-  }
-  return out;
-}
-const ONE_LIGHT_NO_BG = stripBackgrounds(oneLight);
-const VSC_DARK_PLUS_NO_BG = stripBackgrounds(vscDarkPlus);
-
-// In dark mode the slab goes light (white-matter + olive glow); in light mode it
-// goes dark (event-horizon + purple glow) — the same photographic-negative motif
-// as the rest of the site.
-function slab(isDark) {
-  return isDark
-    ? {
-        color: "#12120a",
-        ink: "#12120a",
-        accent: "rgba(135,145,65,1)",
-        active: "rgba(135,145,65,0.20)",
-        panel: "rgba(0,0,0,0.05)",
-        border: "1px solid rgba(105,105,70,0.22)",
-        boxShadow:
-          "0 0 18px 1px rgba(135,145,65,0.16), inset 0 0 30px rgba(255,255,255,0.6)",
-        background:
-          "radial-gradient(130% 160% at 50% 0%, #f1f1ee 0%, #eaeae6 55%, #e2e2dd 100%)",
-      }
-    : {
-        color: "#ededf5",
-        ink: "#ededf5",
-        accent: "rgba(150,140,220,1)",
-        active: "rgba(120,110,190,0.28)",
-        panel: "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(150,150,185,0.22)",
-        boxShadow:
-          "0 0 18px 1px rgba(120,110,190,0.16), inset 0 0 30px rgba(0,0,0,0.55)",
-        background:
-          "radial-gradient(130% 160% at 50% 0%, #16161e 0%, #0b0b10 55%, #050507 100%)",
-      };
-}
+// Slab styling + the background-stripped Prism themes now live in codeSlab.js,
+// shared with ContentViewer / CodeFile / Mermaid.
 
 function Btn({ ink, onClick, disabled, children, title }) {
   return (

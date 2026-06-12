@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { topics } from "../dumps";
+import { topics, searchHaystacks } from "../dumps";
 import { ThemeContext } from "../ThemeContext";
 
 const ORB_SIZE = 34; // px — small
@@ -47,13 +47,40 @@ export default function DumpPage() {
     setHoveredId(id);
   };
 
+  // Text search over the dump notes — the query matches a note's title or its
+  // body (via the haystacks precomputed in dumps.js, so a keystroke costs one
+  // .includes per note, not a full-corpus lowercase). Matched orbs light up
+  // (and the rest dim). `matchedIds` is null when the box is empty.
+  const [query, setQuery] = useState("");
+  const matchedIds = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return null;
+    const set = new Set();
+    for (const t of topics) {
+      if (searchHaystacks[t.id].includes(q)) set.add(t.id);
+    }
+    return set;
+  }, [query]);
+  const searching = matchedIds !== null;
+
+  // Mirror the live match set into a ref so the rAF loop can gently slow the
+  // matched orbs (easier to read / click) without re-subscribing every frame.
+  const matchedRef = useRef(null);
+  useEffect(() => {
+    matchedRef.current = matchedIds;
+  }, [matchedIds]);
+
   // Begin the zoom into a given orb, then navigate. We snapshot the current
   // positions first so coming back resumes from here.
   const enterOrb = (topic, i) => {
     if (enteringRef.current) return;
+    // Carry the active search term into the note so the keyword lands
+    // highlighted (ContentViewer reads it off the ?q= param).
+    const q = query.trim();
+    const dest = `/dump/${topic.id}${q ? `?q=${encodeURIComponent(q)}` : ""}`;
     const s = stateRef.current[i];
     if (!s) {
-      navigate(`/dump/${topic.id}`);
+      navigate(dest);
       return;
     }
     savedOrbs = stateRef.current.map((o) => ({ ...o })); // resume here on return
@@ -65,10 +92,7 @@ export default function DumpPage() {
     // scrollbars it would spawn (restored when DumpPage unmounts on navigate)
     document.body.style.overflow = "hidden";
     setEntering({ cx, cy });
-    enterTimer.current = window.setTimeout(
-      () => navigate(`/dump/${topic.id}`),
-      ENTER_MS
-    );
+    enterTimer.current = window.setTimeout(() => navigate(dest), ENTER_MS);
   };
 
   useEffect(() => {
@@ -78,10 +102,18 @@ export default function DumpPage() {
     const ctx = canvas.getContext("2d");
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
-    const rect = () => box.getBoundingClientRect();
+    // The box's viewport rect, cached: reading getBoundingClientRect() every
+    // frame (and on every pointermove) forces a layout query at 60+ Hz. The
+    // rect only actually changes on resize/reflow/scroll, so it's refreshed
+    // from those events instead.
+    let bounds = box.getBoundingClientRect();
+    const refreshBounds = () => {
+      bounds = box.getBoundingClientRect();
+    };
 
     const sizeCanvas = () => {
-      const { width, height } = rect();
+      refreshBounds();
+      const { width, height } = bounds;
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
       canvas.style.width = width + "px";
@@ -91,7 +123,7 @@ export default function DumpPage() {
 
     // Fresh layout: spread the orbs across the canvas with zippy velocities.
     const seed = () => {
-      const { width, height } = rect();
+      const { width, height } = bounds;
       return topics.map((_, i) => {
         const cols = Math.ceil(Math.sqrt(topics.length));
         const rows = Math.ceil(topics.length / cols);
@@ -111,7 +143,7 @@ export default function DumpPage() {
 
     // Clamp every orb back inside the current bounds (after resize / on resume).
     const clampAll = () => {
-      const { width, height } = rect();
+      const { width, height } = bounds;
       const mX = width - ORB_SIZE;
       const mY = height - ORB_SIZE;
       stateRef.current.forEach((s) => {
@@ -141,11 +173,14 @@ export default function DumpPage() {
       for (let k = 0; k < n; k++) {
         // alternate the two sides of the impact line, with a soft fan spread
         const side = k % 2 === 0 ? 1 : -1;
-        const a = Math.atan2(ty * side, tx * side) + (Math.random() - 0.5) * 1.6;
+        const a =
+          Math.atan2(ty * side, tx * side) + (Math.random() - 0.5) * 1.6;
         const sp = 60 + Math.random() * (150 + impact);
         partsRef.current.push({
-          x, y,
-          px: x, py: y,
+          x,
+          y,
+          px: x,
+          py: y,
           vx: Math.cos(a) * sp,
           vy: Math.sin(a) * sp,
           life: 0.4 + Math.random() * 0.5,
@@ -154,20 +189,35 @@ export default function DumpPage() {
           heat: Math.random(), // 0 cool .. 1 hot core
         });
       }
-      ringsRef.current.push({ x, y, life: 0.55, age: 0, max: 26 + strength * 34 });
-      flashesRef.current.push({ x, y, life: 0.16, age: 0, r: 12 + strength * 20 });
-      if (partsRef.current.length > 600) partsRef.current.splice(0, partsRef.current.length - 600);
+      ringsRef.current.push({
+        x,
+        y,
+        life: 0.55,
+        age: 0,
+        max: 26 + strength * 34,
+      });
+      flashesRef.current.push({
+        x,
+        y,
+        life: 0.16,
+        age: 0,
+        r: 12 + strength * 20,
+      });
+      if (partsRef.current.length > 600)
+        partsRef.current.splice(0, partsRef.current.length - 600);
     };
 
     // Track the cursor in canvas-local coordinates.
     const onMove = (e) => {
-      const r = rect();
+      const r = bounds;
       pointerRef.current = {
         x: e.clientX - r.left,
         y: e.clientY - r.top,
         inside:
-          e.clientX >= r.left && e.clientX <= r.right &&
-          e.clientY >= r.top && e.clientY <= r.bottom,
+          e.clientX >= r.left &&
+          e.clientX <= r.right &&
+          e.clientY >= r.top &&
+          e.clientY <= r.bottom,
       };
     };
     const onLeave = () => (pointerRef.current.inside = false);
@@ -182,7 +232,7 @@ export default function DumpPage() {
       const dt = Math.min((t - last) / 1000, 0.033);
       last = t;
 
-      const { width, height } = rect();
+      const { width, height } = bounds;
       const maxX = width - ORB_SIZE;
       const maxY = height - ORB_SIZE;
       const ptr = pointerRef.current;
@@ -206,9 +256,15 @@ export default function DumpPage() {
         let factor = 1;
         if (ptr.inside) {
           const d = Math.hypot(ptr.x - (s.x + R), ptr.y - (s.y + R));
-          if (d < SLOW_RADIUS) factor = MIN_FACTOR + (1 - MIN_FACTOR) * (d / SLOW_RADIUS);
+          if (d < SLOW_RADIUS)
+            factor = MIN_FACTOR + (1 - MIN_FACTOR) * (d / SLOW_RADIUS);
         }
-        if (hoveredRef.current === topics[i].id) factor = Math.min(factor, 0.04);
+        if (hoveredRef.current === topics[i].id)
+          factor = Math.min(factor, 0.04);
+        // a search match lingers (gentle slow) so it's easy to spot and click
+        const matched = matchedRef.current;
+        if (matched && matched.has(topics[i].id))
+          factor = Math.min(factor, 0.22);
 
         s.x += s.vx * dt * factor;
         s.y += s.vy * dt * factor;
@@ -218,17 +274,31 @@ export default function DumpPage() {
         // so its path bends smoothly back toward the center.
         const cx = s.x + R;
         const cy = s.y + R;
-        if (cx < BORDER_MARGIN) s.vx += BORDER_TURN * (1 - cx / BORDER_MARGIN) * dt;
-        else if (cx > width - BORDER_MARGIN) s.vx -= BORDER_TURN * (1 - (width - cx) / BORDER_MARGIN) * dt;
-        if (cy < BORDER_MARGIN) s.vy += BORDER_TURN * (1 - cy / BORDER_MARGIN) * dt;
-        else if (cy > height - BORDER_MARGIN) s.vy -= BORDER_TURN * (1 - (height - cy) / BORDER_MARGIN) * dt;
+        if (cx < BORDER_MARGIN)
+          s.vx += BORDER_TURN * (1 - cx / BORDER_MARGIN) * dt;
+        else if (cx > width - BORDER_MARGIN)
+          s.vx -= BORDER_TURN * (1 - (width - cx) / BORDER_MARGIN) * dt;
+        if (cy < BORDER_MARGIN)
+          s.vy += BORDER_TURN * (1 - cy / BORDER_MARGIN) * dt;
+        else if (cy > height - BORDER_MARGIN)
+          s.vy -= BORDER_TURN * (1 - (height - cy) / BORDER_MARGIN) * dt;
 
         // hard safety clamp — never reverse (no bounce), just stop any outward
         // drift at the very edge and let the border push ease them back in.
-        if (s.x < 0) { s.x = 0; if (s.vx < 0) s.vx = 0; }
-        else if (s.x > maxX) { s.x = maxX; if (s.vx > 0) s.vx = 0; }
-        if (s.y < 0) { s.y = 0; if (s.vy < 0) s.vy = 0; }
-        else if (s.y > maxY) { s.y = maxY; if (s.vy > 0) s.vy = 0; }
+        if (s.x < 0) {
+          s.x = 0;
+          if (s.vx < 0) s.vx = 0;
+        } else if (s.x > maxX) {
+          s.x = maxX;
+          if (s.vx > 0) s.vx = 0;
+        }
+        if (s.y < 0) {
+          s.y = 0;
+          if (s.vy < 0) s.vy = 0;
+        } else if (s.y > maxY) {
+          s.y = maxY;
+          if (s.vy > 0) s.vy = 0;
+        }
       });
 
       // 2) rigid orb-orb collisions (equal-mass elastic) + particle burst.
@@ -238,23 +308,38 @@ export default function DumpPage() {
           for (let j = i + 1; j < orbs.length; j++) {
             const a = orbs[i];
             const b = orbs[j];
-            let nx = (b.x + R) - (a.x + R);
-            let ny = (b.y + R) - (a.y + R);
+            let nx = b.x + R - (a.x + R);
+            let ny = b.y + R - (a.y + R);
             let dist = Math.hypot(nx, ny);
-            if (dist === 0) { nx = 1; ny = 0; dist = 0.001; }
+            if (dist === 0) {
+              nx = 1;
+              ny = 0;
+              dist = 0.001;
+            }
             if (dist < ORB_SIZE) {
-              nx /= dist; ny /= dist;
+              nx /= dist;
+              ny /= dist;
               // push apart so they never overlap (rigid)
               const overlap = ORB_SIZE - dist;
-              a.x -= nx * overlap / 2; a.y -= ny * overlap / 2;
-              b.x += nx * overlap / 2; b.y += ny * overlap / 2;
+              a.x -= (nx * overlap) / 2;
+              a.y -= (ny * overlap) / 2;
+              b.x += (nx * overlap) / 2;
+              b.y += (ny * overlap) / 2;
               // relative velocity along the collision normal
               const along = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
               if (along > 0) {
-                a.vx -= along * nx; a.vy -= along * ny;
-                b.vx += along * nx; b.vy += along * ny;
+                a.vx -= along * nx;
+                a.vy -= along * ny;
+                b.vx += along * nx;
+                b.vy += along * ny;
                 // spark burst at the contact point
-                burst((a.x + R + b.x + R) / 2, (a.y + R + b.y + R) / 2, nx, ny, Math.abs(along));
+                burst(
+                  (a.x + R + b.x + R) / 2,
+                  (a.y + R + b.y + R) / 2,
+                  nx,
+                  ny,
+                  Math.abs(along),
+                );
               }
             }
           }
@@ -279,7 +364,10 @@ export default function DumpPage() {
         const f = flashes[i];
         f.age += dt;
         const p = f.age / f.life;
-        if (p >= 1) { flashes.splice(i, 1); continue; }
+        if (p >= 1) {
+          flashes.splice(i, 1);
+          continue;
+        }
         const a = 1 - p;
         const rad = f.r * (0.6 + p * 0.5);
         const g = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, rad);
@@ -304,7 +392,10 @@ export default function DumpPage() {
         const rg = rings[i];
         rg.age += dt;
         const p = rg.age / rg.life;
-        if (p >= 1) { rings.splice(i, 1); continue; }
+        if (p >= 1) {
+          rings.splice(i, 1);
+          continue;
+        }
         const ease = 1 - (1 - p) * (1 - p); // easeOutQuad
         const rad = 5 + ease * rg.max;
         const a = (1 - p) * 0.75;
@@ -323,7 +414,10 @@ export default function DumpPage() {
       for (let i = parts.length - 1; i >= 0; i--) {
         const p = parts[i];
         p.age += dt;
-        if (p.age >= p.life) { parts.splice(i, 1); continue; }
+        if (p.age >= p.life) {
+          parts.splice(i, 1);
+          continue;
+        }
         p.px = p.x;
         p.py = p.y;
         p.vy += 120 * dt; // gentle gravity so sparks arc downward
@@ -361,16 +455,41 @@ export default function DumpPage() {
       clampAll();
     };
     window.addEventListener("resize", onResize);
+    // Page scroll moves the box under the viewport — refresh the cached rect so
+    // pointer coords stay box-local. Content above can also reflow the box
+    // without a window resize; the ResizeObserver catches those.
+    window.addEventListener("scroll", refreshBounds, { passive: true });
+    const ro =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(onResize) : null;
+    ro?.observe(box);
 
     return () => {
       cancelAnimationFrame(raf);
       window.clearTimeout(enterTimer.current);
       document.body.style.overflow = ""; // undo the zoom's scrollbar lock
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", refreshBounds);
       window.removeEventListener("pointermove", onMove);
       box.removeEventListener("pointerleave", onLeave);
+      ro?.disconnect();
     };
   }, []);
+
+  // Neutral accent for the search chrome: white on the dark page, black on the
+  // light one — same black-hole / white-matter motif as the orbs themselves.
+  const accent = theme === "dark" ? "255,255,255" : "0,0,0";
+  const matchCount = searching ? matchedIds.size : 0;
+
+  // Enter dives into the sole match; Escape clears the box.
+  const onSearchKey = (e) => {
+    if (e.key === "Enter" && searching && matchCount === 1) {
+      const id = [...matchedIds][0];
+      const idx = topics.findIndex((t) => t.id === id);
+      if (idx !== -1) enterOrb(topics[idx], idx);
+    } else if (e.key === "Escape") {
+      setQuery("");
+    }
+  };
 
   return (
     <>
@@ -387,29 +506,131 @@ export default function DumpPage() {
       >
         <h1 className="text-2xl font-bold text-center pt-4 pb-3">dump</h1>
 
+        {/* search — a grey "negative-space" pill (same material as the bullet
+            panels / callouts) that filters the notes by title or body; matched
+            orbs light up while the rest dim. */}
+        <div className="flex flex-col items-center gap-1 pb-3">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.55em",
+              width: "min(100%, 22rem)",
+              padding: "0.42em 0.85em",
+              borderRadius: "999px",
+              background:
+                theme === "dark"
+                  ? "rgba(255,255,255,0.06)"
+                  : "rgba(0,0,0,0.06)",
+              border: `1px solid rgba(${accent},${
+                theme === "dark" ? 0.14 : 0.13
+              })`,
+              boxShadow: query
+                ? `0 0 12px 0 rgba(${accent},0.2)`
+                : `0 0 6px 0 rgba(${accent},0.1)`,
+              transition: "box-shadow 0.2s ease",
+            }}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke={`rgba(${accent},0.8)`}
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              style={{ flex: "0 0 auto" }}
+            >
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.5" y2="16.5" />
+            </svg>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={onSearchKey}
+              placeholder="search in the dumps…"
+              aria-label="Search dump notes"
+              style={{
+                flex: "1 1 auto",
+                minWidth: 0,
+                background: "transparent",
+                border: "none",
+                outline: "none",
+                color: "var(--text-color)",
+                fontSize: "0.85rem",
+              }}
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                aria-label="Clear search"
+                style={{
+                  flex: "0 0 auto",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: `rgba(${accent},0.7)`,
+                  fontSize: "1.05rem",
+                  lineHeight: 1,
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+          {/* match tally — fixed height so the layout doesn't jump as you type */}
+          <span
+            className="text-xs"
+            aria-live="polite"
+            style={{
+              height: "1.1em",
+              opacity: searching ? 0.7 : 0,
+              color:
+                matchCount === 0 ? `rgba(${accent},0.7)` : "var(--text-color)",
+              transition: "opacity 0.2s ease",
+            }}
+          >
+            {searching
+              ? matchCount === 0
+                ? "no matches"
+                : `${matchCount} match${matchCount === 1 ? " — press ↵" : "es"}`
+              : " "}
+          </span>
+        </div>
+
         {/* title list — hover to highlight the matching orb, click to dive in */}
         <ul className="flex flex-wrap justify-center gap-x-2 gap-y-1 pb-4 text-xs">
-          {topics.map((topic, idx) => (
-            <li key={topic.id} className="flex items-center gap-x-2">
-              {idx > 0 && (
-                <span className="text-stone-500 select-none">-</span>
-              )}
-              <button
-                onClick={() => enterOrb(topic, idx)}
-                onMouseEnter={() => setHover(topic.id)}
-                onMouseLeave={() => setHover(null)}
-                className={`transition-colors hover:underline ${
-                  hoveredId === topic.id
-                    ? theme === "dark"
-                      ? "text-white"
-                      : "text-black"
-                    : "text-stone-500"
-                }`}
-              >
-                {topic.title}
-              </button>
-            </li>
-          ))}
+          {topics.map((topic, idx) => {
+            const isMatch = searching && matchedIds.has(topic.id);
+            const dimmed = searching && !isMatch;
+            const lit = hoveredId === topic.id || isMatch;
+            return (
+              <li key={topic.id} className="flex items-center gap-x-2">
+                {idx > 0 && (
+                  <span className="text-stone-500 select-none">-</span>
+                )}
+                <button
+                  onClick={() => enterOrb(topic, idx)}
+                  onMouseEnter={() => setHover(topic.id)}
+                  onMouseLeave={() => setHover(null)}
+                  className={`transition-colors hover:underline ${
+                    lit
+                      ? theme === "dark"
+                        ? "text-white"
+                        : "text-black"
+                      : dimmed
+                        ? "text-stone-600 opacity-40"
+                        : "text-stone-500"
+                  }`}
+                >
+                  {topic.title}
+                </button>
+              </li>
+            );
+          })}
         </ul>
 
         <div
@@ -430,14 +651,23 @@ export default function DumpPage() {
           }
         >
           {topics.map((topic, i) => {
-            const isHot = hoveredId === topic.id;
+            const isMatch = searching && matchedIds.has(topic.id);
+            const dimmed = searching && !isMatch;
+            // a search hit lights the orb the same way a hover does; the misses
+            // fade back so the matches pop out of the field.
+            const isHot = hoveredId === topic.id || isMatch;
             return (
               // outer wrapper: JS drives its translate (position) every frame
               <div
                 key={topic.id}
                 ref={(el) => (orbRefs.current[i] = el)}
                 className="absolute top-0 left-0 will-change-transform"
-                style={{ width: ORB_SIZE, height: ORB_SIZE }}
+                style={{
+                  width: ORB_SIZE,
+                  height: ORB_SIZE,
+                  opacity: dimmed ? 0.16 : 1,
+                  transition: "opacity 0.25s ease",
+                }}
               >
                 {/* inner button: owns hover/scale — no conflict with the translate above */}
                 <button
@@ -480,7 +710,9 @@ export default function DumpPage() {
                     i.e. hovering the orb itself or its entry in the title list */}
                 <span
                   className={`absolute left-1/2 top-full whitespace-nowrap text-center font-bold text-[10px] leading-tight pointer-events-none transition-all duration-200 ${
-                    isHot ? "text-white opacity-100" : "text-stone-300 opacity-0"
+                    isHot
+                      ? "text-white opacity-100"
+                      : "text-stone-300 opacity-0"
                   }`}
                   style={{
                     transform: `translateX(-50%) translateY(${isHot ? 14 : 3}px)`,

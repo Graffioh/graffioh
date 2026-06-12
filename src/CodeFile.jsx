@@ -1,34 +1,17 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { useEffect, useMemo, useState } from "react";
 import {
-  vscDarkPlus,
-  oneLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
+  SyntaxHighlighter,
+  ONE_LIGHT_NO_BG,
+  VSC_DARK_PLUS_NO_BG,
+  slab,
+} from "./codeSlab";
 
 // ── Code viewer for a linked source file ─────────────────────────────────────
 // Renders a ```github (or ```codefile) fenced block whose body is a GitHub blob
 // URL — fetches the raw file, highlights it, lets you scroll through it, and
-// links back out to the page. Mirrors the site's "photographic-negative" slab
-// (dark slab + purple glow in light mode, light slab + olive glow in dark mode)
-// used by the inline code blocks / PythonRunner, plus the neutral black/white
-// background blur the page asks for.
-
-// Prism themes paint backgrounds on the <pre>/<code>/token nodes; layered over
-// our slab gradient those show up as per-line bands. Strip every background so
-// the slab is the only fill (same trick as ContentViewer / PythonRunner).
-function stripBackgrounds(style) {
-  const out = {};
-  for (const sel in style) {
-    const rule = style[sel];
-    if (rule && typeof rule === "object") {
-      const { background, backgroundColor, backgroundImage, ...rest } = rule;
-      out[sel] = rest;
-    } else out[sel] = rule;
-  }
-  return out;
-}
-const ONE_LIGHT_NO_BG = stripBackgrounds(oneLight);
-const VSC_DARK_PLUS_NO_BG = stripBackgrounds(vscDarkPlus);
+// links back out to the page. Wears the shared "photographic-negative" slab
+// (see codeSlab.js) used by the inline code blocks / PythonRunner, plus the
+// neutral black/white background blur the page asks for.
 
 // File extension → Prism language. Anything unlisted falls back to plain text.
 const EXT_LANG = {
@@ -122,36 +105,18 @@ function loadFile(rawUrl) {
   return p;
 }
 
-// Same slab palette as PythonRunner: in dark mode the slab goes light (white-
-// matter + olive glow); in light mode it goes dark (event-horizon + purple glow).
-// `halo` is the extra neutral background blur the page asks for — black behind
-// the card in light mode, white in dark mode.
-function slab(isDark) {
-  return isDark
-    ? {
-        ink: "#12120a",
-        accent: "rgba(135,145,65,1)",
-        active: "rgba(135,145,65,0.20)",
-        border: "1px solid rgba(105,105,70,0.22)",
-        background:
-          "radial-gradient(130% 160% at 50% 0%, #f1f1ee 0%, #eaeae6 55%, #e2e2dd 100%)",
-        // rim glow + inner light + a soft, even neutral halo (white, no spread so
-        // it hugs the rounded shape and fades — no boxy plate below the card).
-        boxShadow:
-          "0 0 18px 1px rgba(135,145,65,0.16), inset 0 0 30px rgba(255,255,255,0.6), 0 4px 30px rgba(255,255,255,0.07)",
-      }
-    : {
-        ink: "#ededf5",
-        accent: "rgba(150,140,220,1)",
-        active: "rgba(120,110,190,0.26)",
-        border: "1px solid rgba(150,150,185,0.22)",
-        background:
-          "radial-gradient(130% 160% at 50% 0%, #16161e 0%, #0b0b10 55%, #050507 100%)",
-        // rim glow + inner shade + a soft, layered elevation (low-alpha so it
-        // grounds the card without reading as a flat dark plate below it).
-        boxShadow:
-          "0 0 18px 1px rgba(120,110,190,0.16), inset 0 0 30px rgba(0,0,0,0.55), 0 10px 15px -6px rgba(0,0,0,0.12), 0 4px 6px -4px rgba(0,0,0,0.10)",
-      };
+// The shared slab (codeSlab.js) plus this card's extra halo: a soft, even
+// neutral glow behind the card — white with no spread in dark mode (hugs the
+// rounded shape, no boxy plate), a low-alpha layered elevation in light mode
+// (grounds the card without reading as a flat dark plate below it).
+function haloSlab(isDark) {
+  const base = slab(isDark);
+  return {
+    ...base,
+    boxShadow: isDark
+      ? `${base.boxShadow}, 0 4px 30px rgba(255,255,255,0.07)`
+      : `${base.boxShadow}, 0 10px 15px -6px rgba(0,0,0,0.12), 0 4px 6px -4px rgba(0,0,0,0.10)`,
+  };
 }
 
 // The GitHub mark, inlined so it can take the slab's ink color.
@@ -245,7 +210,7 @@ function Btn({ ink, onClick, href, title, square, children }) {
 
 export default function CodeFile({ url, theme }) {
   const isDark = theme === "dark";
-  const s = useMemo(() => slab(isDark), [isDark]);
+  const s = useMemo(() => haloSlab(isDark), [isDark]);
   const src = useMemo(() => parseSource(url), [url]);
   const lang = useMemo(() => langForFile(src.filename), [src.filename]);
 

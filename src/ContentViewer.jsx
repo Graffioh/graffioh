@@ -16,30 +16,12 @@ import rehypeRemoveComments from "rehype-remove-comments";
 import rehypeSlug from "rehype-slug";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
-  vscDarkPlus,
-  oneLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
-
-// Prism themes paint their own background on the <pre>/<code>/token elements.
-// Layered over our custom slab gradient, that shows up as per-line white "bands".
-// Strip every background so our `customStyle` slab is the only one that renders.
-function stripBackgrounds(style) {
-  const out = {};
-  for (const selector in style) {
-    const rule = style[selector];
-    if (rule && typeof rule === "object") {
-      const { background, backgroundColor, backgroundImage, ...rest } = rule;
-      out[selector] = rest;
-    } else {
-      out[selector] = rule;
-    }
-  }
-  return out;
-}
-const ONE_LIGHT_NO_BG = stripBackgrounds(oneLight);
-const VSC_DARK_PLUS_NO_BG = stripBackgrounds(vscDarkPlus);
+  SyntaxHighlighter,
+  canonicalLang,
+  ONE_LIGHT_NO_BG,
+  VSC_DARK_PLUS_NO_BG,
+} from "./codeSlab";
 
 // Flatten a React children tree down to its plain text (raw-HTML inline markup
 // can split a string across nested nodes — we want the whole run as one string).
@@ -327,6 +309,10 @@ function noteTitle(raw, id) {
 // minus rehypeSlug (no ids needed) and remarkWikiLinks (no nested chips/popovers).
 const PREVIEW_REMARK = [remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows, remarkCallouts];
 const PREVIEW_REHYPE = [rehypeRaw, rehypeKatex];
+
+// The main page's remark set — static, so hoisted to keep its identity stable
+// (a fresh array per render would make react-markdown re-run the pipeline).
+const REMARK_PLUGINS = [remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows, remarkCallouts, remarkWikiLinks];
 
 // Cross-reference chip for a wiki-link — a small "portal" pill that mirrors the
 // site's inline-code negative-space motif (dark slab + purple glow in light mode,
@@ -974,6 +960,73 @@ function RefOrbs({ refs, theme }) {
   );
 }
 
+// Elements whose text must NOT be split: block code (under `pre`) gets
+// re-serialized to a string for the SyntaxHighlighter, so injecting <mark>
+// nodes there would corrupt it; the rest never carry visible prose. Inline
+// `code` is NOT skipped — its children render straight through, so matches
+// inside an inline pill highlight too (inline math still escapes via the
+// math-class check below).
+const HL_SKIP = new Set(["pre", "script", "style", "title"]);
+
+// rehype plugin: wrap every case-insensitive occurrence of `term` in the rendered
+// text with a `<mark class="search-hl">`, so a note opened from the dump search
+// (?q=…) lands with the matched keyword highlighted. Runs before rehype-katex, so
+// math is still a `code` fence here and gets skipped (its source isn't mangled).
+function rehypeHighlightTerm(term) {
+  const needle = (term || "").toLowerCase();
+  const len = needle.length;
+  return (tree) => {
+    if (!len) return;
+    const visit = (node) => {
+      if (node.type === "element") {
+        if (HL_SKIP.has(node.tagName)) return;
+        const cn = node.properties?.className;
+        const classes = Array.isArray(cn)
+          ? cn
+          : typeof cn === "string"
+            ? cn.split(/\s+/)
+            : [];
+        // skip KaTeX output / math fences regardless of pipeline order
+        if (classes.some((c) => c === "katex" || /(^|-)math(-|$)/.test(c)))
+          return;
+      }
+      if (!node.children) return;
+      const out = [];
+      for (const child of node.children) {
+        if (child.type !== "text" || !child.value) {
+          visit(child);
+          out.push(child);
+          continue;
+        }
+        const value = child.value;
+        const lower = value.toLowerCase();
+        let from = 0;
+        let idx = lower.indexOf(needle);
+        if (idx === -1) {
+          out.push(child);
+          continue;
+        }
+        while (idx !== -1) {
+          if (idx > from)
+            out.push({ type: "text", value: value.slice(from, idx) });
+          out.push({
+            type: "element",
+            tagName: "mark",
+            properties: { className: ["search-hl"] },
+            children: [{ type: "text", value: value.slice(idx, idx + len) }],
+          });
+          from = idx + len;
+          idx = lower.indexOf(needle, from);
+        }
+        if (from < value.length)
+          out.push({ type: "text", value: value.slice(from) });
+      }
+      node.children = out;
+    };
+    visit(tree);
+  };
+}
+
 export default function ContentViewer({ content, centered = false, zoomable = true }) {
   const { theme } = useContext(ThemeContext);
   const location = useLocation();
@@ -985,24 +1038,18 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
   // Strip [[<url>]] reference links out of the body — they render as heading orbs.
   const cleaned = useMemo(() => stripReferences(content), [content]);
 
-  // Heading renderer factory: applies the level's styling and appends a logo orb
-  // per external reference cited in that heading's section.
-  const heading = (level, className) =>
-    function Heading(props) {
-      const { node, children, ...rest } = props;
-      const id = props.id;
-      const Tag = `h${level}`;
-      const refs =
-        (currentNoteId && id && references[`${currentNoteId}#${id}`]) || [];
-      return (
-        <Tag className={className} {...rest}>
-          {/* `##` sections get a quiet orb marker to separate them as units */}
-          {level === 2 && <SectionOrb theme={theme} />}
-          {children}
-          {refs.length > 0 && <RefOrbs refs={refs} theme={theme} />}
-        </Tag>
-      );
-    };
+  // Keyword carried in from the dump search (?q=…) — every occurrence in the body
+  // is wrapped in a <mark>, and we scroll to the first one. Empty when off-search.
+  const searchTerm = useMemo(() => {
+    const q = new URLSearchParams(location.search).get("q");
+    return q ? q.trim() : "";
+  }, [location.search]);
+  const rehypePlugins = useMemo(() => {
+    const plugins = [rehypeRaw, rehypeRemoveComments, rehypeSlug];
+    if (searchTerm) plugins.push([rehypeHighlightTerm, searchTerm]);
+    plugins.push(rehypeKatex);
+    return plugins;
+  }, [searchTerm]);
 
   // Smooth-scroll to the hash target (table of contents + wiki-link sections).
   // Re-runs on route/hash/content change so an in-app jump to another dump page
@@ -1022,415 +1069,503 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
     return () => window.removeEventListener("hashchange", scrollToHash);
   }, [location.pathname, location.hash, content]);
 
+  // Opened from the dump search: bring the first highlighted match into view,
+  // unless an explicit #section hash already targets a spot on the page.
+  useEffect(() => {
+    if (!searchTerm || window.location.hash) return;
+    const el = document.querySelector(".search-hl");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [searchTerm, content]);
+
+  // Every markdown renderer override, memoized so the component identities are
+  // stable across re-renders: fresh per-render functions would hand
+  // react-markdown new component *types* each time, unmounting and remounting
+  // the entire rendered tree. (`setLightbox` is a useState setter — identity-
+  // stable — so closing over it here is safe.)
+  const components = useMemo(() => {
+    // Heading renderer factory: applies the level's styling and appends a logo
+    // orb per external reference cited in that heading's section.
+    const heading = (level, className) =>
+      function Heading(props) {
+        const { node, children, ...rest } = props;
+        const id = props.id;
+        const Tag = `h${level}`;
+        const refs =
+          (currentNoteId && id && references[`${currentNoteId}#${id}`]) || [];
+        return (
+          <Tag className={className} {...rest}>
+            {/* `##` sections get a quiet orb marker to separate them as units */}
+            {level === 2 && <SectionOrb theme={theme} />}
+            {children}
+            {refs.length > 0 && <RefOrbs refs={refs} theme={theme} />}
+          </Tag>
+        );
+      };
+
+    return {
+      // A callout div — from a `> [!note]` blockquote (remarkCallouts) or
+      // a raw `<div class="note">` — becomes a styled Callout card. Any
+      // other raw `<div>` (e.g. the image flex rows) passes through with
+      // its inline styles intact.
+      div(props) {
+        const { node, children, className, ...rest } = props;
+        const type = calloutTypeFor(className);
+        if (type) {
+          return (
+            <Callout
+              type={type}
+              title={rest["data-callout-title"]}
+              theme={theme}
+            >
+              {children}
+            </Callout>
+          );
+        }
+        return (
+          <div className={className} {...rest}>
+            {children}
+          </div>
+        );
+      },
+      img(props) {
+        const { node, alt, width, height, style, ...rest } = props;
+        // Tailwind's preflight sets `img { height: auto; max-width: 100% }`,
+        // which overrides the HTML width/height *attributes*. Promote any
+        // explicit dimensions to inline styles (which win over the
+        // stylesheet rule) so sizes set in the markdown actually apply.
+        const toCss = (v) =>
+          v != null && /^\d+$/.test(String(v)) ? `${v}px` : v;
+        const sizeStyle = {};
+        if (width != null) sizeStyle.width = toCss(width);
+        if (height != null) sizeStyle.height = toCss(height);
+        const hasExplicitSize =
+          width != null ||
+          height != null ||
+          (style && (style.width || style.height));
+        // The zoom cursor must be set inline, not via a class: raw-HTML
+        // images render as direct children of `.markdown`, where the
+        // `.markdown > * { all: revert }` rule (index.css) wipes any
+        // class-applied `cursor`. Inline styles outrank that rule.
+        const mergedStyle = {
+          ...sizeStyle,
+          ...style,
+          ...(zoomable ? { cursor: "zoom-in" } : {}),
+        };
+        const className = hasExplicitSize
+          ? ""
+          : alt === "griffith-castle"
+            ? ""
+            : "w-8/12";
+        return (
+          <img
+            className={`${className} ${centered ? "mx-auto" : ""}`}
+            alt={alt}
+            style={Object.keys(mergedStyle).length ? mergedStyle : undefined}
+            onClick={
+              zoomable
+                ? () => setLightbox({ src: rest.src, alt })
+                : undefined
+            }
+            {...rest}
+          />
+        );
+      },
+      a(props) {
+        const { node, ref, href, children, ...rest } = props;
+        // Obsidian-style wiki-link → cross-reference chip (SPA navigation).
+        if (/\bwikilink\b/.test(rest.className || "")) {
+          return (
+            <DocLink href={href} theme={theme}>
+              {children}
+            </DocLink>
+          );
+        }
+        // Handle internal links properly
+        if (href && href.startsWith("#")) {
+          return (
+            <a href={href} {...rest}>
+              {children}
+            </a>
+          );
+        }
+        // External links open in new tab
+        return (
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            href={href}
+            {...rest}
+          >
+            {children}
+          </a>
+        );
+      },
+      span(props) {
+        const { children, className, node, ...rest } = props;
+        // `<span class="rgb">…</span>` → RGB bracket-pair coloring.
+        // Any other span passes through untouched.
+        if (/\brgb\b/.test(className || "")) {
+          return (
+            <span className={className} {...rest}>
+              {colorizeBrackets(flattenText(children), theme)}
+            </span>
+          );
+        }
+        return (
+          <span className={className} {...rest}>
+            {children}
+          </span>
+        );
+      },
+      h1: heading(1),
+      h2: heading(2, "text-2xl font-bold mt-8 mb-4"),
+      h3: heading(3, "text-xl font-bold mt-6 mb-3"),
+      h4: heading(4, "text-lg font-bold mt-5 mb-2"),
+      code(props) {
+        const { children, className, node, ...rest } = props;
+        // Capture hyphenated fence words too (e.g. `python-compile`), so a
+        // per-block marker can ride in the language token. The second word
+        // of a fence (```python no-run) is dropped by remark → rehype-raw
+        // (no className, no node.data.meta survives), so the marker must
+        // live in the first word.
+        const match = /language-([\w-]+)/.exec(className || "");
+        // Flatten, don't String(): the search highlighter may nest <mark>
+        // elements inside an inline code's children, and String() on a mixed
+        // array would yield "[object Object]".
+        const text = flattenText(children);
+        const lang = match ? match[1] : null;
+        // ```python-compile / ```py-compile → a live, runnable & steppable
+        // block. Plain ```python / ```py is just highlighted source with no
+        // Run button, so ordinary Python fences stay inert (portable,
+        // standard-markdown behaviour) and running is explicitly opt-in.
+        const isPython = lang === "python" || lang === "py";
+        const runnablePython =
+          lang === "python-compile" || lang === "py-compile";
+        // ```mermaid → render an actual diagram instead of highlighting
+        // the source (theme-aware, lazy-loaded — see Mermaid.jsx).
+        if (match && match[1] === "mermaid") {
+          return (
+            <Mermaid
+              code={text.replace(/\n$/, "")}
+              theme={theme}
+              zoomable={zoomable}
+            />
+          );
+        }
+        // ```python-compile / ```py-compile → a live, runnable & steppable
+        // block (lazy CPython-in-WASM via Pyodide — see PythonRunner.jsx).
+        if (runnablePython) {
+          return (
+            <PythonRunner code={text.replace(/\n$/, "")} theme={theme} />
+          );
+        }
+        // ```github / ```codefile → fetch a linked source file (the fence
+        // body is its GitHub blob URL) and show it scrollable, highlighted,
+        // with a link back out (see CodeFile.jsx).
+        if (match && (match[1] === "github" || match[1] === "codefile")) {
+          return <CodeFile url={text.trim()} theme={theme} />;
+        }
+        // A fenced block (multiline) with no language must still render as a
+        // unified block. Otherwise it falls through to the inline `<code>`
+        // pill styling below, whose `box-decoration-break: clone` repaints
+        // the background/border on every wrapped line ("split pills").
+        const isBlock = match || text.includes("\n");
+        return isBlock ? (
+          <SyntaxHighlighter
+            {...rest}
+            PreTag="div"
+            children={text.replace(/\n$/, "")}
+            // canonicalLang: the async-light Prism build only knows canonical
+            // language names, not the aliases (js, sh, …) the full build had.
+            language={isPython ? "python" : match ? canonicalLang(match[1]) : "text"}
+            // Mirror the inline-code "photographic negative": dark slab in
+            // light mode, white slab in dark mode (syntax theme flips too).
+            style={theme === "dark" ? ONE_LIGHT_NO_BG : VSC_DARK_PLUS_NO_BG}
+            className="text-sm my-4"
+            wrapLongLines={false}
+            customStyle={{
+              overflowX: "auto",
+              borderRadius: "0.7em",
+              padding: "1em 1.1em",
+              ...(theme === "dark"
+                ? {
+                    // white-matter slab — olive rim glow + soft inner light
+                    color: "#12120a",
+                    border: "1px solid rgba(105,105,70,0.22)",
+                    boxShadow:
+                      "0 0 18px 1px rgba(135,145,65,0.16), inset 0 0 30px rgba(255,255,255,0.6)",
+                    background:
+                      "radial-gradient(130% 160% at 50% 0%, #f1f1ee 0%, #eaeae6 55%, #e2e2dd 100%)",
+                  }
+                : {
+                    // black-matter slab — event-horizon glow like the orbs
+                    border: "1px solid rgba(150,150,185,0.22)",
+                    boxShadow:
+                      "0 0 18px 1px rgba(120,110,190,0.16), inset 0 0 30px rgba(0,0,0,0.55)",
+                    background:
+                      "radial-gradient(130% 160% at 50% 0%, #16161e 0%, #0b0b10 55%, #050507 100%)",
+                  }),
+            }}
+          />
+        ) : (
+          <code
+            {...rest}
+            // inline "black hole": faded translucent-black core with a
+            // faint purple rim glow, crisp light text — small + stays
+            // in the line flow. In dark mode it flips to the exact
+            // photographic negative: white core, black text.
+            className="rounded-[0.35em] px-[0.36em] py-[0.04em] mx-[0.05em]"
+            style={{
+              fontSize: "0.88em",
+              background:
+                theme === "dark"
+                  ? "radial-gradient(120% 135% at 50% 28%, #ecece9 0%, #e7e7e7 65%, #e2e2dd 100%)"
+                  : "radial-gradient(120% 135% at 50% 28%, #131316 0%, #181818 65%, #1d1d22 100%)",
+              color: theme === "dark" ? "#12120a" : "#ededf5",
+              border:
+                theme === "dark"
+                  ? "1px solid rgba(105,105,70,0.22)"
+                  : "1px solid rgba(150,150,185,0.22)",
+              boxShadow:
+                theme === "dark"
+                  ? "0 0 6px 0 rgba(135,145,65,0.25), inset 0 0 5px rgba(255,255,255,0.6)"
+                  : "0 0 6px 0 rgba(120,110,190,0.25), inset 0 0 5px rgba(0,0,0,0.6)",
+              boxDecorationBreak: "clone",
+              WebkitBoxDecorationBreak: "clone",
+            }}
+          >
+            {children}
+          </code>
+        );
+      },
+      // A whole list → ONE soft tinted panel (the bullets share a single
+      // merged background instead of each being its own floating card), so
+      // a list reads as a grouped unit. Inline-styled because a top-level
+      // `<ul>` is a direct child of `.markdown`, where the `> * { all:
+      // revert }` rule (index.css) would wipe class-applied layout; inline
+      // styles outrank it. A nested `<ul>` recurses through here too, so it
+      // becomes an inset sub-panel inside its parent bullet row (its outer
+      // margins are trimmed in index.css via `!important`, which is the only
+      // thing that can beat the inline margin).
+      ul(props) {
+        const { children, node, className, ...rest } = props;
+        const isDark = theme === "dark";
+        const inToc = useContext(TocContext);
+        // Inside a `> [!toc]` callout, skip the panel and lay the list
+        // out as a quiet, indented outline (styled by `.toc-list` in
+        // index.css — these sit inside the callout, so `all: revert`
+        // doesn't reach them and class CSS applies cleanly).
+        if (inToc) {
+          return (
+            <ul {...rest} className={`toc-list ${className || ""}`.trim()}>
+              {children}
+            </ul>
+          );
+        }
+        return (
+          <ul
+            {...rest}
+            className={className}
+            style={{
+              listStyle: "none",
+              margin: "0.85em 0",
+              // Hug the longest bullet row instead of stretching full
+              // width, and leave a wide right gutter for the fade tail
+              // to dissolve into.
+              padding: "0.1em 4.5em 0.1em 0.9em",
+              display: "flex",
+              flexDirection: "column",
+              width: "fit-content",
+              maxWidth: "100%",
+              borderRadius: "0.6em",
+              background: isDark
+                ? "rgba(255,255,255,0.06)"
+                : "rgba(0,0,0,0.06)",
+              border: `1px solid ${
+                isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.13)"
+              }`,
+              // Keep fill + border + dividers fully solid up to just
+              // past the last word of the longest row, then dissolve the
+              // whole panel (bg, border, rounded corner) rightward into
+              // the page background.
+              WebkitMaskImage:
+                "linear-gradient(to right, #000 calc(100% - 4em), transparent 100%)",
+              maskImage:
+                "linear-gradient(to right, #000 calc(100% - 4em), transparent 100%)",
+            }}
+          >
+            {children}
+          </ul>
+        );
+      },
+      // One bullet → a row *inside* the shared list panel (no card of its
+      // own). Consecutive rows are split by a hairline divider so they stay
+      // legible while the background reads as one continuous group — that
+      // divider is a CSS `li + li` rule (index.css), NOT done here: react-
+      // markdown v9 doesn't pass a list `index` to this component, so an
+      // inline first-row check can't work. The orb marker uses the site's
+      // black-hole / white-matter material (black orb in light mode, white
+      // in dark); orb + content sit in a flex row so wrapped lines hang
+      // past it.
+      li(props) {
+        const { children, node, ordered, index, checked, ...rest } = props;
+        const isDark = theme === "dark";
+        const inToc = useContext(TocContext);
+        // TOC row: a small neutral dot + the anchor link, no panel /
+        // glow / divider. `borderTop: 0` cancels the `.markdown li + li`
+        // hairline (an inline value beats that non-important CSS rule).
+        if (inToc) {
+          return (
+            <li
+              {...rest}
+              style={{
+                listStyle: "none",
+                display: "flex",
+                alignItems: "flex-start",
+                gap: "0.55em",
+                margin: 0,
+                padding: "0.16em 0",
+                borderTop: 0,
+                fontSize: "0.9em",
+                lineHeight: 1.5,
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  flex: "0 0 auto",
+                  width: "0.32em",
+                  height: "0.32em",
+                  marginTop: "0.5em",
+                  borderRadius: "999px",
+                  background: isDark
+                    ? "rgba(255,255,255,0.5)"
+                    : "rgba(0,0,0,0.45)",
+                }}
+              />
+              <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+                {children}
+              </div>
+            </li>
+          );
+        }
+        return (
+          <li
+            {...rest}
+            style={{
+              listStyle: "none",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: "0.6em",
+              margin: 0,
+              padding: "0.5em 0",
+              fontSize: "0.9em",
+              lineHeight: 1.55,
+            }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                flex: "0 0 auto",
+                width: "0.4em",
+                height: "0.4em",
+                marginTop: "0.5em",
+                borderRadius: "999px",
+                background: isDark
+                  ? "radial-gradient(circle at 50% 42%, #fff 58%, #fafafa 78%, rgba(255,255,255,0) 100%)"
+                  : "radial-gradient(circle at 50% 42%, #000 58%, #050505 78%, rgba(0,0,0,0) 100%)",
+                border: isDark
+                  ? "1px solid rgba(255,255,255,0.55)"
+                  : "1px solid rgba(0,0,0,0.35)",
+                boxShadow: isDark
+                  ? "0 0 5px 0 rgba(255,255,255,0.45)"
+                  : "0 0 5px 0 rgba(0,0,0,0.35)",
+              }}
+            />
+            <div style={{ flex: "1 1 auto", minWidth: 0 }}>{children}</div>
+          </li>
+        );
+      },
+      // Search-keyword highlight (from the dump search ?q=…). Tinted in
+      // the site's accent — olive on the dark page, purple on the light
+      // one — with a soft glow, echoing the code-slab / orb halos.
+      mark(props) {
+        const { node, children, ...rest } = props;
+        const isDark = theme === "dark";
+        return (
+          <mark
+            {...rest}
+            style={{
+              background: isDark
+                ? "rgba(135,145,65,0.40)"
+                : "rgba(120,110,190,0.28)",
+              color: "inherit",
+              borderRadius: "0.25em",
+              padding: "0.04em 0.16em",
+              boxShadow: isDark
+                ? "0 0 6px 0 rgba(135,145,65,0.4)"
+                : "0 0 6px 0 rgba(120,110,190,0.32)",
+            }}
+          >
+            {children}
+          </mark>
+        );
+      },
+      strong(props) {
+        const { children, ...rest } = props;
+        return <strong className="font-bold" {...rest}>{children}</strong>;
+      },
+      em(props) {
+        const { children, ...rest } = props;
+        return <em className="italic" {...rest}>{children}</em>;
+      },
+      // Small caption / reference line, e.g. an image source under a
+      // figure. Inline-styled so it survives `.markdown > * {all:revert}`.
+      small(props) {
+        const { node, children, style, ...rest } = props;
+        return (
+          <small
+            {...rest}
+            style={{
+              display: "block",
+              marginTop: "-0.4rem",
+              marginBottom: "1.5rem",
+              fontSize: "0.78em",
+              fontStyle: "italic",
+              opacity: 0.55,
+              textAlign: centered ? "center" : "left",
+              ...style,
+            }}
+          >
+            {children}
+          </small>
+        );
+      },
+    };
+  }, [theme, centered, zoomable, currentNoteId]);
+
+  // The rendered markdown element, memoized: ContentViewer re-renders for
+  // lightbox open/close and for every location change (hash included) — far
+  // too often to re-run the unified parse pipeline, which on a long KaTeX-
+  // heavy note costs hundreds of ms plus a full DOM teardown/rebuild.
+  const markdown = useMemo(
+    () => (
+      <Markdown
+        className={`markdown ${centered ? "text-center" : ""}`}
+        remarkPlugins={REMARK_PLUGINS}
+        rehypePlugins={rehypePlugins}
+        components={components}
+      >
+        {cleaned}
+      </Markdown>
+    ),
+    [cleaned, centered, rehypePlugins, components]
+  );
+
   return (
     <>
       <div className="w-full">
-        <div className="md:w-7/12 w-full px-4 mx-auto">
-          <Markdown
-            className={`markdown ${centered ? "text-center" : ""}`}
-            remarkPlugins={[remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows, remarkCallouts, remarkWikiLinks]}
-            rehypePlugins={[rehypeRaw, rehypeRemoveComments, rehypeSlug, rehypeKatex]}
-            components={{
-              // A callout div — from a `> [!note]` blockquote (remarkCallouts) or
-              // a raw `<div class="note">` — becomes a styled Callout card. Any
-              // other raw `<div>` (e.g. the image flex rows) passes through with
-              // its inline styles intact.
-              div(props) {
-                const { node, children, className, ...rest } = props;
-                const type = calloutTypeFor(className);
-                if (type) {
-                  return (
-                    <Callout
-                      type={type}
-                      title={rest["data-callout-title"]}
-                      theme={theme}
-                    >
-                      {children}
-                    </Callout>
-                  );
-                }
-                return (
-                  <div className={className} {...rest}>
-                    {children}
-                  </div>
-                );
-              },
-              img(props) {
-                const { node, alt, width, height, style, ...rest } = props;
-                // Tailwind's preflight sets `img { height: auto; max-width: 100% }`,
-                // which overrides the HTML width/height *attributes*. Promote any
-                // explicit dimensions to inline styles (which win over the
-                // stylesheet rule) so sizes set in the markdown actually apply.
-                const toCss = (v) =>
-                  v != null && /^\d+$/.test(String(v)) ? `${v}px` : v;
-                const sizeStyle = {};
-                if (width != null) sizeStyle.width = toCss(width);
-                if (height != null) sizeStyle.height = toCss(height);
-                const hasExplicitSize =
-                  width != null ||
-                  height != null ||
-                  (style && (style.width || style.height));
-                // The zoom cursor must be set inline, not via a class: raw-HTML
-                // images render as direct children of `.markdown`, where the
-                // `.markdown > * { all: revert }` rule (index.css) wipes any
-                // class-applied `cursor`. Inline styles outrank that rule.
-                const mergedStyle = {
-                  ...sizeStyle,
-                  ...style,
-                  ...(zoomable ? { cursor: "zoom-in" } : {}),
-                };
-                const className = hasExplicitSize
-                  ? ""
-                  : alt === "griffith-castle"
-                    ? ""
-                    : "w-8/12";
-                return (
-                  <img
-                    className={`${className} ${centered ? "mx-auto" : ""}`}
-                    alt={alt}
-                    style={Object.keys(mergedStyle).length ? mergedStyle : undefined}
-                    onClick={
-                      zoomable
-                        ? () => setLightbox({ src: rest.src, alt })
-                        : undefined
-                    }
-                    {...rest}
-                  />
-                );
-              },
-              a(props) {
-                const { node, ref, href, children, ...rest } = props;
-                // Obsidian-style wiki-link → cross-reference chip (SPA navigation).
-                if (/\bwikilink\b/.test(rest.className || "")) {
-                  return (
-                    <DocLink href={href} theme={theme}>
-                      {children}
-                    </DocLink>
-                  );
-                }
-                // Handle internal links properly
-                if (href && href.startsWith("#")) {
-                  return (
-                    <a href={href} {...rest}>
-                      {children}
-                    </a>
-                  );
-                }
-                // External links open in new tab
-                return (
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    href={href}
-                    {...rest}
-                  >
-                    {children}
-                  </a>
-                );
-              },
-              span(props) {
-                const { children, className, node, ...rest } = props;
-                // `<span class="rgb">…</span>` → RGB bracket-pair coloring.
-                // Any other span passes through untouched.
-                if (/\brgb\b/.test(className || "")) {
-                  return (
-                    <span className={className} {...rest}>
-                      {colorizeBrackets(flattenText(children), theme)}
-                    </span>
-                  );
-                }
-                return (
-                  <span className={className} {...rest}>
-                    {children}
-                  </span>
-                );
-              },
-              h1: heading(1),
-              h2: heading(2, "text-2xl font-bold mt-8 mb-4"),
-              h3: heading(3, "text-xl font-bold mt-6 mb-3"),
-              h4: heading(4, "text-lg font-bold mt-5 mb-2"),
-              code(props) {
-                const { children, className, node, ...rest } = props;
-                const match = /language-(\w+)/.exec(className || "");
-                const text = String(children);
-                // ```mermaid → render an actual diagram instead of highlighting
-                // the source (theme-aware, lazy-loaded — see Mermaid.jsx).
-                if (match && match[1] === "mermaid") {
-                  return (
-                    <Mermaid
-                      code={text.replace(/\n$/, "")}
-                      theme={theme}
-                      zoomable={zoomable}
-                    />
-                  );
-                }
-                // ```python / ```py → a live, runnable & steppable block
-                // (lazy CPython-in-WASM via Pyodide — see PythonRunner.jsx).
-                if (match && (match[1] === "python" || match[1] === "py")) {
-                  return (
-                    <PythonRunner code={text.replace(/\n$/, "")} theme={theme} />
-                  );
-                }
-                // ```github / ```codefile → fetch a linked source file (the fence
-                // body is its GitHub blob URL) and show it scrollable, highlighted,
-                // with a link back out (see CodeFile.jsx).
-                if (match && (match[1] === "github" || match[1] === "codefile")) {
-                  return <CodeFile url={text.trim()} theme={theme} />;
-                }
-                // A fenced block (multiline) with no language must still render as a
-                // unified block. Otherwise it falls through to the inline `<code>`
-                // pill styling below, whose `box-decoration-break: clone` repaints
-                // the background/border on every wrapped line ("split pills").
-                const isBlock = match || text.includes("\n");
-                return isBlock ? (
-                  <SyntaxHighlighter
-                    {...rest}
-                    PreTag="div"
-                    children={text.replace(/\n$/, "")}
-                    language={match ? match[1] : "text"}
-                    // Mirror the inline-code "photographic negative": dark slab in
-                    // light mode, white slab in dark mode (syntax theme flips too).
-                    style={theme === "dark" ? ONE_LIGHT_NO_BG : VSC_DARK_PLUS_NO_BG}
-                    className="text-sm my-4"
-                    wrapLongLines={false}
-                    customStyle={{
-                      overflowX: "auto",
-                      borderRadius: "0.7em",
-                      padding: "1em 1.1em",
-                      ...(theme === "dark"
-                        ? {
-                            // white-matter slab — olive rim glow + soft inner light
-                            color: "#12120a",
-                            border: "1px solid rgba(105,105,70,0.22)",
-                            boxShadow:
-                              "0 0 18px 1px rgba(135,145,65,0.16), inset 0 0 30px rgba(255,255,255,0.6)",
-                            background:
-                              "radial-gradient(130% 160% at 50% 0%, #f1f1ee 0%, #eaeae6 55%, #e2e2dd 100%)",
-                          }
-                        : {
-                            // black-matter slab — event-horizon glow like the orbs
-                            border: "1px solid rgba(150,150,185,0.22)",
-                            boxShadow:
-                              "0 0 18px 1px rgba(120,110,190,0.16), inset 0 0 30px rgba(0,0,0,0.55)",
-                            background:
-                              "radial-gradient(130% 160% at 50% 0%, #16161e 0%, #0b0b10 55%, #050507 100%)",
-                          }),
-                    }}
-                  />
-                ) : (
-                  <code
-                    {...rest}
-                    // inline "black hole": faded translucent-black core with a
-                    // faint purple rim glow, crisp light text — small + stays
-                    // in the line flow. In dark mode it flips to the exact
-                    // photographic negative: white core, black text.
-                    className="rounded-[0.35em] px-[0.36em] py-[0.04em] mx-[0.05em]"
-                    style={{
-                      fontSize: "0.88em",
-                      background:
-                        theme === "dark"
-                          ? "radial-gradient(120% 135% at 50% 28%, #ecece9 0%, #e7e7e7 65%, #e2e2dd 100%)"
-                          : "radial-gradient(120% 135% at 50% 28%, #131316 0%, #181818 65%, #1d1d22 100%)",
-                      color: theme === "dark" ? "#12120a" : "#ededf5",
-                      border:
-                        theme === "dark"
-                          ? "1px solid rgba(105,105,70,0.22)"
-                          : "1px solid rgba(150,150,185,0.22)",
-                      boxShadow:
-                        theme === "dark"
-                          ? "0 0 6px 0 rgba(135,145,65,0.25), inset 0 0 5px rgba(255,255,255,0.6)"
-                          : "0 0 6px 0 rgba(120,110,190,0.25), inset 0 0 5px rgba(0,0,0,0.6)",
-                      boxDecorationBreak: "clone",
-                      WebkitBoxDecorationBreak: "clone",
-                    }}
-                  >
-                    {children}
-                  </code>
-                );
-              },
-              // A whole list → ONE soft tinted panel (the bullets share a single
-              // merged background instead of each being its own floating card), so
-              // a list reads as a grouped unit. Inline-styled because a top-level
-              // `<ul>` is a direct child of `.markdown`, where the `> * { all:
-              // revert }` rule (index.css) would wipe class-applied layout; inline
-              // styles outrank it. A nested `<ul>` recurses through here too, so it
-              // becomes an inset sub-panel inside its parent bullet row (its outer
-              // margins are trimmed in index.css via `!important`, which is the only
-              // thing that can beat the inline margin).
-              ul(props) {
-                const { children, node, className, ...rest } = props;
-                const isDark = theme === "dark";
-                const inToc = useContext(TocContext);
-                // Inside a `> [!toc]` callout, skip the panel and lay the list
-                // out as a quiet, indented outline (styled by `.toc-list` in
-                // index.css — these sit inside the callout, so `all: revert`
-                // doesn't reach them and class CSS applies cleanly).
-                if (inToc) {
-                  return (
-                    <ul {...rest} className={`toc-list ${className || ""}`.trim()}>
-                      {children}
-                    </ul>
-                  );
-                }
-                return (
-                  <ul
-                    {...rest}
-                    className={className}
-                    style={{
-                      listStyle: "none",
-                      margin: "0.85em 0",
-                      // Hug the longest bullet row instead of stretching full
-                      // width, and leave a wide right gutter for the fade tail
-                      // to dissolve into.
-                      padding: "0.1em 4.5em 0.1em 0.9em",
-                      display: "flex",
-                      flexDirection: "column",
-                      width: "fit-content",
-                      maxWidth: "100%",
-                      borderRadius: "0.6em",
-                      background: isDark
-                        ? "rgba(255,255,255,0.06)"
-                        : "rgba(0,0,0,0.06)",
-                      border: `1px solid ${
-                        isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.13)"
-                      }`,
-                      // Keep fill + border + dividers fully solid up to just
-                      // past the last word of the longest row, then dissolve the
-                      // whole panel (bg, border, rounded corner) rightward into
-                      // the page background.
-                      WebkitMaskImage:
-                        "linear-gradient(to right, #000 calc(100% - 4em), transparent 100%)",
-                      maskImage:
-                        "linear-gradient(to right, #000 calc(100% - 4em), transparent 100%)",
-                    }}
-                  >
-                    {children}
-                  </ul>
-                );
-              },
-              // One bullet → a row *inside* the shared list panel (no card of its
-              // own). Consecutive rows are split by a hairline divider so they stay
-              // legible while the background reads as one continuous group — that
-              // divider is a CSS `li + li` rule (index.css), NOT done here: react-
-              // markdown v9 doesn't pass a list `index` to this component, so an
-              // inline first-row check can't work. The orb marker uses the site's
-              // black-hole / white-matter material (black orb in light mode, white
-              // in dark); orb + content sit in a flex row so wrapped lines hang
-              // past it.
-              li(props) {
-                const { children, node, ordered, index, checked, ...rest } = props;
-                const isDark = theme === "dark";
-                const inToc = useContext(TocContext);
-                // TOC row: a small neutral dot + the anchor link, no panel /
-                // glow / divider. `borderTop: 0` cancels the `.markdown li + li`
-                // hairline (an inline value beats that non-important CSS rule).
-                if (inToc) {
-                  return (
-                    <li
-                      {...rest}
-                      style={{
-                        listStyle: "none",
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: "0.55em",
-                        margin: 0,
-                        padding: "0.16em 0",
-                        borderTop: 0,
-                        fontSize: "0.9em",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        style={{
-                          flex: "0 0 auto",
-                          width: "0.32em",
-                          height: "0.32em",
-                          marginTop: "0.5em",
-                          borderRadius: "999px",
-                          background: isDark
-                            ? "rgba(255,255,255,0.5)"
-                            : "rgba(0,0,0,0.45)",
-                        }}
-                      />
-                      <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-                        {children}
-                      </div>
-                    </li>
-                  );
-                }
-                return (
-                  <li
-                    {...rest}
-                    style={{
-                      listStyle: "none",
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: "0.6em",
-                      margin: 0,
-                      padding: "0.5em 0",
-                      fontSize: "0.9em",
-                      lineHeight: 1.55,
-                    }}
-                  >
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        flex: "0 0 auto",
-                        width: "0.4em",
-                        height: "0.4em",
-                        marginTop: "0.5em",
-                        borderRadius: "999px",
-                        background: isDark
-                          ? "radial-gradient(circle at 50% 42%, #fff 58%, #fafafa 78%, rgba(255,255,255,0) 100%)"
-                          : "radial-gradient(circle at 50% 42%, #000 58%, #050505 78%, rgba(0,0,0,0) 100%)",
-                        border: isDark
-                          ? "1px solid rgba(255,255,255,0.55)"
-                          : "1px solid rgba(0,0,0,0.35)",
-                        boxShadow: isDark
-                          ? "0 0 5px 0 rgba(255,255,255,0.45)"
-                          : "0 0 5px 0 rgba(0,0,0,0.35)",
-                      }}
-                    />
-                    <div style={{ flex: "1 1 auto", minWidth: 0 }}>{children}</div>
-                  </li>
-                );
-              },
-              strong(props) {
-                const { children, ...rest } = props;
-                return <strong className="font-bold" {...rest}>{children}</strong>;
-              },
-              em(props) {
-                const { children, ...rest } = props;
-                return <em className="italic" {...rest}>{children}</em>;
-              },
-              // Small caption / reference line, e.g. an image source under a
-              // figure. Inline-styled so it survives `.markdown > * {all:revert}`.
-              small(props) {
-                const { node, children, style, ...rest } = props;
-                return (
-                  <small
-                    {...rest}
-                    style={{
-                      display: "block",
-                      marginTop: "-0.4rem",
-                      marginBottom: "1.5rem",
-                      fontSize: "0.78em",
-                      fontStyle: "italic",
-                      opacity: 0.55,
-                      textAlign: centered ? "center" : "left",
-                      ...style,
-                    }}
-                  >
-                    {children}
-                  </small>
-                );
-              },
-            }}
-          >
-            {cleaned}
-          </Markdown>
-        </div>
+        <div className="md:w-7/12 w-full px-4 mx-auto">{markdown}</div>
       </div>
       {lightbox &&
         createPortal(

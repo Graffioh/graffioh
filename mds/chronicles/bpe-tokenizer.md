@@ -32,7 +32,13 @@ $$
 \text{31.9\% reduction - 1.47x speedup}
 $$
 
-instead of iterating through the frequency table (from `pretokenize`), we use a reverse index structured as follow: `<pair>: list(slot)` where `slot = i` (index in words) and `words = list((word, word_frequency))` computed from the original frequency table once
+
+```python
+# optimization 1 - use a reverse index with <pair>: add((<word>, <count>)) after picking the winning pair
+#   so that we don't traverse each freq_table key to find in which word, the pair appear
+words = list(freq_table.items())
+index_pair_to_word_slots: defaultdict[tuple[bytes, ...], set[int]] = defaultdict(set[int])
+```
 
 ```
          73817271 function calls (73782395 primitive calls) in 24.296 seconds
@@ -53,3 +59,16 @@ instead of iterating through the frequency table (from `pretokenize`), we use a 
         5    0.122    0.024    0.122    0.024 {built-in method gc.collect}
 ...
 ```
+
+## parallelize pretokenization
+
+### gone wrong
+
+parallelizing on small examples is not beneficial (process startup overhead)
+
+![bpe-parallel-timeline](../bpe-parallel-timeline.png)
+
+### with dynamic num_processes
+
+...
+

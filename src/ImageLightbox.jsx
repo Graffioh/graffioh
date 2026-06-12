@@ -54,6 +54,24 @@ export default function ImageLightbox({ src, alt, svg, slabStyle, maxWidthPx, on
     const el = surfaceRef.current;
     if (!el) return;
 
+    // Coalesce pointer-rate view updates into one state commit per frame — a
+    // high-polling mouse fires move events far faster than the display
+    // refresh, and each setView would otherwise be its own React render.
+    // Only the latest queued update runs; the stale ones are dropped.
+    let moveRaf = 0;
+    let pendingMove = null;
+    const queueMove = (fn) => {
+      pendingMove = fn;
+      if (!moveRaf) {
+        moveRaf = requestAnimationFrame(() => {
+          moveRaf = 0;
+          const f = pendingMove;
+          pendingMove = null;
+          if (f) f();
+        });
+      }
+    };
+
     const onWheel = (e) => {
       e.preventDefault();
       const factor = e.deltaY < 0 ? 1.2 : 1 / 1.2;
@@ -66,7 +84,10 @@ export default function ImageLightbox({ src, alt, svg, slabStyle, maxWidthPx, on
         movedRef.current = true;
         const mid = touchMidpoint(e.touches);
         const ratio = touchDistance(e.touches) / pinchRef.current.startDist;
-        zoomAt(pinchRef.current.startScale * ratio, mid.x, mid.y);
+        // absolute target scale (from the pinch start), so dropping stale
+        // updates can't accumulate error
+        const target = pinchRef.current.startScale * ratio;
+        queueMove(() => zoomAt(target, mid.x, mid.y));
       } else if (e.touches.length === 1 && dragRef.current) {
         const t = e.touches[0];
         const dx = t.clientX - dragRef.current.startX;
@@ -74,7 +95,9 @@ export default function ImageLightbox({ src, alt, svg, slabStyle, maxWidthPx, on
         if (Math.hypot(dx, dy) > 8) movedRef.current = true;
         if (viewRef.current.scale <= 1) return;
         e.preventDefault();
-        setView((v) => ({ ...v, tx: dragRef.current.tx + dx, ty: dragRef.current.ty + dy }));
+        const tx = dragRef.current.tx + dx;
+        const ty = dragRef.current.ty + dy;
+        queueMove(() => setView((v) => ({ ...v, tx, ty })));
       }
     };
 
@@ -84,7 +107,9 @@ export default function ImageLightbox({ src, alt, svg, slabStyle, maxWidthPx, on
       const dy = e.clientY - dragRef.current.startY;
       if (Math.hypot(dx, dy) > 5) movedRef.current = true;
       if (viewRef.current.scale <= 1) return;
-      setView((v) => ({ ...v, tx: dragRef.current.tx + dx, ty: dragRef.current.ty + dy }));
+      const tx = dragRef.current.tx + dx;
+      const ty = dragRef.current.ty + dy;
+      queueMove(() => setView((v) => ({ ...v, tx, ty })));
     };
 
     const onMouseUp = () => {
@@ -108,6 +133,7 @@ export default function ImageLightbox({ src, alt, svg, slabStyle, maxWidthPx, on
     document.body.style.overflow = "hidden";
 
     return () => {
+      cancelAnimationFrame(moveRaf);
       el.removeEventListener("wheel", onWheel);
       el.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("mousemove", onMouseMove);

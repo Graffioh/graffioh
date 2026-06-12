@@ -12,12 +12,30 @@ const files = import.meta.glob("../mds/dump/*.md", {
 
 export const dumpContent = {}; // id -> raw markdown
 
+// What the dump search (DumpPage) matches against, precomputed once at module
+// load so each keystroke is a cheap .includes — and with the markdown plumbing
+// stripped (link/image targets, raw-HTML tags, [[<url>]] refs) so queries like
+// "http" or "png" don't match every note through its link targets. Labels,
+// alt text, and wiki-link note names stay searchable.
+export const searchHaystacks = {}; // id -> lowercased searchable text
+
+function searchText(title, raw) {
+  const body = raw
+    .replace(/\[\[\s*https?:\/\/[^\]]*\]\]/gi, " ") // external reference links
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, " $1 ") // images: keep alt, drop path
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, " $1 ") // links: keep label, drop URL
+    .replace(/<[^>]+>/g, " "); // raw HTML tags (attrs, inline styles)
+  return `${title}\n${body}`.toLowerCase();
+}
+
 export const topics = Object.entries(files)
   .map(([path, raw]) => {
     const id = path.split("/").pop().replace(/\.md$/, "");
     dumpContent[id] = raw;
     const heading = raw.match(/^#\s+(.+)$/m);
-    return { id, title: heading ? heading[1].trim() : id.replace(/-/g, " ") };
+    const title = heading ? heading[1].trim() : id.replace(/-/g, " ");
+    searchHaystacks[id] = searchText(title, raw);
+    return { id, title };
   })
   // ordered by topic
   .sort((a, b) => a.title.localeCompare(b.title));

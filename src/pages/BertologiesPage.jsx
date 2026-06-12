@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
 import ContentViewer from "../ContentViewer";
 
-export default function NotePage() {
+export default function BertologiesPage() {
   const [content, setContent] = useState(null);
 
+  // `[]`: load once on mount — without it the effect re-fires the dynamic
+  // import after every render.
   useEffect(() => {
     const loadContent = async () => {
       try {
@@ -16,7 +17,7 @@ export default function NotePage() {
     };
 
     loadContent();
-  });
+  }, []);
 
   return <div>{content ? <ContentViewer content={content} /> : null}</div>;
 }

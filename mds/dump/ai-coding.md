@@ -57,7 +57,7 @@ we don't use UTF-16, UTF-32 (other for general compatibility with web standards)
 
 ### wrong UTF-8 decoding
 
-```python
+```python-compile
 def decode_utf8_bytes_to_str_wrong(str_bytes: bytes):
     return "".join([bytes([b]).decode("utf-8") for b in str_bytes])
 
@@ -68,9 +68,26 @@ this is wrong for multi-byte characters e.g. 😂, because their bytes are compo
 
 the fix is:
 
-```python
+```python-compile
 def decode_utf8_bytes_to_str(str_bytes: bytes):
     return str_bytes.decode("utf-8")
 
 print(decode_utf8_bytes_to_str("😂".encode("utf-8")))
 ```
+## Python parallelization
+
+`multiprocessing.Pool` and `ProcessPoolExecutor`
+
+**Cost of process parallelization**:
+
+- sharing memory across processes (serialize, copy, deserialize)
+- fixed startup cost (on macOS, each worker spawn a fresh intepreter and re-imports the module)
+
+### Why threads can't really parallelize work: Python GIL (Global Interpreter Lock)
+
+This lock, forces python **threads** to only execute python code at once, even on multiple cores, this means that it can't do *split* work:
+- it works good when work need to be suspended for a bit and other work can be done in the meanwhile (I/O bound)
+- it's not good for heavy compute bound operations where parallelization helps (CPU bound, <u>processes must be spawned for this</u>)
+
+
+
