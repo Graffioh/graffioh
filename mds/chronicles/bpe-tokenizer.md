@@ -76,6 +76,8 @@ then i tried running TinyStories train set and it was taking too much:
 
 ![bpe-train-terminal](../bpe-train-terminal.png)
 
+7~ it/s
+
 time to optimize more or fix the existing one(?)
 
 ### better optimization on pretokenize
@@ -96,7 +98,7 @@ thanks to this we are down to 76s...but there is still something off...
 
 the other culript is: pretokenize is iterating through all the words in the training corpus, and what i was doing to these words was converting them into bytes! this conversion was being done a lot lot of times, and that slowed down everything. The fix is to actually convert to bytes only when needed, since strings are easily converted without losing any ordering and such (string is just an 'encoding' of n-bytes)
 
-the conversion is now done here, when frequency table chunk is aggregate from the parallel processing:
+the conversion is now done here, when frequency table chunk is aggregated from the parallel processing:
 
 ```python
  with Pool(
@@ -122,4 +124,38 @@ the conversion is now done here, when frequency table chunk is aggregate from th
          freq_table_chunk[tuple(bytes_split)] = count
      freq_table.update(freq_table_chunk)
 ```
+after these optimizations, `merge` when training on Tinystories went from 7 it/s to 10 it/s
 
+the last optimization to go through, is the *in-place editing of the pair indexes* (both word slot and count)...here i'll update and sync them in place while merging:
+
+```python
+ for slot in index_pair_to_word_slots[max_pair]:
+     cur_word, cur_count = words[slot]
+
+     # decrement the count since we're gonna merge bytes
+     for cur_w_pos in range(len(cur_word) - 1):
+         byte_pair = (cur_word[cur_w_pos], cur_word[cur_w_pos + 1])
+         index_pair_to_count[byte_pair] -= 1
+
+     new_word: list[bytes] = []
+     i = 0
+     while i < len(cur_word):
+         if i + 1 < len(cur_word) and cur_word[i] == max_pair[0] and cur_word[i + 1] == max_pair[1]:
+             new_word.append(cur_word[i] + cur_word[i + 1])
+             i += 2
+         else:
+             new_word.append(cur_word[i])
+             i += 1
+
+     # restore the decremented count on the bytes not merged, and add new one on the bytes merged
+     for new_w_pos in range(len(new_word) - 1):
+         byte_pair = (cur_word[new_w_pos], cur_word[new_w_pos + 1])
+         index_pair_to_count[byte_pair] += 1
+         index_pair_to_word_slots[byte_pair].add(slot)
+
+     words[slot] = (tuple(new_word), cur_count)
+```
+
+now we train on the whole TinyStories dataset in 1:50 min :)
+
+![bpe-train-terminal-253its](../bpe-train-terminal-253its.png)
