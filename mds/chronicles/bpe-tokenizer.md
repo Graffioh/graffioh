@@ -94,6 +94,32 @@ above, we can see that there are some methods called that are not really to spli
 
 thanks to this we are down to 76s...but there is still something off...
 
-### better optimization on merge
+the other culript is: pretokenize is iterating through all the words in the training corpus, and what i was doing to these words was converting them into bytes! this conversion was being done a lot lot of times, and that slowed down everything. The fix is to actually convert to bytes only when needed, since strings are easily converted without losing any ordering and such (string is just an 'encoding' of n-bytes)
 
+the conversion is now done here, when frequency table chunk is aggregate from the parallel processing:
+
+```python
+ with Pool(
+     num_processes,
+ ) as pool:
+     pretoken_freq_table_from_parallel = list(
+         tqdm(
+             # results arrive as each chunk completes, with yield, so we can use tqdm
+             pool.imap_unordered(pretokenize_worker_star, pretokenize_args),
+             total=len(pretokenize_args),
+             desc="pretokenize chunks",
+         )
+     )
+
+ for pretoken_freq_table_chunk in pretoken_freq_table_from_parallel:
+     freq_table_chunk: Counter[tuple[bytes, ...]] = Counter()
+     for pretoken, count in pretoken_freq_table_chunk.items():
+         bytes_from_pretoken = pretoken.encode("utf-8")
+         bytes_split: list[bytes] = []
+         for b in bytes_from_pretoken:
+             bytes_split.append(bytes([b]))
+
+         freq_table_chunk[tuple(bytes_split)] = count
+     freq_table.update(freq_table_chunk)
+```
 
