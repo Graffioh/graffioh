@@ -4,7 +4,7 @@
 https://github.com/Graffioh/lmfromscratch/blob/main/assignment1-basics/cs336_basics/bpe_tokenizer/bpe_parallel.py
 ```
 
-**test_train_bpe.py**
+starting with `test_train_bpe.py` and then later on *TinyStories* training
 
 ## initial run without any optimization:
 
@@ -71,4 +71,29 @@ the pretokenize time is only ~2s across the total time spent in the `train_bpe` 
 `merge` is the one to optimize in this case
 
 ![bpe-parallel-timeline](../bpe-parallel-timeline.png)
+
+then i tried running TinyStories train set and it was taking too much:
+
+![bpe-train-terminal](../bpe-train-terminal.png)
+
+time to optimize more or fix the existing one(?)
+
+### better optimization on pretokenize
+
+profiling current pretokenize on 465MB of data:
+
+![bpe-profile-cprofile](../bpe-profile-cprofile.png)
+
+unique pretokens in chunk are *34878* but i'm calling `.encode("utf-8")` *107322122 times*, and this can be optimized by keeping everything as a string until we actually need bytes (since encoding a string, will lead to split bytes anyway!)
+
+just with this we go from 134s to 81s (34% reduction!)
+
+![bpe-profile-cprofile-81s](../bpe-profile-cprofile-81s.png)
+
+above, we can see that there are some methods called that are not really to split text (regex/main.py compile, setlocale, isinstance and such) because of `txt_split = regex.finditer(gpt_regex_pattern, text)`: i'm calling the function via the module instead of doing that directly on the regex pattern object...such a waste...
+
+thanks to this we are down to 76s...but there is still something off...
+
+### better optimization on merge
+
 
