@@ -167,6 +167,7 @@ now we train on the whole TinyStories dataset in 1:50 min :)
 well...i got OOM during *OpenWebText* training
 
 <img src="../openwebtext-oom.png" alt="OpenWebText training OOM" width="320" />
+<small>camera photo because my m1 pro crashed shortly afterward.</small>
 
 some quick wins were on pretokenize parallelization side, where i was managing/holding too much memory for each worker:
 - i was storing all the freq table chunks that i got from parallel workers and then only after aggregating into the general freq table -> so i moved to a streaming approach
