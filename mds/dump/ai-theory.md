@@ -107,6 +107,11 @@ after pre-tokenization, we must **merge** the highest frequency adjacent pair of
 > [!note]
 > to break ties between pairs, lexicographically greater pair ( `ord('b') > ord('a')` ) is the one picked.
 
+some notes based on implementation exercise:
+- handle everything as `str` and only convert into `bytes` when needed (we can do this easily thanks to this beautiful concept of *UTF-8 bytes representation*)
+- special tokens must be treated as standalone full tokens without splitting them in bytes (in encoding)
+- when special tokens are overlapping e.g. `special_tokens = <|endoftext|>, <|endoftext|><|endoftext|>`, we must prefer the longest one during regex matching (to disambiguate)
+
 ## Transformer
 
 <div style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; margin:1.2rem 0;">

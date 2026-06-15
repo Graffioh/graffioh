@@ -6,7 +6,9 @@ https://github.com/Graffioh/lmfromscratch/blob/main/assignment1-basics/cs336_bas
 
 starting with `test_train_bpe.py` and then later on *TinyStories* training
 
-## initial run without any optimization:
+## Time performance
+
+### initial run without any optimization:
 
 ```
  160236054 function calls (160201169 primitive calls) in 35.700 seconds
@@ -26,7 +28,7 @@ starting with `test_train_bpe.py` and then later on *TinyStories* training
 ...
 ```
 
-## using a reverse index to prune the search space:
+### using a reverse index to prune the search space:
 
 $$
 \text{31.9\% reduction - 1.47x speedup}
@@ -60,7 +62,7 @@ index_pair_to_word_slots: defaultdict[tuple[bytes, ...], set[int]] = defaultdict
 ...
 ```
 
-## parallelize pretokenization
+### parallelize pretokenization
 
 ### gone wrong
 
@@ -80,7 +82,7 @@ then i tried running TinyStories train set and it was taking too much:
 
 time to optimize more or fix the existing one(?)
 
-### better optimization on pretokenize
+#### better optimization on pretokenize
 
 profiling current pretokenize on 465MB of data:
 
@@ -159,3 +161,13 @@ the last optimization to go through, is the *in-place editing of the pair indexe
 now we train on the whole TinyStories dataset in 1:50 min :)
 
 ![bpe-train-terminal-253its](../bpe-train-terminal-253its.png)
+
+## Memory optimization
+
+well...i got OOM during *OpenWebText* training
+
+<img src="../openwebtext-oom.png" alt="OpenWebText training OOM" width="320" />
+
+some quick wins were on pretokenize parallelization side, where i was managing/holding too much memory for each worker:
+- i was storing all the freq table chunks that i got from parallel workers and then only after aggregating into the general freq table -> so i moved to a streaming approach
+- i was holding all the text chunks in the worker because of wrong regex pattern (`.split`) instead of traversing one by one (`.finditer`)
