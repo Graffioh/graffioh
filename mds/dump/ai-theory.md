@@ -112,6 +112,26 @@ some notes based on implementation exercise:
 - special tokens must be treated as standalone full tokens without splitting them in bytes (in encoding)
 - when special tokens are overlapping e.g. `special_tokens = <|endoftext|>, <|endoftext|><|endoftext|>`, we must prefer the longest one during regex matching (to disambiguate)
 
+## fp32 vs fp16 vs bf16
+
+| Format | Sign bits | Exponent bits | Mantissa bits | Main property |
+|---|---:|---:|---:|---|
+| fp32 | 1 | 8 | 23 | large range, high precision; high memory usage|
+| fp16 | 1 | 5 | 10 | limited range, decent precision |
+| bf16 | 1 | 8 | 7 | large range, lower precision; good to avoid underflow/overflow during training |
+
+but in reality *mixed precision training* is used, to balance between memory and stabilization: 
+- fp32 for optimizer states (so training is stable)
+- bf16 for parameters, activations and gradients
+
+there also exists some funny ones like *nvfp4* by NVIDIA, which is basically fp4 and we can actually list the values: 
+
+`0, ±0.5, ±1, ±1.5, ±2, ±3, ±4, ±6`
+
+but these values are bundled with a *scale factor* to produce the actual value 
+
+(will explore more later on...)
+
 ## Transformer
 
 <div style="display:flex; align-items:center; gap:1.5rem; flex-wrap:wrap; margin:1.2rem 0;">
@@ -147,4 +167,3 @@ I think this is actually the most used word after glancing at RoPE.
 - The frequency varies based on the token's pair positions: taken $t_m$ and $t_n$ with positions $m,n$, then each $q/k$ pair shift $\Delta \cdot \theta_i$, where $\Delta$ is the deciding factor for the phase (how much each pair has rotated): <- *need to revise/explore this a bit more, but for now g2g*
     - $\Delta$ high (far-apart tokens): the fast pairs have wrapped, so the slow pairs carry the clean positional signal.
     - $\Delta$ low (nearby tokens): the fast pairs give a large, sharp phase difference, cleanly differentiating neighbors (slow pairs barely move).
-

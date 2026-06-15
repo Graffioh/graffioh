@@ -1221,6 +1221,96 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
       h2: heading(2, "text-2xl font-bold mt-8 mb-4"),
       h3: heading(3, "text-xl font-bold mt-6 mb-3"),
       h4: heading(4, "text-lg font-bold mt-5 mb-2"),
+      table(props) {
+        const { node, children, ...rest } = props;
+        const isDark = theme === "dark";
+        return (
+          <div
+            style={{
+              overflowX: "auto",
+              margin: "1.25em 0 1.5em",
+              maxWidth: "100%",
+            }}
+          >
+            <table
+              {...rest}
+              style={{
+                width: "100%",
+                borderCollapse: "separate",
+                borderSpacing: 0,
+                fontSize: "0.9em",
+                lineHeight: 1.45,
+                borderRadius: "0.65em",
+                overflow: "hidden",
+                background: isDark
+                  ? "rgba(255,255,255,0.055)"
+                  : "rgba(0,0,0,0.045)",
+                border: `1px solid ${
+                  isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.13)"
+                }`,
+              }}
+            >
+              {children}
+            </table>
+          </div>
+        );
+      },
+      thead(props) {
+        const { node, children, ...rest } = props;
+        const isDark = theme === "dark";
+        return (
+          <thead
+            {...rest}
+            style={{
+              background: isDark
+                ? "rgba(255,255,255,0.09)"
+                : "rgba(0,0,0,0.075)",
+            }}
+          >
+            {children}
+          </thead>
+        );
+      },
+      th(props) {
+        const { node, children, style, ...rest } = props;
+        const isDark = theme === "dark";
+        return (
+          <th
+            {...rest}
+            style={{
+              padding: "0.65em 0.85em",
+              textAlign: "left",
+              fontWeight: 700,
+              WebkitTextStroke: "0.35px currentColor",
+              borderBottom: `1px solid ${
+                isDark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.14)"
+              }`,
+              ...style,
+            }}
+          >
+            {children}
+          </th>
+        );
+      },
+      td(props) {
+        const { node, children, style, ...rest } = props;
+        const isDark = theme === "dark";
+        return (
+          <td
+            {...rest}
+            style={{
+              padding: "0.58em 0.85em",
+              borderTop: `1px solid ${
+                isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"
+              }`,
+              verticalAlign: "top",
+              ...style,
+            }}
+          >
+            {children}
+          </td>
+        );
+      },
       code(props) {
         const { children, className, node, ...rest } = props;
         // Capture hyphenated fence words too (e.g. `python-compile`), so a

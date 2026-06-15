@@ -171,3 +171,5 @@ well...i got OOM during *OpenWebText* training
 some quick wins were on pretokenize parallelization side, where i was managing/holding too much memory for each worker:
 - i was storing all the freq table chunks that i got from parallel workers and then only after aggregating into the general freq table -> so i moved to a streaming approach
 - i was holding all the text chunks in the worker because of wrong regex pattern (`.split`) instead of traversing one by one (`.finditer`)
+
+even after this the memory still grows a lot...i'll check later...
