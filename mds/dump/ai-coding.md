@@ -1,6 +1,6 @@
 # ai coding
 
-## Tensors & Strides
+## Strides
 
 In cpp everything is in a plain row layout, and to index inside a multi-dimensional array (a tensor) you need to skip *strides* of dimensions.
 
@@ -89,5 +89,29 @@ This lock, forces python **threads** to only execute python code at once, even o
 - it works good when work need to be suspended for a bit and other work can be done in the meanwhile (I/O bound)
 - it's not good for heavy compute bound operations where parallelization helps (CPU bound, <u>processes must be spawned for this</u>)
 
+## einops
 
+better way to handle tensors during operations without juggling with dimensions
 
+### einsum
+
+for a good looking matmul 
+
+taken x.dim = (... m hidden) and y.dim = (... n hidden)
+
+`.einsum(x, y, "... m hidden, ... n hidden -> ... m n")`
+
+### reduce
+
+for common reduce operations: sum, mean, max, min...
+
+`.reduce(x "... hidden -> ...", "sum")`
+
+### rearrange
+
+to split or aggregate dimensions
+
+taken x.dim = (... heads*head1)
+
+`.rearrange(x "... ( heads head1 ) -> ... heads head1")`
+ 

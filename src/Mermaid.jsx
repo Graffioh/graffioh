@@ -115,6 +115,13 @@ export default function Mermaid({ code, theme, zoomable = true }) {
           overflowX: "auto",
           display: "flex",
           justifyContent: "center",
+          // Hug the diagram instead of stretching the full content column: the
+          // slab takes the SVG's natural width (capped at 100% on narrow
+          // screens). useMaxWidth gives the SVG width:100% with no intrinsic
+          // basis, so a shrink-to-fit parent would collapse it — hence the
+          // definite width here. Wide diagrams (natural > column) still fill the
+          // column; narrow ones (like the compute/memory sketch) sit compact.
+          width: naturalWidth ? `min(100%, ${naturalWidth}px)` : undefined,
           // reserve a little height while mermaid loads so the page doesn't jump
           minHeight: svg ? undefined : "3rem",
           cursor: canZoom ? "zoom-in" : undefined,

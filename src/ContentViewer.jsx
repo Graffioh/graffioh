@@ -706,23 +706,28 @@ function RefOrb({ url, label, theme }) {
   );
 }
 
-// Section marker for a `##` heading — a small glowing orb in the same material
+// Section marker for headings — a small glowing orb in the same material
 // as the reference orbs (white-matter in dark mode, black-hole in light), minus
-// the logo. It hangs just left of the heading text as a quiet "section starts
-// here" cue, so top-level sections read as distinct units without a heavy `---`
-// rule. Sized in `em` so it scales with the heading. Decorative only.
-function SectionOrb({ theme }) {
+// the logo. It hangs just left of the heading text and scales down with heading
+// depth, so nested sections stay distinguishable without heavy rules.
+function SectionOrb({ theme, level = 2 }) {
   const isDark = theme === "dark";
+  const sizeByLevel = {
+    2: { size: "0.46em", margin: "0.55em", glow: 1 },
+    3: { size: "0.34em", margin: "0.5em", glow: 0.75 },
+    4: { size: "0.25em", margin: "0.45em", glow: 0.55 },
+  };
+  const marker = sizeByLevel[level] || sizeByLevel[2];
   const mat = isDark
     ? {
         bg: "radial-gradient(circle at 50% 42%, #fff 55%, #fafafa 74%, rgba(255,255,255,0) 100%)",
         border: "1px solid rgba(220,220,240,0.55)",
-        glow: "0 0 6px 1px rgba(255,255,255,0.5), 0 0 12px 1px rgba(180,185,225,0.3)",
+        glow: `0 0 ${6 * marker.glow}px 1px rgba(255,255,255,0.5), 0 0 ${12 * marker.glow}px 1px rgba(180,185,225,0.3)`,
       }
     : {
         bg: "radial-gradient(circle at 50% 42%, #000 55%, #050505 74%, rgba(0,0,0,0) 100%)",
         border: "1px solid rgba(140,140,170,0.4)",
-        glow: "0 0 6px 1px rgba(0,0,0,0.5), 0 0 12px 1px rgba(90,90,130,0.25)",
+        glow: `0 0 ${6 * marker.glow}px 1px rgba(0,0,0,0.5), 0 0 ${12 * marker.glow}px 1px rgba(90,90,130,0.25)`,
       };
   return (
     <span
@@ -731,9 +736,9 @@ function SectionOrb({ theme }) {
         display: "inline-block",
         verticalAlign: "middle",
         flex: "0 0 auto",
-        width: "0.46em",
-        height: "0.46em",
-        marginRight: "0.55em",
+        width: marker.size,
+        height: marker.size,
+        marginRight: marker.margin,
         // nudge up so the dot sits on the cap-height middle, not the x-height
         position: "relative",
         top: "-0.08em",
@@ -1094,8 +1099,9 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
           (currentNoteId && id && references[`${currentNoteId}#${id}`]) || [];
         return (
           <Tag className={className} {...rest}>
-            {/* `##` sections get a quiet orb marker to separate them as units */}
-            {level === 2 && <SectionOrb theme={theme} />}
+            {level >= 2 && level <= 4 && (
+              <SectionOrb theme={theme} level={level} />
+            )}
             {children}
             {refs.length > 0 && <RefOrbs refs={refs} theme={theme} />}
           </Tag>
