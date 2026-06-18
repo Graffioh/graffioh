@@ -167,6 +167,16 @@ this leads to less memory movement -> that means we can keep our GPUs busy with 
 >
 > so even if it feels a small optimization, it will save quite a bit of performance...the same applies to why bias is dropped in modern transformer!
 
+## Hyperparameters consensus
+
+### $d_\text{ff} / d_\text{model}$ ratio
+
+[[https://arxiv.org/abs/2001.08361|Scaling Laws for Neural Language Models]]
+
+the optimal size for the dimension of the first feed forward network is $d_{\text{ff}} = 4d_{\text{model}}$ (and everyone, boringly, agrees to this)
+
+- T5 from google took a more system-oriented approach where basically they chose a 64 ratio, just because: bigger matrix, better it is on GPU consumption (worked fine)
+
 ## RoPE
 
 Attention is *permutation invariant* (e.g. position 1 and position 69 are "the same"), that means the position of the token is not taken in count by attention mechanism.

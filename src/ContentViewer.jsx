@@ -202,6 +202,26 @@ function refLabel(url) {
   }
 }
 
+function arxivId(url) {
+  const m = url.match(/arxiv\.org\/(?:abs|pdf)\/([^?#]+)/i);
+  return m ? m[1].replace(/\.pdf$/i, "").replace(/v\d+$/i, "") : "";
+}
+
+const ARXIV_PAPERS = {
+  "1706.03762": {
+    title: "Attention Is All You Need",
+    authors: "Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Lukasz Kaiser, Illia Polosukhin",
+    abstract:
+      "The dominant sequence transduction models are based on complex recurrent or convolutional neural networks in an encoder-decoder configuration. The authors propose the Transformer, a simpler architecture based only on attention mechanisms, removing recurrence and convolutions. Experiments on machine translation show stronger quality, better parallelization, and substantially less training time, with strong results on English-German, English-French, and constituency parsing.",
+  },
+  "2001.08361": {
+    title: "Scaling Laws for Neural Language Models",
+    authors: "Jared Kaplan, Sam McCandlish, Tom Henighan, Tom B. Brown, Benjamin Chess, Rewon Child, Scott Gray, Alec Radford, Jeffrey Wu, Dario Amodei",
+    abstract:
+      "This paper studies empirical scaling laws for language-model cross-entropy loss. Loss follows power laws with model size, dataset size, and training compute across many orders of magnitude, while architectural details such as width and depth have relatively small effects over broad ranges. The resulting relationships help estimate compute-optimal model and dataset allocation.",
+  },
+};
+
 // Strip [[<url>|Title]] reference links out of raw markdown before rendering —
 // they don't appear inline; they're hoisted to logo orbs on the section heading
 // (see `references` in dumps.js). Collapses the blank lines left behind.
@@ -609,6 +629,7 @@ function RefOrb({ url, label, theme }) {
       };
   const kind = refKind(url);
   const isArxiv = kind === "arxiv";
+  const paper = isArxiv ? ARXIV_PAPERS[arxivId(url)] : null;
   const red = isDark ? "#b31b1b" : "#ff6b6b"; // arXiv / PDF red, tuned per orb
   const ink = isDark ? "#15150d" : "#f0f0f0"; // letters / glyph on the orb core
   const glyph = isArxiv ? (
@@ -691,8 +712,19 @@ function RefOrb({ url, label, theme }) {
       >
         {glyph}
       </a>
-      <span className="ref-orb-tooltip" role="tooltip">
-        {label}
+      <span
+        className={`ref-orb-tooltip ${paper ? "ref-orb-paper" : ""}`}
+        role="tooltip"
+      >
+        {paper ? (
+          <>
+            <span className="ref-orb-paper-title">{paper.title}</span>
+            <span className="ref-orb-paper-authors">{paper.authors}</span>
+            <span className="ref-orb-paper-abstract">{paper.abstract}</span>
+          </>
+        ) : (
+          label
+        )}
       </span>
     </span>
   );
@@ -866,8 +898,9 @@ function Callout({ type = "note", title, children, theme }) {
         padding: tab ? "0.72em 0.9em 0.62em 0.9em" : "0.55em 0.9em 0.62em 0.9em",
         borderRadius: "0.6em",
         // Match the bullet list panel: same neutral-grey fill + uniform border
-        // (no glow), and the same 0.9em body text.
-        fontSize: "0.9em",
+        // (no glow). Body text runs a hair smaller than the bullets (0.82 vs
+        // 0.9em) so a note reads as a quieter aside.
+        fontSize: "0.82em",
         lineHeight: 1.55,
         background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
         border: `1px solid ${
@@ -1653,7 +1686,7 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
   return (
     <>
       <div className="w-full">
-        <div className="md:w-7/12 w-full px-4 mx-auto">{markdown}</div>
+        <div className="md:w-8/12 w-full px-4 mx-auto">{markdown}</div>
       </div>
       {lightbox &&
         createPortal(

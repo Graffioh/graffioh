@@ -38,6 +38,7 @@
     src: url("../Roboto-Regular.ttf") format("truetype");
 }
 
+
 /* Theme variables */
 /* Light theme */
 :root {
@@ -136,6 +137,34 @@ body {
     transform: translateX(-50%) translateY(0);
     transition-delay: 0s;
 }
+.ref-orb-tooltip.ref-orb-paper {
+    width: min(420px, calc(100vw - 32px));
+    white-space: normal;
+    text-align: left;
+    line-height: 1.38;
+    padding: 9px 11px 10px;
+}
+.ref-orb-paper-title,
+.ref-orb-paper-authors,
+.ref-orb-paper-abstract {
+    display: block;
+}
+.ref-orb-paper-title {
+    font-size: 12px;
+    font-weight: 800;
+    margin-bottom: 3px;
+}
+.ref-orb-paper-authors {
+    font-size: 10px;
+    font-weight: 600;
+    opacity: 0.72;
+    margin-bottom: 6px;
+}
+.ref-orb-paper-abstract {
+    font-size: 11px;
+    font-weight: 500;
+    opacity: 0.9;
+}
 
 a[href="/"]:hover {
     color: var(--hover-text-color) !important;
@@ -146,10 +175,14 @@ a[href="/"]:hover {
         1px 1px 0 var(--hover-shadow-color);
 }
 :root {
-    font-family: "Commit Mono";
+    /* Palatino — a classic, warm serif that reads well for long-form text.
+       Native on macOS; Palatino Linotype / Book Antiqua are the Windows
+       equivalents, with URW Palladio / generic serif as the final fallbacks.
+       (Code blocks keep their own monospace stack in codeSlab.jsx.) */
+    font-family: "Palatino", "Palatino Linotype", "Book Antiqua", "URW Palladio L", serif;
     line-height: 1.5;
     font-weight: 500;
-    font-size: 15px;
+    font-size: 18px;
     /* color: rgba(255, 255, 255, 0.87); */
     /* background-color: #181818; */
     font-synthesis: weight style;
