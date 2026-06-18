@@ -10,6 +10,13 @@ const MIN_FACTOR = 0.1; // how much speed remains right under the cursor
 const BORDER_MARGIN = 90; // px — orbs start curving away this far from the edge
 const BORDER_TURN = 1500; // px/s² — inward push that bends their path back in
 const ENTER_MS = 340; // dive-into-orb animation length — snappy warp-in
+const SLOW_RADIUS_SQ = SLOW_RADIUS * SLOW_RADIUS;
+const INV_SLOW_RADIUS = 1 / SLOW_RADIUS;
+const COLLISION_CELL_SIZE = ORB_SIZE;
+const ORB_SIZE_SQ = ORB_SIZE * ORB_SIZE;
+const MAX_PARTICLES = 600;
+const topicIds = topics.map((topic) => topic.id);
+const topicCount = topics.length;
 
 // Orb positions persist across navigation (changing section, or entering an
 // orb and coming back) — module-scoped so they survive DumpPage unmount and
@@ -83,7 +90,13 @@ export default function DumpPage() {
       navigate(dest);
       return;
     }
-    savedOrbs = stateRef.current.map((o) => ({ ...o })); // resume here on return
+    savedOrbs = stateRef.current.map(({ x, y, vx, vy, phase }) => ({
+      x,
+      y,
+      vx,
+      vy,
+      phase,
+    })); // resume here on return
     setHover(null);
     const cx = s.x + R;
     const cy = s.y + R; // chosen orb's center, box-local — the zoom focal point
@@ -125,11 +138,11 @@ export default function DumpPage() {
     const seed = () => {
       const { width, height } = bounds;
       return topics.map((_, i) => {
-        const cols = Math.ceil(Math.sqrt(topics.length));
-        const rows = Math.ceil(topics.length / cols);
+        const cols = Math.ceil(Math.sqrt(topicCount));
+        const rows = Math.ceil(topicCount / cols);
         const cx = ((i % cols) + 0.5) * (width / cols);
         const cy = (Math.floor(i / cols) + 0.5) * (height / rows);
-        const angle = (i / topics.length) * Math.PI * 2 + 0.6;
+        const angle = (i / topicCount) * Math.PI * 2 + 0.6;
         const speed = 95 + (i % 3) * 25; // px/s — zippy when away from cursor
         return {
           x: Math.min(Math.max(cx - R, 0), width - ORB_SIZE),
@@ -167,7 +180,11 @@ export default function DumpPage() {
     // tangent (perpendicular to the impact line) like a real impact splash.
     const burst = (x, y, nx, ny, impact) => {
       const strength = Math.min(impact / 140, 1); // 0..1 normalized impact
-      const n = 14 + Math.floor(strength * 16);
+      const parts = partsRef.current;
+      const n = Math.min(
+        14 + Math.floor(strength * 16),
+        Math.max(0, MAX_PARTICLES - parts.length),
+      );
       const tx = -ny;
       const ty = nx; // tangent direction
       for (let k = 0; k < n; k++) {
@@ -176,7 +193,7 @@ export default function DumpPage() {
         const a =
           Math.atan2(ty * side, tx * side) + (Math.random() - 0.5) * 1.6;
         const sp = 60 + Math.random() * (150 + impact);
-        partsRef.current.push({
+        parts.push({
           x,
           y,
           px: x,
@@ -203,8 +220,6 @@ export default function DumpPage() {
         age: 0,
         r: 12 + strength * 20,
       });
-      if (partsRef.current.length > 600)
-        partsRef.current.splice(0, partsRef.current.length - 600);
     };
 
     // Track the cursor in canvas-local coordinates.
@@ -226,6 +241,34 @@ export default function DumpPage() {
 
     let raf = 0;
     let last = performance.now();
+    const collisionCells = new Map();
+
+    const resolveCollision = (a, b, nx, ny, dist) => {
+      nx /= dist;
+      ny /= dist;
+      // push apart so they never overlap (rigid)
+      const overlap = ORB_SIZE - dist;
+      a.x -= (nx * overlap) / 2;
+      a.y -= (ny * overlap) / 2;
+      b.x += (nx * overlap) / 2;
+      b.y += (ny * overlap) / 2;
+      // relative velocity along the collision normal
+      const along = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+      if (along > 0) {
+        a.vx -= along * nx;
+        a.vy -= along * ny;
+        b.vx += along * nx;
+        b.vy += along * ny;
+        // spark burst at the contact point
+        burst(
+          (a.x + R + b.x + R) / 2,
+          (a.y + R + b.y + R) / 2,
+          nx,
+          ny,
+          Math.abs(along),
+        );
+      }
+    };
 
     const loop = (t) => {
       raf = requestAnimationFrame(loop);
@@ -240,10 +283,11 @@ export default function DumpPage() {
       const en = enteringRef.current; // non-null while diving into an orb
 
       // 1) integrate each orb (steer, slow near cursor, move, bounce off walls)
-      orbs.forEach((s, i) => {
+      for (let i = 0; i < orbs.length; i++) {
+        const s = orbs[i];
         // while zooming, the focal orb holds perfectly still so the view stays
         // locked onto it; the rest keep drifting as the scene scales up.
-        if (en && i === en.ci) return;
+        if (en && i === en.ci) continue;
 
         const steer = Math.sin(t * 0.0004 + s.phase) * 0.9 * dt;
         const cos = Math.cos(steer);
@@ -255,15 +299,19 @@ export default function DumpPage() {
 
         let factor = 1;
         if (ptr.inside) {
-          const d = Math.hypot(ptr.x - (s.x + R), ptr.y - (s.y + R));
-          if (d < SLOW_RADIUS)
-            factor = MIN_FACTOR + (1 - MIN_FACTOR) * (d / SLOW_RADIUS);
+          const dx = ptr.x - (s.x + R);
+          const dy = ptr.y - (s.y + R);
+          const dSq = dx * dx + dy * dy;
+          if (dSq < SLOW_RADIUS_SQ) {
+            const d = Math.sqrt(dSq);
+            factor = MIN_FACTOR + (1 - MIN_FACTOR) * d * INV_SLOW_RADIUS;
+          }
         }
-        if (hoveredRef.current === topics[i].id)
+        if (hoveredRef.current === topicIds[i])
           factor = Math.min(factor, 0.04);
         // a search match lingers (gentle slow) so it's easy to spot and click
         const matched = matchedRef.current;
-        if (matched && matched.has(topics[i].id))
+        if (matched && matched.has(topicIds[i]))
           factor = Math.min(factor, 0.22);
 
         s.x += s.vx * dt * factor;
@@ -299,47 +347,61 @@ export default function DumpPage() {
           s.y = maxY;
           if (s.vy > 0) s.vy = 0;
         }
-      });
+      }
 
       // 2) rigid orb-orb collisions (equal-mass elastic) + particle burst.
+      // A spatial hash keeps this near-linear as the dump grows: each orb only
+      // checks its own cell and the neighboring cells, instead of every pair.
       // Skipped while zooming so nothing jostles the locked focal orb.
       if (!en) {
+        const cols = Math.max(1, Math.ceil(width / COLLISION_CELL_SIZE));
+        const rows = Math.max(1, Math.ceil(height / COLLISION_CELL_SIZE));
+        collisionCells.clear();
+
         for (let i = 0; i < orbs.length; i++) {
-          for (let j = i + 1; j < orbs.length; j++) {
-            const a = orbs[i];
-            const b = orbs[j];
-            let nx = b.x + R - (a.x + R);
-            let ny = b.y + R - (a.y + R);
-            let dist = Math.hypot(nx, ny);
-            if (dist === 0) {
-              nx = 1;
-              ny = 0;
-              dist = 0.001;
-            }
-            if (dist < ORB_SIZE) {
-              nx /= dist;
-              ny /= dist;
-              // push apart so they never overlap (rigid)
-              const overlap = ORB_SIZE - dist;
-              a.x -= (nx * overlap) / 2;
-              a.y -= (ny * overlap) / 2;
-              b.x += (nx * overlap) / 2;
-              b.y += (ny * overlap) / 2;
-              // relative velocity along the collision normal
-              const along = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
-              if (along > 0) {
-                a.vx -= along * nx;
-                a.vy -= along * ny;
-                b.vx += along * nx;
-                b.vy += along * ny;
-                // spark burst at the contact point
-                burst(
-                  (a.x + R + b.x + R) / 2,
-                  (a.y + R + b.y + R) / 2,
-                  nx,
-                  ny,
-                  Math.abs(along),
-                );
+          const s = orbs[i];
+          const gx = Math.min(
+            cols - 1,
+            Math.max(0, Math.floor((s.x + R) / COLLISION_CELL_SIZE)),
+          );
+          const gy = Math.min(
+            rows - 1,
+            Math.max(0, Math.floor((s.y + R) / COLLISION_CELL_SIZE)),
+          );
+          const key = gy * cols + gx;
+          s.gridX = gx;
+          s.gridY = gy;
+          s.gridNext = collisionCells.get(key) ?? -1;
+          collisionCells.set(key, i);
+        }
+
+        for (let i = 0; i < orbs.length; i++) {
+          const a = orbs[i];
+          const fromY = Math.max(0, a.gridY - 1);
+          const toY = Math.min(rows - 1, a.gridY + 1);
+          const fromX = Math.max(0, a.gridX - 1);
+          const toX = Math.min(cols - 1, a.gridX + 1);
+
+          for (let gy = fromY; gy <= toY; gy++) {
+            for (let gx = fromX; gx <= toX; gx++) {
+              let j = collisionCells.get(gy * cols + gx) ?? -1;
+              while (j !== -1) {
+                if (j > i) {
+                  const b = orbs[j];
+                  let nx = b.x - a.x;
+                  let ny = b.y - a.y;
+                  let distSq = nx * nx + ny * ny;
+
+                  if (distSq < ORB_SIZE_SQ) {
+                    if (distSq === 0) {
+                      nx = 1;
+                      ny = 0;
+                      distSq = 0.000001;
+                    }
+                    resolveCollision(a, b, nx, ny, Math.sqrt(distSq));
+                  }
+                }
+                j = orbs[j].gridNext;
               }
             }
           }
@@ -347,10 +409,11 @@ export default function DumpPage() {
       }
 
       // 3) write orb positions — the zoom itself is a CSS scale on the box
-      orbs.forEach((s, i) => {
+      for (let i = 0; i < orbs.length; i++) {
+        const s = orbs[i];
         const el = orbRefs.current[i];
-        if (el) el.style.transform = `translate(${s.x}px, ${s.y}px)`;
-      });
+        if (el) el.style.transform = `translate3d(${s.x}px, ${s.y}px, 0)`;
+      }
 
       // 4) update + draw flashes / rings / particles on the overlay canvas
       ctx.clearRect(0, 0, width, height);

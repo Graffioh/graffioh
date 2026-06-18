@@ -589,7 +589,6 @@ function ArxivLogo({ ink, red, height = 12 }) {
 // any other link (globe) stay round. Opens in a new tab; hovering lifts it and
 // pops the title.
 function RefOrb({ url, label, theme }) {
-  const [hover, setHover] = useState(false);
   const isDark = theme === "dark";
   const orb = isDark
     ? {
@@ -647,15 +646,30 @@ function RefOrb({ url, label, theme }) {
     </svg>
   );
   return (
-    <span style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+    <span
+      className="ref-orb-wrap"
+      style={{
+        "--ref-orb-rest": orb.rest,
+        "--ref-orb-hot": orb.hot,
+        "--ref-orb-tooltip-bg": isDark
+          ? "rgba(250,250,248,0.97)"
+          : "rgba(18,18,24,0.97)",
+        "--ref-orb-tooltip-color": isDark ? "#1a1a1f" : "#e9e9ec",
+        "--ref-orb-tooltip-border": `1px solid rgba(${
+          isDark ? "135,145,65" : "120,110,190"
+        },0.4)`,
+        "--ref-orb-tooltip-shadow": `0 10px 26px -10px rgba(0,0,0,${
+          isDark ? 0.55 : 0.3
+        })`,
+      }}
+    >
       <a
+        className="ref-orb"
         href={url}
         target="_blank"
         rel="noopener noreferrer"
         title={label}
         aria-label={label}
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -668,40 +682,18 @@ function RefOrb({ url, label, theme }) {
           textDecoration: "none",
           background: isArxiv ? orb.pill : orb.bg,
           border: orb.border,
-          boxShadow: hover ? orb.hot : orb.rest,
-          transform: hover ? "scale(1.22)" : "none",
+          boxShadow: "var(--ref-orb-rest)",
+          transform: "translateZ(0)",
           transition: "transform 0.18s ease, box-shadow 0.18s ease",
+          willChange: "transform",
           cursor: "pointer",
         }}
       >
         {glyph}
       </a>
-      {hover && (
-        <span
-          role="tooltip"
-          style={{
-            position: "absolute",
-            top: "100%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            marginTop: 9,
-            whiteSpace: "nowrap",
-            pointerEvents: "none",
-            zIndex: 30,
-            fontFamily: "system-ui, sans-serif",
-            fontSize: 11,
-            fontWeight: 600,
-            padding: "3px 8px",
-            borderRadius: 7,
-            background: isDark ? "rgba(250,250,248,0.97)" : "rgba(18,18,24,0.97)",
-            color: isDark ? "#1a1a1f" : "#e9e9ec",
-            border: `1px solid rgba(${isDark ? "135,145,65" : "120,110,190"},0.4)`,
-            boxShadow: `0 10px 26px -10px rgba(0,0,0,${isDark ? 0.55 : 0.3})`,
-          }}
-        >
-          {label}
-        </span>
-      )}
+      <span className="ref-orb-tooltip" role="tooltip">
+        {label}
+      </span>
     </span>
   );
 }

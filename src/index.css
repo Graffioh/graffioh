@@ -91,6 +91,52 @@ body {
 .markdown em {
     font-style: italic !important;
 }
+
+/* Heading reference orbs use CSS hover/focus instead of React state so moving
+   across many newly added orbs does not schedule component renders. */
+.ref-orb-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.ref-orb-wrap:hover .ref-orb,
+.ref-orb-wrap:focus-within .ref-orb {
+    box-shadow: var(--ref-orb-hot) !important;
+    transform: scale(1.22) translateZ(0) !important;
+}
+.ref-orb-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-2px);
+    margin-top: 9px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 30;
+    font-family: system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 7px;
+    background: var(--ref-orb-tooltip-bg);
+    color: var(--ref-orb-tooltip-color);
+    border: var(--ref-orb-tooltip-border);
+    box-shadow: var(--ref-orb-tooltip-shadow);
+    opacity: 0;
+    visibility: hidden;
+    transition:
+        opacity 0.14s ease,
+        transform 0.14s ease,
+        visibility 0s linear 0.14s;
+}
+.ref-orb-wrap:hover .ref-orb-tooltip,
+.ref-orb-wrap:focus-within .ref-orb-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    transition-delay: 0s;
+}
+
 a[href="/"]:hover {
     color: var(--hover-text-color) !important;
     text-shadow:
@@ -235,4 +281,3 @@ a:hover {
       display: none !important;
     }
   }
-
