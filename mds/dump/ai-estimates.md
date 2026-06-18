@@ -29,20 +29,24 @@ for example:
 - training GPT-4 is speculated to take $2e25 \space \text{FLOPs}$
 - **H100** has a peak performance of $1979 \space \text{teraFLOP/s}$ on sparse matrix, half with dense matrix.
 
-in general, number of FLOPs in transformers, can be 'approximated' by calculating the time in matmul operations
-
-taken $(B, N, D)$, with $B$ batch dim (*num of data points*), $N$ input dim and $D$ hidden dim (*number of parameters*):
-
-$$2 * B * N * D$$ 
-
-($2$ because in a matmul we perform a multiplication and a sum over all elements)
-
 >[!note]
 >generally, the MFU (*Model FLOPs utilization*) is added in the calculation for a more precise per-second calculation: 
 >
 >`mfu = actual_flop_per_sec / promised_flop_per_sec` with `promised_flop_per_sec` dependent on `dtype` and the model (present in the GPU spec sheet; B200 >> H100, bf16 >> fp32)
 >
-> ...and additional note (inside the note): because of memory bottlenecks, the MFU is usually 0.5.
+> ...and additional note (inside the note): because of memory bottlenecks, the MFU is usually ~0.5, calculated with `mfu = min(1, arithmetic_intensity / accelerator_intensity)`
+
+in general, number of FLOPs in transformers, can be 'approximated' by calculating the time in matmul operations
+
+taken $(B, N, D)$, with $B$ batch dim (*num of data points*), $N$ input dim and $D$ hidden dim (*number of parameters*), for a forward pass on a single layer, the cost is:
+
+$$2 * B * N * D$$ 
+
+*(backward pass is 2x expensive than forward pass)*
+
+>[!note]
+> this is where the **6ND** rule to calculate flops come from:
+> forward pass: 2 + backward pass: 4 = 6
 
 ### Calculating training time
 
@@ -66,7 +70,7 @@ days = total_flops / flops_per_day
 
 ### arithmetic intensity
 
-`arithmetic_intensity = flops / bytes`
+`arithmetic_intensity = flops / bytes_moved`
 
 ### gpu accelerator intensity
 

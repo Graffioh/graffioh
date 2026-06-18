@@ -2,7 +2,7 @@
 
 ## Strides
 
-In cpp everything is in a plain row layout, and to index inside a multi-dimensional array (a tensor) you need to skip *strides* of dimensions.
+In a plain row layout (*Row-major*, for efficiency) to index inside a multi-dimensional array (a tensor) you need to skip *strides* of dimensions.
 
 A **stride** is the product of sizes of dimensions to reach our dst.
 
@@ -114,4 +114,4 @@ to split or aggregate dimensions
 taken x.dim = (... heads*head1)
 
 `.rearrange(x "... ( heads head1 ) -> ... heads head1")`
- 
+

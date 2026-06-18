@@ -143,6 +143,30 @@ but these values are bundled with a *scale factor* to produce the actual value
 
 [[https://arxiv.org/abs/1706.03762|Attention Is All You Need]]
 
+## Pre-norm vs Post-norm
+
+historically post-norm was used, so a layer norm after each transformer block in the residual stream
+
+some guy in 2020 found out that having the layer norm outside of the residual stream AND at the start of each operation in the transformer block:
+- removed the need of lr warmup
+- made the training more stable because the gradients at init of every layer are 'clean' (since the residual stream is just passing the input identity)
+
+>[!note]
+> i prefer to /s/post-norm/residual-norm because it actually lives on the residual stream
+>
+> whereas today, it's commmon to put layer norm pre / post operation in the transformer block (those are the actual pre/post norm)
+
+## Why RMSNorm over LayerNorm
+
+well, *RMSNorm* is just as good as LayerNorm (sometimes even better) without having to take in count extra parameters...free optimization!
+
+this leads to less memory movement -> that means we can keep our GPUs busy with matmul instead of side operations
+
+>[!note]
+> normalization work involve really low amount of flop % compared to tensor operations, but during runtime, depending on setup, memory movement and such, it can take up to 25.5% of runtime.
+>
+> so even if it feels a small optimization, it will save quite a bit of performance...the same applies to why bias is dropped in modern transformer!
+
 ## RoPE
 
 Attention is *permutation invariant* (e.g. position 1 and position 69 are "the same"), that means the position of the token is not taken in count by attention mechanism.
