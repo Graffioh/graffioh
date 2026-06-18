@@ -2,16 +2,26 @@
 // word's glyphs. The particles spring toward their home positions, but are
 // pushed *away* from the cursor (a "negative magnet") — so hovering carves a
 // moving void out of the word, which heals as the cursor leaves.
-import React, { useContext, useEffect, useRef } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { ThemeContext } from "./ThemeContext";
 
 const TEXT = "bertø";
 const FONT_STACK =
   'system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif';
 
+// The slashed "ø" closes up at this size — the ring + diagonal crowd its
+// counter — so render just that glyph lighter to open it. Everything else
+// stays heavy. Tune Ø_WEIGHT (lower = more open) if needed.
+const BASE_WEIGHT = 700;
+const WEIGHT_OVERRIDES = { ø: 500 };
+const weightFor = (ch) => WEIGHT_OVERRIDES[ch] || BASE_WEIGHT;
+
 export default function BertoTitle() {
   const { theme } = useContext(ThemeContext);
   const canvasRef = useRef(null);
+  // Bumped whenever the device pixel ratio changes (zoom / monitor switch) to
+  // re-render the canvas crisply at the new resolution.
+  const [dprVersion, setDprVersion] = useState(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -36,33 +46,38 @@ export default function BertoTitle() {
     // White on the dark page, near-black on the light one.
     const rgb = theme === "dark" ? "255,255,255" : "26,26,26";
 
-    // Render the word offscreen and sample opaque pixels into particle homes
-    // (all coordinates in device px).
+    // Sample the word at Full-HD (1x / CSS) resolution — NOT the device
+    // resolution. The dot pattern was tuned around the 30px rasterization (how
+    // it looks in a 1x "Full HD" viewport); rasterizing at 2x on Retina subtly
+    // reshapes fine features (the e/ø counters) and looked worse. So we sample
+    // the glyphs at 1x here for the pattern, then scale the resulting particle
+    // positions up to the real device resolution below — crisp on Retina, but
+    // with the Full-HD letterforms.
     const off = document.createElement("canvas");
-    off.width = canvas.width;
-    off.height = canvas.height;
+    off.width = cssW;
+    off.height = cssH;
     const octx = off.getContext("2d");
     octx.fillStyle = "#fff";
     octx.textBaseline = "middle";
     octx.textAlign = "left";
-    octx.font = `700 ${fontSize * dpr}px ${FONT_STACK}`;
-    octx.fillText(TEXT, padX * dpr, canvas.height / 2 + 1 * dpr);
+    octx.font = `700 ${fontSize}px ${FONT_STACK}`;
+    octx.fillText(TEXT, padX, cssH / 2 + 1);
 
     const data = octx.getImageData(0, 0, off.width, off.height).data;
-    // Keep a fine sampling grid so every glyph (b/r/t/ø stems) stays well
-    // formed; the air between particles comes from a small dot size below,
-    // which also keeps the e/ø counters open.
-    const gap = Math.max(2, Math.round(2.1 * dpr));
+    const gap = Math.max(2, Math.round(2.1)); // sampling grid, in CSS px
     const particles = [];
     for (let y = 0; y < off.height; y += gap) {
       for (let x = 0; x < off.width; x += gap) {
         if (data[(y * off.width + x) * 4 + 3] > 128) {
-          // Start scattered so the word assembles on first paint.
+          // Home position scaled up to device px; start scattered so the word
+          // assembles on first paint.
+          const hx = x * dpr;
+          const hy = y * dpr;
           particles.push({
-            hx: x,
-            hy: y,
-            x: x + (Math.random() - 0.5) * 46 * dpr,
-            y: y + (Math.random() - 0.5) * 46 * dpr,
+            hx,
+            hy,
+            x: hx + (Math.random() - 0.5) * 46 * dpr,
+            y: hy + (Math.random() - 0.5) * 46 * dpr,
             vx: 0,
             vy: 0,
           });
@@ -73,7 +88,9 @@ export default function BertoTitle() {
     const mouse = { x: -9999, y: -9999 };
     const R = 24 * dpr; // repulsion radius
     const K = 2.0 * dpr; // repulsion strength
-    const dot = Math.max(1.1, 1.1 * dpr);
+    // Integer dot size so the squares land on whole device pixels (crisp, no
+    // anti-aliased fuzz). 2px on a Retina (dpr 2) screen, 1px at dpr 1.
+    const dot = Math.max(1, Math.round(1.1 * dpr));
     const spring = 0.09;
     const friction = 0.8;
 
@@ -103,7 +120,8 @@ export default function BertoTitle() {
         p.vy = (p.vy + ay) * friction;
         p.x += p.vx;
         p.y += p.vy;
-        ctx.fillRect(p.x, p.y, dot, dot);
+        // Snap to whole device pixels so every dot stays a crisp square.
+        ctx.fillRect(Math.round(p.x), Math.round(p.y), dot, dot);
       }
       raf = requestAnimationFrame(frame);
     }
@@ -125,15 +143,25 @@ export default function BertoTitle() {
       mouse.y = -9999;
     }
 
+    // Re-run the whole setup if the device pixel ratio changes (browser zoom,
+    // dragging the window to a screen with a different density), so the canvas
+    // is always rendered at — and snapped to — the current resolution.
+    function onResize() {
+      const next = Math.min(window.devicePixelRatio || 1, 2);
+      if (next !== dpr) setDprVersion((v) => v + 1);
+    }
+
     canvas.addEventListener("pointermove", onMove);
     canvas.addEventListener("pointerleave", onLeave);
+    window.addEventListener("resize", onResize);
 
     return () => {
       cancelAnimationFrame(raf);
       canvas.removeEventListener("pointermove", onMove);
       canvas.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("resize", onResize);
     };
-  }, [theme]);
+  }, [theme, dprVersion]);
 
   return (
     <canvas

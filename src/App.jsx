@@ -12,6 +12,7 @@ import ChroniclePage from "./pages/ChroniclePage";
 import ResourcesPage from "./pages/ResourcesPage";
 import MoneyToolPage from "./pages/MoneyToolPage";
 import BertologiesPage from "./pages/BertologiesPage";
+import { useState } from "react";
 import { Link, BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { ThemeProvider } from "./ThemeContext";
@@ -45,41 +46,107 @@ function App() {
 }
 
 function Header() {
-  return (
-    <div className="flex border-b-2 border-stone-500 justify-between items-center p-2 md:w-8/12 mx-auto">
-      <Link to={"/"} aria-label="berto" style={{ lineHeight: 0 }}>
-        <BertoTitle />
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+
+  // Shared section links — laid out inline on desktop, stacked in the mobile menu.
+  const links = (
+    <>
+      <a
+        href={"https://github.com/Graffioh"}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="px-2 py-1"
+        onClick={close}
+      >
+        projects
+      </a>
+      <Link to={"/blog"} className="px-2 py-1" onClick={close}>
+        blog
       </Link>
-      <div>
-        <ThemeToggle />
-        <a
-          href={"https://github.com/Graffioh"}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="px-2"
+      <Link to={"/dump"} className="px-2 py-1" onClick={close}>
+        dump
+      </Link>
+      <Link to={"/chronicles"} className="px-2 py-1" onClick={close}>
+        chronicles
+      </Link>
+      {/*
+      <Link to={"/bertologies"} className="px-2 py-1" onClick={close}>
+        bertologies
+      </Link>
+      <Link to={"/resources"} className="px-2 py-1" onClick={close}>
+        <button class="cs-btn">resources</button>
+      </Link>
+      <Link to={"/notes"} className="px-2 py-1" onClick={close}>
+        notes
+      </Link>*/}
+    </>
+  );
+
+  return (
+    <div className="md:w-8/12 mx-auto">
+      <div className="flex border-b-2 border-stone-500 justify-between items-center p-2">
+        <Link
+          to={"/"}
+          aria-label="berto"
+          style={{ lineHeight: 0 }}
+          onClick={close}
         >
-          projects
-        </a>
-        <Link to={"/blog"} className="px-2">
-          blog
+          <BertoTitle />
         </Link>
-        <Link to={"/dump"} className="px-2">
-          dump
-        </Link>
-        <Link to={"/chronicles"} className="px-2">
-          chronicles
-        </Link>
-        {/*
-        <Link to={"/bertologies"} className="px-2">
-          bertologies
-        </Link>
-        <Link to={"/resources"} className="px-2">
-          <button class="cs-btn">resources</button>
-        </Link>
-        <Link to={"/notes"} className="px-2">
-          notes
-        </Link>*/}
+
+        {/* Desktop: theme toggle + links inline */}
+        <div className="hidden md:flex items-center">
+          <ThemeToggle />
+          {links}
+        </div>
+
+        {/* Mobile: theme toggle to the left of the hamburger */}
+        <div className="md:hidden flex items-center">
+          <ThemeToggle />
+          <button
+            type="button"
+            className="p-2"
+            aria-label="Menu"
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+            style={{ cursor: "pointer", color: "var(--text-color)" }}
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              {open ? (
+                <>
+                  <line x1="5" y1="5" x2="19" y2="19" />
+                  <line x1="19" y1="5" x2="5" y2="19" />
+                </>
+              ) : (
+                <>
+                  <line x1="3" y1="7" x2="21" y2="7" />
+                  <line x1="3" y1="12" x2="21" y2="12" />
+                  <line x1="3" y1="17" x2="21" y2="17" />
+                </>
+              )}
+            </svg>
+          </button>
+        </div>
       </div>
+
+      {/* Mobile: dropdown menu with the sections */}
+      {open && (
+        <div
+          className="md:hidden flex flex-col items-end gap-1 px-3 py-3"
+          style={{ borderBottom: "1px solid var(--border-color)" }}
+        >
+          {links}
+        </div>
+      )}
     </div>
   );
 }
