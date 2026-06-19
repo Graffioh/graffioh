@@ -1,4 +1,4 @@
-# ai infra
+# infra
 
 ## Techniques for optimization via parallelism
 

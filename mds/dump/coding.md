@@ -1,4 +1,4 @@
-# ai coding
+# coding
 
 ## Strides
 
@@ -51,7 +51,7 @@ A Unicode is a text encoding standard that maps characters to *integer code poin
 
 UTF-8 is a form of Unicode encoding, where multiple Unicode code points are converted in one byte (0-255).
 
-with tokenizers, we use UTF-8 encoding, because first of all, using Unicode would mean a big vocab size (and it's not really an issue [[ai-theory#Tokenizer]]) composed of a big amount of rare characters (wasteful)
+with tokenizers, we use UTF-8 encoding, because first of all, using Unicode would mean a big vocab size (and it's not really an issue [[theory#Tokenizer]]) composed of a big amount of rare characters (wasteful)
 
 we don't use UTF-16, UTF-32 (other for general compatibility with web standards) because we would be using 16 and 32 bits per code point, that means adding a lot of noise for common "few words" strings to fit these bits space
 
@@ -114,4 +114,3 @@ to split or aggregate dimensions
 taken x.dim = (... heads*head1)
 
 `.rearrange(x "... ( heads head1 ) -> ... heads head1")`
-

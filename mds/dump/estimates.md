@@ -1,6 +1,4 @@
-# ai estimates
-
-## AI operations
+# estimates
 
 ```mermaid
 %%{init: {'flowchart': {'nodeSpacing': 8, 'rankSpacing': 38, 'padding': 3, 'subGraphTitleMargin': {'top': 6, 'bottom': 10}}, 'themeVariables': {'fontSize': '13px'}}}%%

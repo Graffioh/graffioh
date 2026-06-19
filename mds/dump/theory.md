@@ -1,4 +1,4 @@
-# ai theory
+# theory
 
 ## Basics
 
@@ -78,7 +78,7 @@ a tokenizer is composed of a round-trip constructed as follows:
 
 other than making strings to be computable by the LLM, it also introduces *compression*, useful for fitting more tokens in the same context window!
 
-we'll not use a char-level/byte-level tokenizer (no compression), instead, nowadays a *byte-pair (BPE)* tokenizer is often used ([tiktoken by openai](https://github.com/openai/tiktoken))
+we'll not use a char-level/single byte-level tokenizer (no compression), instead, nowadays a *byte-pair (BPE)* tokenizer is often used ([tiktoken by openai](https://github.com/openai/tiktoken))
 
 larger the *compression ratio*, the better it is: `compression_ratio() = bytes(token) / num_tokens`
 
@@ -90,7 +90,7 @@ byte-pair encoding is used to have an efficient subword-level tokenization
 
 > common sequences of bytes are represented by a single token, rare sequences are represented by many tokens
 
-[[ai-coding#Unicode & UTF-8]]
+[[coding#Unicode & UTF-8]]
 
 a **pre-tokenizer** is used to optimize the BPE tokenization:
 - avoiding contamination (e.g. dog! vs dog. , the adjacent bytes differs by punctuation. with pre-tokenization, we'll chunk the text via some heuristic, and we'll get 'dog', '!', '.' as different chunks, then merging will be allowed only per-chunk and thanks to this we'll have 'dog' and '!/.' as different adjacent bytes) 
