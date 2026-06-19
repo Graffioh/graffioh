@@ -43,8 +43,8 @@ export default function BertoTitle() {
     canvas.width = Math.round(cssW * dpr);
     canvas.height = Math.round(cssH * dpr);
 
-    // White on the dark page, near-black on the light one.
-    const rgb = theme === "dark" ? "255,255,255" : "26,26,26";
+    // White on the dark page, black on the light one.
+    const rgb = theme === "dark" ? "255,255,255" : "0,0,0";
 
     // Sample the word at Full-HD (1x / CSS) resolution — NOT the device
     // resolution. The dot pattern was tuned around the 30px rasterization (how
