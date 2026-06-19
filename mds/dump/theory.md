@@ -177,6 +177,39 @@ the optimal size for the dimension of the first feed forward network is $d_{\tex
 
 - T5 from google took a more system-oriented approach where basically they chose a 64 ratio, just because: bigger matrix, better it is on GPU consumption (worked fine)
 
+### $d_\text{head} \times \text{num\_heads} \approx d_\text{model}$
+
+here we reshape the heads $Q, K, V$ this way: 
+
+$$
+\text{seq\_len} \times d_\text{model} \rightarrow \text{seq\_len} \times \text{num\_heads} \times d_\text{head}
+$$
+
+- the computational cost remains the same
+- the parameter count stay controlled
+
+so why we do this? <u>because empirically, it works well</u>
+
+### Aspect ratio
+
+$$d_\text{model} / \text{num\_layers}$$
+
+the normal consensus on this ratio is around 100 - 150
+
+mostly a ratio for good expressiveness and good system compatibility (e.g. if it's too deep and not wide, we would need a lot of GPUs without fully using tensor parallelism benefits...wasteful)
+
+## softmax is dangerous
+
+wherever we see softmax, so exponentiation, there is high probability that it can either blow up or vanish. 
+
+we say that: *"it is sensitive to the scale of its inputs"* and to handle this, we must be sure that the input is normalized
+
+e.g. in attention, to guard the softmax, initially the transformer original paper introduced $1/\sqrt{d_k}$ but recently there is also extra normalization right after computing $Q, K$ and before multiplying with $V$ -> called *QK norm*
+
+## Attention variations
+
+<img src="/dump/img/attention-variations.png" alt="attention variations" style="width:700px; max-width:100%;" />
+
 ## RoPE
 
 Attention is *permutation invariant* (e.g. position 1 and position 69 are "the same"), that means the position of the token is not taken in count by attention mechanism.
