@@ -206,9 +206,9 @@ we say that: *"it is sensitive to the scale of its inputs"* and to handle this, 
 
 e.g. in attention, to guard the softmax, initially the transformer original paper introduced $1/\sqrt{d_k}$ but recently there is also extra normalization right after computing $Q, K$ and before multiplying with $V$ -> called *QK norm*
 
-## Attention variations
+## Attention heads variations
 
-<img src="/dump/img/attention-variations.png" alt="attention variations" style="width:700px; max-width:100%;" />
+<img src="/dump/img/attention-variations.png" alt="attention heads variations" style="width:700px; max-width:100%;" />
 
 ## RoPE
 
