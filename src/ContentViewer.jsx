@@ -1431,26 +1431,21 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
         ) : (
           <code
             {...rest}
-            // inline "black hole": faded translucent-black core with a
-            // faint purple rim glow, crisp light text — small + stays
-            // in the line flow. In dark mode it flips to the exact
-            // photographic negative: white core, black text.
-            className="rounded-[0.35em] px-[0.36em] py-[0.04em] mx-[0.05em]"
+            // inline code: a quiet, flat pill that sits in the prose flow
+            // without competing with it. Warm tinted background + hairline
+            // border echo the blog's muted palette (index.css variables);
+            // no gradient or glow so it reads as typography, not a widget.
+            // Dark mode inverts to the photographic negative.
+            className="rounded-[0.32em] px-[0.34em] py-[0.06em] mx-[0.04em]"
             style={{
-              fontSize: "0.88em",
-              background:
-                theme === "dark"
-                  ? "radial-gradient(120% 135% at 50% 28%, #ecece9 0%, #e7e7e7 65%, #e2e2dd 100%)"
-                  : "radial-gradient(120% 135% at 50% 28%, #131316 0%, #181818 65%, #1d1d22 100%)",
-              color: theme === "dark" ? "#12120a" : "#ededf5",
-              border:
-                theme === "dark"
-                  ? "1px solid rgba(105,105,70,0.22)"
-                  : "1px solid rgba(150,150,185,0.22)",
-              boxShadow:
-                theme === "dark"
-                  ? "0 0 6px 0 rgba(135,145,65,0.25), inset 0 0 5px rgba(255,255,255,0.6)"
-                  : "0 0 6px 0 rgba(120,110,190,0.25), inset 0 0 5px rgba(0,0,0,0.6)",
+              fontFamily:
+                '"Commit Mono", "Fira Code", Menlo, Consolas, "DejaVu Sans Mono", monospace',
+              fontSize: "0.8em",
+              background: theme === "dark" ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.045)",
+              color: "inherit",
+              border: theme === "dark"
+                ? "1px solid var(--border-color)"
+                : "1px solid var(--border-color)",
               boxDecorationBreak: "clone",
               WebkitBoxDecorationBreak: "clone",
             }}

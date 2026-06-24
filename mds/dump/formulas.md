@@ -1,6 +1,6 @@
 # formulas cheatsheet
 
-## Attention
+## Self-Attention
 
 $$
 \text{Attention}(Q,K,V) = \text{attn\_score} \cdot V
@@ -11,6 +11,16 @@ $$
 $$
 
 - we need to apply a *causal mask* on attn_score before softmax (so during training, we avoid looking at future tokens and cheating)
+
+### Multi-Head Self-Attention
+
+$$
+\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, ..., \text{head}_h)
+$$
+
+$$
+\text{MultiHeadSelfAttention}(x) = W_O \text{MultiHead}(W_Q x, W_K x, W_v x)
+$$
 
 ## RMS Norm
 
