@@ -214,6 +214,9 @@ e.g. in attention, to guard the softmax, initially the transformer original pape
 
 ### alternatives for optimization
 
+>[!note]
+> what is done in the industry is that these attention alternatives are combined with the normal attention (e.g. Nemotron 3 with Mamba 2 and normal attention)
+
 #### Linear attention
 
 instead of $Attn(Q,K,V) = \rho(QK^T)V$ quadratic complexity $(n^2d_k)$, if we ignore $\rho$ we can actually have a linear complexity:
@@ -238,6 +241,26 @@ in this way we don't need to store KV and compute that for every token in output
 > e.g. $QK^T \space (n \times d_k)(n \times d_k) \rightarrow O(n^2 \cdot d_k)$
 >
 > $K^TV \space (d_k \times n)(n \times d_v) \rightarrow O(n \cdot d_k \cdot d_v)$ because $n$ is contracted
+
+#### Mamba 2
+
+taken the RNN formulation above, it can be modified with a *gate*, depending only on input, as follows, used to decaying older informations (act on previous state):
+
+$$
+S_t = \gamma_t S_{t-1} + k_t v_t^T \space \text{with} \space \gamma_t = f(x_t) \space \text{and} \space 0 \leq \gamma \leq 1
+$$
+
+[[https://arxiv.org/abs/2405.21060|Transformers are SSMs: Generalized Models and Efficient Algorithms Through Structured State Space Duality]]
+
+#### Gated delta net
+
+augmentation of Mamba 2, where here we add an extra gate on the current state:
+
+$$
+S_t = \gamma_t (I - \beta_tk_tk_t^T) S_{t-1} + \beta_t k_t v_t^T \space \text{with} \space \gamma_t = f(x_t)
+$$
+
+need to explore and go deep more on these...
 
 ## RoPE
 
