@@ -206,9 +206,38 @@ we say that: *"it is sensitive to the scale of its inputs"* and to handle this, 
 
 e.g. in attention, to guard the softmax, initially the transformer original paper introduced $1/\sqrt{d_k}$ but recently there is also extra normalization right after computing $Q, K$ and before multiplying with $V$ -> called *QK norm*
 
-## Attention heads variations
+## Attention 
+
+### heads variations
 
 <img src="/dump/img/attention-variations.png" alt="attention heads variations" style="width:700px; max-width:100%;" />
+
+### alternatives for optimization
+
+#### Linear attention
+
+instead of $Attn(Q,K,V) = \rho(QK^T)V$ quadratic complexity $(n^2d_k)$, if we ignore $\rho$ we can actually have a linear complexity:
+
+$$
+(QK^T)V = Q(K^TV)
+$$
+
+thanks to this simple matrix multiplication associative rule, we get to $2nd_vd_k$
+
+But for inference, we can use a clever formulation...we can think about combining this linear attention to the concept of RNN, where we shape the calculation this way:
+
+$$
+S_t = S_{t-1} + k_t v_t^T \space \text{and} \space y_t = q_t^TS_t
+$$
+
+in this way we don't need to store KV and compute that for every token in output, since we can just look at the previous *state*!
+
+>[!note]
+> the key to calculate matmul complexity is to square the contracted dimension if equal or add to multiplication if not equal
+>
+> e.g. $QK^T \space (n \times d_k)(n \times d_k) \rightarrow O(n^2 \cdot d_k)$
+>
+> $K^TV \space (d_k \times n)(n \times d_v) \rightarrow O(n \cdot d_k \cdot d_v)$ because $n$ is contracted
 
 ## RoPE
 

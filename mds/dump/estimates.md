@@ -1,5 +1,23 @@
 # estimates
 
+## GPT2-XL resource accounting
+
+> **hyperparameters**: `vocab_size = 50257` · `context_length = 1024` · `num_layers = 48` · `d_model = 1600` · `num_heads = 25` · `d_ff = 4288`
+
+| component                                    | shape                     | params |
+| -------------------------------------------- | ------------------------- | -----: |
+| embedding                                    | `(vocab_size, d_model)`    | 80.4M  |
+| RMSNorm × 2                                  | `(d_model,)`              | 1.6K   |
+| attention                                    | `4 × (d_model, d_model)`  | 10.24M |
+| SwiGLU                                       | `3 × (d_ff, d_model)`     | 20.58M |
+| **transformer block** (norm + attn + SwiGLU) |                           | 30.7M  |
+| **transformer blocks × `num_layers`**        | `30.7M × 48`             | 1.47B  |
+| output `Linear`                              | `(d_model, vocab_size)`   | 80.4M  |
+
+**total** = `1.47B + 2 × 80.4M` **1.63B params**
+
+## accelerator and memory
+
 ```mermaid
 %%{init: {'flowchart': {'nodeSpacing': 8, 'rankSpacing': 38, 'padding': 3, 'subGraphTitleMargin': {'top': 6, 'bottom': 10}}, 'themeVariables': {'fontSize': '13px'}}}%%
 flowchart TB

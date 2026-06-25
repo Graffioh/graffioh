@@ -11,3 +11,7 @@ e.g. `W` in Linear (created via `nn.Parameter`), thanks to the super init, will 
 - `torch.ones` for multiplicative gain/bias parameters, so we start with identity and then we slowly learn the best gain/bias
 - `torch.zeros` for additive bias where the initial desired contribution is 0
 - random distributions for weight matrices
+
+## nn.ModuleList
+
+`nn.ModuleList` instead of a simple list to store `nn.Module`s, so that the state dict are tracked and so what (otherwise can't load state dict)
