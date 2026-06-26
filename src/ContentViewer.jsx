@@ -5,6 +5,7 @@ import Markdown from "react-markdown";
 import GithubSlugger from "github-slugger";
 import ImageLightbox from "./ImageLightbox";
 import Mermaid from "./Mermaid";
+import Plot from "./Plot";
 import PythonRunner from "./PythonRunner";
 import CodeFile from "./CodeFile";
 import { ThemeContext } from "./ThemeContext";
@@ -1368,6 +1369,20 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
           return (
             <Mermaid
               code={text.replace(/\n$/, "")}
+              theme={theme}
+              zoomable={zoomable}
+            />
+          );
+        }
+        // ```surprise / ```plot → a math figure rendered as a self-contained,
+        // dependency-free SVG (analytic curve sampled in JS — see Plot.jsx). No
+        // library, no lazy chunk: it adds nothing to the bundle and renders
+        // synchronously, so it can't slow md rendering or the page.
+        if (match && (match[1] === "surprise" || match[1] === "plot")) {
+          return (
+            <Plot
+              spec={text.replace(/\n$/, "")}
+              fenceLang={match[1]}
               theme={theme}
               zoomable={zoomable}
             />

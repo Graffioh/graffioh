@@ -21,6 +21,49 @@ $$
 - rows = outputs -> each row, tell us how output $i$ respond to all the inputs
 - columns = inputs -> each column, tell us how input $j$ respond to all the outputs
 
+### Training process
+
+it consists of performing a backward pass after a forward pass
+
+why after a forward pass? because forward pass will calculate predictions (and the loss) used in backward pass to update the weights, with chain rule (backprop, compute gradients) and gradient descent (uses gradients to update weights):
+
+$$
+\theta \leftarrow \theta - \eta \nabla_{\theta} L
+$$
+
+with $\theta$ model parameters, $\eta$ learning rate and $L$ loss
+
+*loss*? not the meme |_ 
+
+it's a function that measures how much the current predictions are different from the ground truth outputs
+
+the common one is [[formulas#Cross-entropy loss]]
+
+#### Entropy and such
+
+*surprise* (a.k.a. self-information) of an event $s$ is just how unexpected it is.
+
+$$
+h(s) = \log \frac{1}{p_s} = -\log p_s
+$$
+
+```surprise
+```
+
+entropy comes from surprise and probability distribution
+
+$$
+H = \sum_s p_s h(s)
+$$
+
+usually we don't have the ground truth probability distribution for a problem, instead we have an approximate one given by some *model* (**spoiler**: in our case is the LLM!)
+
+if model probability distribution belief is a lot different than the ground truth one, then the average surprise is high and this is calculated via **cross-entropy**
+
+<img src="/dump/img/cross-entropy.png" alt="cross-entropy between model distribution and ground truth" style="width:620px; max-width:100%;" />
+
+<small>Reference: <a href="https://www.youtube.com/watch?v=KHVR587oW8I&t=1465s">The Key Equation Behind Probability (YouTube)</a></small>
+
 ### Backward Pass
 
 composed of two sibling operations:

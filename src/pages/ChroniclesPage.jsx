@@ -9,7 +9,7 @@ export default function ChroniclesPage() {
   return (
     <div className="p-8 max-w-3xl mx-auto">
       <h1 className="text-xl font-bold text-center pb-8">
-        chronicles from a dumb guy trying to optimize stuff
+        chronicles from a dumb guy trying to optimize/experiment stuff
       </h1>
       <div className="flex flex-wrap justify-start gap-x-3 gap-y-2 text-sm font-bold">
         {chronicles.map((c, idx) => (

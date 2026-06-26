@@ -1,5 +1,31 @@
 # formulas cheatsheet
 
+## Cross-entropy loss
+
+$$
+\ell(\theta; \mathcal{D})
+=
+\frac{1}{|\mathcal{D}|\,m}
+\sum_{x\in\mathcal{D}}
+\sum_{i=1}^{m}
+-\log p_{\theta}\!\left(x_{i+1}\mid x_{1:i}\right)
+$$
+
+- $\frac{1}{|D|} \sum_{x \in D}$ is a way to get an approximation of probability distribution from the dataset
+- $\frac{1}{m} \sum_{i=1}^{m}$ is to gather the per-token probability of the whole sequence
+
+$$
+p(x_{i+1}\mid x_{1:i})
+=
+\operatorname{softmax}(o_i)[x_{i+1}]
+=
+\frac{\exp\!\left(o_i[x_{i+1}]\right)}
+{\sum_{a=1}^{\mathrm{vocab\_size}}
+\exp\!\left(o_i[a]\right)}.
+$$
+
+with $o_i[k]$ indexing into logits and taking k logit
+
 ## Self-Attention
 
 $$
@@ -9,8 +35,6 @@ $$
 $$
 \text{attn\_score} = \text{softmax}({\frac{QK^T}{\sqrt{d_{head}}}})
 $$
-
-- we need to apply a *causal mask* on attn_score before softmax (so during training, we avoid looking at future tokens and cheating)
 
 ### Multi-Head Self-Attention
 
