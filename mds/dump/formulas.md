@@ -26,6 +26,39 @@ $$
 
 with $o_i[k]$ indexing into logits and taking k logit
 
+## Perplexity
+
+$$
+\text{perplexity} = \exp(\frac{1}{m}\sum_{i=1}^m \ell_i)
+$$
+
+easy way to interpret cross entropy: $1$ perfect, $\leq 1$ good, $\gt 1$ not good
+
+## AdamW
+
+$$
+\begin{array}{rll}
+1 & \operatorname{init}(\theta) & \triangleright\ \text{Initialize learnable parameters} \\[0.35em]
+2 & m \gets 0 & \triangleright\ \text{Initial value of the first moment vector; same shape as } \theta \\[0.35em]
+3 & v \gets 0 & \triangleright\ \text{Initial value of the second moment vector; same shape as } \theta \\[0.35em]
+4 & \mathbf{for}\ t = 1, \ldots, T\ \mathbf{do} & \\[0.35em]
+5 & \quad \text{Sample batch of data } B_t & \\[0.35em]
+6 & \quad g \gets \nabla_{\theta}\ell(\theta; B_t) & \triangleright\ \text{Compute the gradient of the loss} \\[0.35em]
+7 & \quad \alpha_t \gets \alpha \frac{\sqrt{1-\beta_2^t}}{1-\beta_1^t} & \triangleright\ \text{Compute adjusted } \alpha \text{ for iteration } t \\[0.35em]
+8 & \quad \theta \gets \theta - \alpha\lambda\theta & \triangleright\ \text{Apply weight decay} \\[0.35em]
+9 & \quad m \gets \beta_1 m + (1-\beta_1)g & \triangleright\ \text{Update the first moment estimate} \\[0.35em]
+10 & \quad v \gets \beta_2 v + (1-\beta_2)g^2 & \triangleright\ \text{Update the second moment estimate} \\[0.35em]
+11 & \quad \theta \gets \theta - \alpha_t \frac{m}{\sqrt{v}+\epsilon} & \triangleright\ \text{Apply moment-adjusted weight updates} \\[0.35em]
+12 & \mathbf{end\ for} &
+\end{array}
+$$
+
+<small>Reference videos by yacine: 
+<a href="https://www.youtube.com/watch?v=M4HQHmBrAmI">Adam</a>
+and
+<a href="https://www.youtube.com/watch?v=PTRk4vNcM-g">AdamW</a>
+</small>
+
 ## Self-Attention
 
 $$
@@ -79,5 +112,3 @@ $$
 
 - $q, k$ are single heads
 - $R$ is the rotation matrix, used to rotate each $q/k$ pair by frequency $\theta_i = base^{\frac{-2i}{d_{\text{head}}}}$
-
-

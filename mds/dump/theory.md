@@ -133,8 +133,6 @@ byte-pair encoding is used to have an efficient subword-level tokenization
 
 > common sequences of bytes are represented by a single token, rare sequences are represented by many tokens
 
-[[coding#Unicode & UTF-8]]
-
 a **pre-tokenizer** is used to optimize the BPE tokenization:
 - avoiding contamination (e.g. dog! vs dog. , the adjacent bytes differs by punctuation. with pre-tokenization, we'll chunk the text via some heuristic, and we'll get 'dog', '!', '.' as different chunks, then merging will be allowed only per-chunk and thanks to this we'll have 'dog' and '!/.' as different adjacent bytes) 
 - avoiding a full pass over text corpus for every merge (when we split in chunks, we compute a chunk <-> count mapping (smaller than whole text corpus), that will be consulted every merge)
@@ -186,7 +184,7 @@ but these values are bundled with a *scale factor* to produce the actual value
 
 [[https://arxiv.org/abs/1706.03762|Attention Is All You Need]]
 
-## Pre-norm vs Post-norm
+### Pre-norm vs Post-norm
 
 historically post-norm was used, so a layer norm after each transformer block in the residual stream
 
@@ -199,7 +197,7 @@ some guy in 2020 found out that having the layer norm outside of the residual st
 >
 > whereas today, it's commmon to put layer norm pre / post operation in the transformer block (those are the actual pre/post norm)
 
-## Why RMSNorm over LayerNorm
+### Why RMSNorm over LayerNorm
 
 well, *RMSNorm* is just as good as LayerNorm (sometimes even better) without having to take in count extra parameters...free optimization!
 
@@ -210,9 +208,17 @@ this leads to less memory movement -> that means we can keep our GPUs busy with 
 >
 > so even if it feels a small optimization, it will save quite a bit of performance...the same applies to why bias is dropped in modern transformer!
 
-## Hyperparameters consensus
+### Learning rate schedule & Gradient clipping
 
-### $d_\text{ff} / d_\text{model}$ ratio
+learning rate usually needs to warmup, then starts high and slowly go down 
+
+to do so, a *schedule* is used (e.g cosine schedule) that will tell for each training iteration, what the learning rate should become
+
+other than this, another neat technique to optimize training and gradients is called *gradient clipping*, where a limit on the norm (the magnitude, via sqrt an ^2) of the gradient is enforced after each backward pass to avoid large gradients
+
+### Hyperparameters consensus
+
+#### $d_\text{ff} / d_\text{model}$ ratio
 
 [[https://arxiv.org/abs/2001.08361|Scaling Laws for Neural Language Models]]
 
@@ -220,7 +226,7 @@ the optimal size for the dimension of the first feed forward network is $d_{\tex
 
 - T5 from google took a more system-oriented approach where basically they chose a 64 ratio, just because: bigger matrix, better it is on GPU consumption (worked fine)
 
-### $d_\text{head} \times \text{num\_heads} \approx d_\text{model}$
+#### $d_\text{head} \times \text{num\_heads} \approx d_\text{model}$
 
 here we reshape the heads $Q, K, V$ this way: 
 
@@ -233,7 +239,7 @@ $$
 
 so why we do this? <u>because empirically, it works well</u>
 
-### Aspect ratio
+#### Aspect ratio
 
 $$d_\text{model} / \text{num\_layers}$$
 
@@ -241,7 +247,7 @@ the normal consensus on this ratio is around 100 - 150
 
 mostly a ratio for good expressiveness and good system compatibility (e.g. if it's too deep and not wide, we would need a lot of GPUs without fully using tensor parallelism benefits...wasteful)
 
-## softmax is dangerous
+### softmax is dangerous
 
 wherever we see softmax, so exponentiation, there is high probability that it can either blow up or vanish. 
 
@@ -249,18 +255,18 @@ we say that: *"it is sensitive to the scale of its inputs"* and to handle this, 
 
 e.g. in attention, to guard the softmax, initially the transformer original paper introduced $1/\sqrt{d_k}$ but recently there is also extra normalization right after computing $Q, K$ and before multiplying with $V$ -> called *QK norm*
 
-## Attention 
+### Attention 
 
-### heads variations
+#### heads variations
 
 <img src="/dump/img/attention-variations.png" alt="attention heads variations" style="width:700px; max-width:100%;" />
 
-### alternatives for optimization
+#### alternatives for optimization
 
 >[!note]
 > what is done in the industry is that these attention alternatives are combined with the normal attention (e.g. Nemotron 3 with Mamba 2 and normal attention)
 
-#### Linear attention
+- **Linear attention**
 
 instead of $Attn(Q,K,V) = \rho(QK^T)V$ quadratic complexity $(n^2d_k)$, if we ignore $\rho$ we can actually have a linear complexity:
 
@@ -285,7 +291,7 @@ in this way we don't need to store KV and compute that for every token in output
 >
 > $K^TV \space (d_k \times n)(n \times d_v) \rightarrow O(n \cdot d_k \cdot d_v)$ because $n$ is contracted
 
-#### Mamba 2
+- **Mamba 2**
 
 taken the RNN formulation above, it can be modified with a *gate*, depending only on input, as follows, used to decaying older informations (act on previous state):
 
@@ -295,7 +301,7 @@ $$
 
 [[https://arxiv.org/abs/2405.21060|Transformers are SSMs: Generalized Models and Efficient Algorithms Through Structured State Space Duality]]
 
-#### Gated delta net
+- **Gated delta net**
 
 augmentation of Mamba 2, where here we add an extra gate on the current state:
 
@@ -305,7 +311,7 @@ $$
 
 need to explore and go deep more on these...
 
-## RoPE
+### RoPE
 
 Attention is *permutation invariant* (e.g. position 1 and position 69 are "the same"), that means the position of the token is not taken in count by attention mechanism.
 
@@ -313,7 +319,7 @@ The original Transformer paper used to sum a *positional encoding* embedding to 
 
 Some strategies to encode positional informations directly into the attention mechanism have been tried, but the best one is *RoPE (Rotational Positional Embeddings)*.
 
-### wtf?
+#### wtf?
 
 I think this is actually the most used word after glancing at RoPE.
 
