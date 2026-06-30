@@ -242,6 +242,7 @@ function stripReferences(md) {
 // stripped upstream by stripReferences and surfaced as heading orbs instead.)
 function remarkWikiLinks() {
   const slug = (s) => new GithubSlugger().slug(s);
+  const noteId = (s) => s.trim().replace(/\.md$/i, "");
   const WIKI = /\[\[([^\]]+?)\]\]/g;
   return (tree) => {
     const visit = (node) => {
@@ -262,7 +263,7 @@ function remarkWikiLinks() {
             out.push({ type: "text", value: text.slice(last, m.index) });
           const [target, label] = m[1].split("|");
           const [note, heading] = target.split("#");
-          let url = `/dump/${note.trim()}`;
+          let url = `/dump/${noteId(note)}`;
           if (heading) url += `#${slug(heading.trim())}`;
           out.push({
             type: "link",

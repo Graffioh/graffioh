@@ -180,7 +180,7 @@ but these values are bundled with a *scale factor* to produce the actual value
 <img src="/dump/img/transformer-residual.png" alt="transformer residual stream" style="width:440px; max-width:100%;" />
 </div>
 
-[[formulas#Attention]]
+[[formulas#Self-Attention]]
 
 [[https://arxiv.org/abs/1706.03762|Attention Is All You Need]]
 
@@ -335,3 +335,57 @@ I think this is actually the most used word after glancing at RoPE.
 - The frequency varies based on the token's pair positions: taken $t_m$ and $t_n$ with positions $m,n$, then each $q/k$ pair shift $\Delta \cdot \theta_i$, where $\Delta$ is the deciding factor for the phase (how much each pair has rotated): <- *need to revise/explore this a bit more, but for now g2g*
     - $\Delta$ high (far-apart tokens): the fast pairs have wrapped, so the slow pairs carry the clean positional signal.
     - $\Delta$ low (nearby tokens): the fast pairs give a large, sharp phase difference, cleanly differentiating neighbors (slow pairs barely move).
+
+## Continual learning and In-context learning
+
+### Continual learning
+
+improve the model, after training and deployment, based on real requests feedback and knowledge, by updating the weights (without the need of pretraining a base model from scratch)
+
+e.g. 
+- Cursor with Tab model, gets around 400k+ user samples a day, so it's really easy to improve the model with *meaningful* data
+- the various Sonnet models 
+
+### In-context learning
+
+it's more *adapting* than learning, since it will gain knowledge by informations present in its context, without updating weights
+
+so **if** we end up getting an infinite context window, this will work pretty well :')
+
+> [!note]
+> this will not improve model reasoning ability...it will just give access to more informations
+
+## Sparsity
+
+so this is basically a way to save up resources without sacrifying quality (or even improving it!)
+
+### MoE (Mixture of Experts)
+
+this allow to have a bigger model (more parameters) but without overhead cost (we use only a subset of those)
+
+> router -> multiple FFNs -> ffn $\in$ FFNs activated every forward/backward pass
+
+increasing model size is shown to improve performance
+
+### DSA (Deepseek Sparse Attention)
+
+this is an architectural change for attention, where we try to introduce sparsity to save resources
+
+adding sparsity here is not easy like in MoE. In MoE we are fine with *trial-and-error*, we are just *classifying* a FFN for a specific token and also with load balancing strategies this is a lot less of an issue
+
+but in attention, we are talking about information and we can't do trial and error on this, since it can end up losing that information forever
+
+> indexer -> QK^T -> k $\in$ QK chosen -> more efficient QK calculation
+
+the indexer will only retrieve some candidates keys that then will be used to compute $QK^T$
+
+the retrieved keys get an "approximated" relevance, because to get the real relevance for that query, we should compute the full attention x)
+
+## Distillation
+
+...
+
+### OPSD (On Policy Self Distillation)
+
+<small>Reference: <a href="https://www.youtube.com/watch?v=wxOZWD6wYVY">Sasha Rush Dwarkesh OPSD explanation</a></small>
+

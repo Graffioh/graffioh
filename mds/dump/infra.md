@@ -28,6 +28,8 @@ So our great researchers found some ways to optimize this process:
 
 ### Expert parallelism (MoE)
 
+[[theory.md#MoE (Mixture of Experts)]]
+
 ...
 
 ## GGUF

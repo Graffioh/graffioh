@@ -110,3 +110,6 @@ assuming single h100, 50% MFU, 400k steps, 1024 batch size
 
 *i won't calculate everything again to just plug-in values and get a final number...i'm a bit lazy...*
 
+## training
+
+...
