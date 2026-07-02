@@ -367,6 +367,14 @@ this allow to have a bigger model (more parameters) but without overhead cost (w
 
 increasing model size is shown to improve performance
 
+#### how router works?
+
+there are various functions/techniques for routing
+
+the most used one is *heuristic balancing losses* where we add an heuristic loss (load balancing sort of approach) to the normal loss
+
+avoids starvation of experts in training, where basically the most chosen expert get always more and more weight through backprop
+
 ### DSA (Deepseek Sparse Attention)
 
 this is an architectural change for attention, where we try to introduce sparsity to save resources
