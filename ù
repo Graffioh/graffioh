@@ -49,20 +49,16 @@ now lets see the shape of a matmul on an hardware level:
 
 in this drawing we can see both the circuit doing the operation (+x, logic unit) and the infrastructure around it with registers to hold data and mux to select those data to send as inputs 
 
-now the thing is that the cost is split between logic unit cost and infra cost, counting ANDs alone
+now the thing is that the cost is split between calculator cost and infra cost
 
-the logic unit cost, as seen above, is $p \cdot q$ ANDs
+the calculator cost, counting the ANDs alone, as seen above, is $p \cdot q$ ANDs
 
-the infra cost, to move the data to the logic unit, for $n$ inputs and $p$ bits per input, is:
+the infra cost, to move the data to the calculator, for $n$ inputs and $p$ bits per input, is:
 
 - ANDs: $n \cdot p$ (to take in count the inputs values)
 - ORs: $(n-1) \cdot p$ (to collapse down to one option, the selected one)
 
 $\implies$ ANDs for each Mux (m muxes for each input): $m \cdot n \cdot p$
 
-so, if you plug in numbers, you see that infra cost $\gt$ logic unit cost $\implies$ *memory bound*
-
-now the big issue is that the programmer can only act on the logic unit part, where the computation happens, by writing a more efficient program and such, having a marginal gain since in this case performance is infra bound since it's not his job to act on hardware infra circuits!
-
-this structure above was inside the *CUDA cores* before NVIDIA Volta generation where *Tensor cores* were introduced.
+so, if you plug in numbers, you see that infra cost $\gt$ calculator cost $\implies$ *memory bound*
 
