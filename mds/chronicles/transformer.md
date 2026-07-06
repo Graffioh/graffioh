@@ -112,4 +112,19 @@ assuming single h100, 50% MFU, 400k steps, 1024 batch size
 
 ## training
 
-...
+so, the pytorch code at the time of experiments was not really optimized via fused kernels or such...and everything was on fp32 (even though GPU was capping at 99%, it was still a bit slow)
+
+![transformer-training-loss](../transformer-training-loss.png)
+
+tried on A100 and H100
+
+H100 was faster, so only there i run 5000 iterations and achieved ~1.8 valid loss, tried a bit with various learning rates and cosine scheduler
+
+100% could've been lower with a bit of hyperparams tuning
+
+didn't go much in details because my prime intellect credits are limited, want to save some for distributed training and such, and i was burning all of them :(
+
+also setupped some cool scripts for easy reproducibility on the remote gpu, thanks to codex:
+- build docker image 
+- setup training artifacts (from hugging face)
+- run either train/decode
