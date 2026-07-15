@@ -1059,7 +1059,12 @@ function rehypeHighlightTerm(term) {
   };
 }
 
-export default function ContentViewer({ content, centered = false, zoomable = true }) {
+export default function ContentViewer({
+  content,
+  centered = false,
+  zoomable = true,
+  titleMeta = null,
+}) {
   const { theme } = useContext(ThemeContext);
   const location = useLocation();
   const params = useParams();
@@ -1125,13 +1130,16 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
         const refs =
           (currentNoteId && id && references[`${currentNoteId}#${id}`]) || [];
         return (
-          <Tag className={className} {...rest}>
-            {level >= 2 && level <= 4 && (
-              <SectionOrb theme={theme} level={level} />
-            )}
-            {children}
-            {refs.length > 0 && <RefOrbs refs={refs} theme={theme} />}
-          </Tag>
+          <>
+            <Tag className={className} {...rest}>
+              {level >= 2 && level <= 4 && (
+                <SectionOrb theme={theme} level={level} />
+              )}
+              {children}
+              {refs.length > 0 && <RefOrbs refs={refs} theme={theme} />}
+            </Tag>
+            {level === 1 && titleMeta}
+          </>
         );
       };
 
@@ -1674,7 +1682,7 @@ export default function ContentViewer({ content, centered = false, zoomable = tr
         );
       },
     };
-  }, [theme, centered, zoomable, currentNoteId]);
+  }, [theme, centered, zoomable, currentNoteId, titleMeta]);
 
   // The rendered markdown element, memoized: ContentViewer re-renders for
   // lightbox open/close and for every location change (hash included) — far
