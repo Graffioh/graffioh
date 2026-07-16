@@ -12,12 +12,19 @@ import ChroniclePage from "./pages/ChroniclePage";
 import ResourcesPage from "./pages/ResourcesPage";
 import MoneyToolPage from "./pages/MoneyToolPage";
 import BertologiesPage from "./pages/BertologiesPage";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Link, BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import ThemeToggle from "./ThemeToggle";
 import { ThemeProvider } from "./ThemeContext";
 import BackgroundVortex from "./BackgroundVortex";
 import BertoTitle from "./BertoTitle";
+
+// Local-only markdown workbench over mds/ (file API in mdsEditorPlugin.js).
+// `import.meta.env.DEV` is compiled to `false` in production builds, so the
+// route, its chunk, and the API behind it never ship to the deployed site.
+const DevPage = import.meta.env.DEV
+  ? lazy(() => import("./pages/DevPage"))
+  : null;
 
 function App() {
   return (
@@ -39,6 +46,16 @@ function App() {
           <Route path="/notes/note/:id" element={<NotePage />} />
           <Route path="/money" element={<MoneyToolPage />} />
           <Route path="/bertologies" element={<BertologiesPage />} />
+          {DevPage && (
+            <Route
+              path="/dev"
+              element={
+                <Suspense fallback={null}>
+                  <DevPage />
+                </Suspense>
+              }
+            />
+          )}
         </Routes>
       </Router>
     </ThemeProvider>

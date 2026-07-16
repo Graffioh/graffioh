@@ -1064,6 +1064,9 @@ export default function ContentViewer({
   centered = false,
   zoomable = true,
   titleMeta = null,
+  // fill the parent instead of the site's centered 8/12 column — used by the
+  // /dev workbench's split-view preview pane, whose pane is already narrow
+  fluid = false,
 }) {
   const { theme } = useContext(ThemeContext);
   const location = useLocation();
@@ -1705,7 +1708,13 @@ export default function ContentViewer({
   return (
     <>
       <div className="w-full">
-        <div className="md:w-8/12 w-full px-4 mx-auto">{markdown}</div>
+        <div
+          className={
+            fluid ? "w-full px-6" : "md:w-8/12 w-full px-4 mx-auto"
+          }
+        >
+          {markdown}
+        </div>
       </div>
       {lightbox &&
         createPortal(
