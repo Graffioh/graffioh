@@ -1,0 +1,165 @@
+/* Shared monochrome diagram material. DiagramShell supplies every color as a
+   theme-aware token; scene data can select roles but never raw colors. */
+
+.diagram-shell {
+  font-family: "Commit Mono", Menlo, Consolas, monospace;
+}
+
+.diagram-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.diagram-texture {
+  opacity: 0.38;
+}
+
+.diagram-frame {
+  fill: transparent;
+  stroke: var(--diagram-ink);
+  stroke-width: 2.2;
+  stroke-opacity: 0.72;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ── Generic blog-diagram scene renderer ─────────────────────────────────── */
+
+.blog-diagram--grid-off .diagram-texture {
+  display: none;
+}
+
+.blog-diagram__shape,
+.blog-diagram__connector {
+  vector-effect: non-scaling-stroke;
+}
+
+.blog-diagram__shape {
+  stroke: var(--diagram-ink);
+  stroke-width: 1.6;
+  stroke-opacity: 0.62;
+}
+
+.blog-diagram__shape--frame {
+  stroke-width: 2.1;
+  stroke-opacity: 0.66;
+}
+
+.blog-diagram__shape--pill {
+  stroke-width: 1.45;
+}
+
+.blog-diagram__fill--none {
+  fill: transparent;
+}
+
+.blog-diagram__fill--soft {
+  fill: var(--diagram-surface-soft);
+}
+
+.blog-diagram__fill--mid {
+  fill: var(--diagram-surface-mid);
+}
+
+.blog-diagram__fill--strong {
+  fill: var(--diagram-surface-strong);
+}
+
+.blog-diagram__stroke--dashed {
+  stroke-dasharray: 7 6;
+}
+
+.blog-diagram__stroke--none {
+  stroke: none;
+}
+
+.blog-diagram__text,
+.blog-diagram__connector-label {
+  pointer-events: none;
+  user-select: none;
+}
+
+.blog-diagram__text {
+  fill: var(--diagram-ink);
+}
+
+.blog-diagram__text--title {
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.blog-diagram__text--subtitle {
+  fill: var(--diagram-muted);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.blog-diagram__text--label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.blog-diagram__text--micro,
+.blog-diagram__connector-label {
+  fill: var(--diagram-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.blog-diagram__text--caption {
+  fill: var(--diagram-muted);
+  font-size: 10px;
+  letter-spacing: 0.025em;
+}
+
+/* Structural labels stay bright even when their typographic role is `micro`.
+   Muted ink is reserved for standalone annotations and connector notes. */
+.blog-diagram__element:not(.blog-diagram__element--text) > .blog-diagram__text {
+  fill: var(--diagram-ink);
+}
+
+.blog-diagram__connector {
+  fill: none;
+  stroke: var(--diagram-ink);
+  stroke-width: 1.5;
+  stroke-opacity: 0.58;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.blog-diagram__connector--dashed {
+  stroke-dasharray: 6 6;
+}
+
+@media (max-width: 640px) {
+  /* Preserve authored coordinates and pan the slab instead of shrinking labels
+     below legibility. */
+  .diagram-canvas {
+    min-width: 760px;
+  }
+
+  .blog-diagram__text--title {
+    font-size: 28px;
+  }
+
+  .blog-diagram__text--subtitle {
+    font-size: 13px;
+  }
+
+  .blog-diagram__text--label {
+    font-size: 14px;
+  }
+
+  .blog-diagram__text--micro,
+  .blog-diagram__connector-label {
+    font-size: 11px;
+  }
+
+  .blog-diagram__text--caption {
+    font-size: 12px;
+  }
+}

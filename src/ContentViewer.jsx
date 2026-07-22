@@ -8,6 +8,8 @@ import Mermaid from "./Mermaid";
 import Plot from "./Plot";
 import PythonRunner from "./PythonRunner";
 import CodeFile from "./CodeFile";
+import CodeReference from "./CodeReference";
+import BlogDiagram from "./diagrams/BlogDiagram";
 import { ThemeContext } from "./ThemeContext";
 import { dumpContent, references } from "./dumps";
 import remarkGfm from "remark-gfm";
@@ -327,6 +329,36 @@ function noteTitle(raw, id) {
   return m ? m[1].trim() : (id || "").replace(/-/g, " ");
 }
 
+// Preserve supported fenced-code metadata through the markdown → hast
+// conversion. react-markdown otherwise drops the fence meta before it reaches
+// the custom `code` renderer.
+function fenceMetaValue(meta, key) {
+  const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = new RegExp(
+    `(?:^|\\s)${escapedKey}=(?:"([^"]*)"|'([^']*)'|(\\S+))`
+  ).exec(meta || "");
+  return match && (match[1] ?? match[2] ?? match[3]);
+}
+
+function remarkCodeReferences() {
+  return (tree) => {
+    const visit = (node) => {
+      if (node.type === "code" && node.meta) {
+        const sourceUrl = fenceMetaValue(node.meta, "source");
+        const title = fenceMetaValue(node.meta, "title");
+        if (sourceUrl || title) {
+          node.data = node.data || {};
+          node.data.hProperties = node.data.hProperties || {};
+          if (sourceUrl) node.data.hProperties["data-source-url"] = sourceUrl;
+          if (title) node.data.hProperties["data-code-title"] = title;
+        }
+      }
+      if (node.children) node.children.forEach(visit);
+    };
+    visit(tree);
+  };
+}
+
 // Plugin set for the small preview render — same math/arrow handling as the page,
 // minus rehypeSlug (no ids needed) and remarkWikiLinks (no nested chips/popovers).
 const PREVIEW_REMARK = [remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows, remarkCallouts];
@@ -334,7 +366,7 @@ const PREVIEW_REHYPE = [rehypeRaw, rehypeKatex];
 
 // The main page's remark set — static, so hoisted to keep its identity stable
 // (a fresh array per render would make react-markdown re-run the pipeline).
-const REMARK_PLUGINS = [remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows, remarkCallouts, remarkWikiLinks];
+const REMARK_PLUGINS = [remarkGfm, remarkMath, remarkInlineDisplayMath, remarkArrows, remarkCallouts, remarkWikiLinks, remarkCodeReferences];
 
 // Cross-reference chip for a wiki-link — a small "portal" pill that mirrors the
 // site's inline-code negative-space motif (dark slab + purple glow in light mode,
@@ -1386,6 +1418,17 @@ export default function ContentViewer({
             />
           );
         }
+        // ```blog-diagram → any scene drawn in the development-only /diagram
+        // workbench. Geometry lives in the versioned JSON fence, while this
+        // single renderer supplies the blog's slab, ink, type, and scaling.
+        if (match && match[1] === "blog-diagram") {
+          return (
+            <BlogDiagram
+              source={text.replace(/\n$/, "")}
+              theme={theme}
+            />
+          );
+        }
         // ```surprise / ```plot → a math figure rendered as a self-contained,
         // dependency-free SVG (analytic curve sampled in JS — see Plot.jsx). No
         // library, no lazy chunk: it adds nothing to the bundle and renders
@@ -1418,6 +1461,25 @@ export default function ContentViewer({
         // pill styling below, whose `box-decoration-break: clone` repaints
         // the background/border on every wrapped line ("split pills").
         const isBlock = match || text.includes("\n");
+        const sourceUrl =
+          rest["data-source-url"] ||
+          node?.properties?.["data-source-url"] ||
+          node?.properties?.dataSourceUrl;
+        const codeTitle =
+          rest["data-code-title"] ||
+          node?.properties?.["data-code-title"] ||
+          node?.properties?.dataCodeTitle;
+        if (isBlock && sourceUrl) {
+          return (
+            <CodeReference
+              code={text.replace(/\n$/, "")}
+              language={isPython ? "python" : match ? match[1] : "text"}
+              sourceUrl={sourceUrl}
+              title={codeTitle}
+              theme={theme}
+            />
+          );
+        }
         return isBlock ? (
           <SyntaxHighlighter
             {...rest}

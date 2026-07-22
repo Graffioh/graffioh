@@ -26,6 +26,12 @@ const DevPage = import.meta.env.DEV
   ? lazy(() => import("./pages/DevPage"))
   : null;
 
+// Visual authoring for the generic blog-diagram fence. Like the markdown
+// workbench above, the route and its editor chunk disappear from production.
+const DiagramEditorPage = import.meta.env.DEV
+  ? lazy(() => import("./pages/DiagramEditorPage"))
+  : null;
+
 function App() {
   return (
     <ThemeProvider>
@@ -52,6 +58,16 @@ function App() {
               element={
                 <Suspense fallback={null}>
                   <DevPage />
+                </Suspense>
+              }
+            />
+          )}
+          {DiagramEditorPage && (
+            <Route
+              path="/diagram"
+              element={
+                <Suspense fallback={null}>
+                  <DiagramEditorPage />
                 </Suspense>
               }
             />

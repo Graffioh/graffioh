@@ -9,13 +9,20 @@
 //   DELETE /__mds/file?path=<rel>      -> delete (blog posts also drop their blogPosts.js entry)
 //   POST   /__mds/blog-post            body {title}   -> next-numbered mds/blog/<id>.md
 //                                         + entry prepended to src/data/blogPosts.js
+//   GET    /__mds/diagrams             -> { diagrams: ["my-diagram", ...] }
+//   GET    /__mds/diagram?name=<slug>  -> { name, scene, revision }
+//   PUT    /__mds/diagram?name=<slug>  body {scene, baseRevision} -> replace JSON
+//                                         (add ?ifAbsent=1 to create atomically)
 import fs from "node:fs";
+import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const MDS_DIR = path.join(ROOT, "mds");
+const DIAGRAMS_DIR = path.join(MDS_DIR, "diagrams");
 const BLOG_POSTS_JS = path.join(ROOT, "src", "data", "blogPosts.js");
+const DIAGRAM_SLUG = /^[a-z0-9][a-z0-9-]*$/;
 
 // Resolve a client-supplied relative path, refusing anything that escapes mds/
 // or isn't a markdown file.
@@ -36,6 +43,51 @@ function walk(dir, prefix = "") {
     else if (entry.name.endsWith(".md")) out.push(rel);
   }
   return out.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+}
+
+function safeDiagramPath(name) {
+  if (!DIAGRAM_SLUG.test(name)) return null;
+  return path.join(DIAGRAMS_DIR, `${name}.json`);
+}
+
+function listDiagrams() {
+  if (!fs.existsSync(DIAGRAMS_DIR)) return [];
+  return fs
+    .readdirSync(DIAGRAMS_DIR, { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => /^([a-z0-9][a-z0-9-]*)\.json$/.exec(entry.name))
+    .filter(Boolean)
+    .map((match) => match[1])
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+}
+
+function isScene(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function sceneProblem(value) {
+  if (!isScene(value)) return "scene must be a JSON object";
+  if (value.version !== undefined && Number(value.version) !== 1)
+    return "scene version must be 1";
+  if (!Array.isArray(value.elements)) return "scene must contain an elements array";
+  return "";
+}
+
+function contentRevision(content) {
+  return createHash("sha256").update(content).digest("hex").slice(0, 20);
+}
+
+function readDiagram(abs, name) {
+  const content = fs.readFileSync(abs, "utf8");
+  let scene;
+  try {
+    scene = JSON.parse(content);
+  } catch (error) {
+    throw new Error(`invalid JSON in diagram ${name}: ${error.message}`);
+  }
+  const problem = sceneProblem(scene);
+  if (problem) throw new Error(`diagram ${name}: ${problem}`);
+  return { scene, revision: contentRevision(content) };
 }
 
 function readBody(req) {
@@ -112,6 +164,127 @@ export default function mdsEditorApi() {
 
           if (route === "/list" && req.method === "GET") {
             return send(res, 200, { files: walk(MDS_DIR) });
+          }
+
+          if (route === "/diagrams") {
+            if (req.method !== "GET") {
+              res.setHeader("Allow", "GET");
+              return send(res, 405, { error: "method not allowed; use GET" });
+            }
+            return send(res, 200, { diagrams: listDiagrams() });
+          }
+
+          if (route === "/diagram") {
+            if (req.method !== "GET" && req.method !== "PUT") {
+              res.setHeader("Allow", "GET, PUT");
+              return send(res, 405, {
+                error: "method not allowed; use GET or PUT",
+              });
+            }
+
+            const name = url.searchParams.get("name") || "";
+            const abs = safeDiagramPath(name);
+            if (!abs) {
+              return send(res, 400, {
+                error:
+                  "invalid diagram name; use a lowercase slug matching [a-z0-9][a-z0-9-]*",
+              });
+            }
+
+            if (req.method === "GET") {
+              if (!fs.existsSync(abs)) {
+                return send(res, 404, {
+                  code: "diagram_not_found",
+                  error: `diagram not found: ${name}`,
+                });
+              }
+              if (!fs.lstatSync(abs).isFile()) {
+                return send(res, 409, {
+                  error: `diagram path is not a regular file: ${name}`,
+                });
+              }
+              try {
+                return send(res, 200, { name, ...readDiagram(abs, name) });
+              } catch (error) {
+                return send(res, 422, { error: error.message });
+              }
+            }
+
+            if (url.searchParams.get("ifAbsent") && fs.existsSync(abs)) {
+              return send(res, 409, {
+                error: `diagram already exists: ${name}`,
+              });
+            }
+
+            let payload;
+            try {
+              payload = JSON.parse((await readBody(req)) || "{}");
+            } catch (error) {
+              return send(res, 400, {
+                error: `request body must be valid JSON: ${error.message}`,
+              });
+            }
+            const problem = sceneProblem(payload?.scene);
+            if (problem) {
+              return send(res, 400, {
+                error: problem,
+              });
+            }
+            if (fs.existsSync(abs) && !fs.lstatSync(abs).isFile()) {
+              return send(res, 409, {
+                error: `diagram path is not a regular file: ${name}`,
+              });
+            }
+            fs.mkdirSync(DIAGRAMS_DIR, { recursive: true });
+            const content = `${JSON.stringify(payload.scene, null, 2)}\n`;
+            const createOnly = Boolean(url.searchParams.get("ifAbsent"));
+
+            if (!createOnly) {
+              if (!fs.existsSync(abs)) {
+                return send(res, 404, {
+                  code: "diagram_not_found",
+                  error: `diagram not found: ${name}`,
+                });
+              }
+              const currentContent = fs.readFileSync(abs, "utf8");
+              const currentRevision = contentRevision(currentContent);
+              if (payload.baseRevision !== currentRevision) {
+                return send(res, 409, {
+                  code: "diagram_revision_conflict",
+                  error: `${name}.json changed on disk; reload it before saving`,
+                });
+              }
+              if (currentContent === content) {
+                return send(res, 200, {
+                  ok: true,
+                  name,
+                  revision: currentRevision,
+                  unchanged: true,
+                });
+              }
+            }
+
+            try {
+              fs.writeFileSync(
+                abs,
+                content,
+                createOnly
+                  ? { encoding: "utf8", flag: "wx" }
+                  : "utf8"
+              );
+            } catch (error) {
+              if (error?.code === "EEXIST") {
+                return send(res, 409, {
+                  error: `diagram already exists: ${name}`,
+                });
+              }
+              throw error;
+            }
+            return send(res, 200, {
+              ok: true,
+              name,
+              revision: contentRevision(content),
+            });
           }
 
           if (route === "/blog-post" && req.method === "POST") {

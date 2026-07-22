@@ -1,5 +1,10 @@
 const blogPosts = [
   {
+    id: "19",
+    title: "How to write an argmax kernel",
+    date: "21-07-2026",
+  },
+  {
     id: "18",
     title: "Empower a curl request: super-curl",
     date: "25-01-2026",

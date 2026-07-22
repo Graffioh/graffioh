@@ -1,0 +1,550 @@
+{
+  "version": 1,
+  "name": "cuda-thread-level-argmax",
+  "title": "Thread-level argmax",
+  "description": "Every thread scans its own blockDim.x-strided sequence of columns in rowx and keeps a private (maxval, argmax) pair in registers.",
+  "width": 960,
+  "height": 640,
+  "frame": true,
+  "grid": true,
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 60,
+      "y": 48,
+      "width": 500,
+      "height": 32,
+      "text": "THREAD-LEVEL ARGMAX",
+      "fill": "none",
+      "stroke": "none",
+      "textRole": "title",
+      "align": "left",
+      "labelPosition": "center",
+      "radius": 0,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "subtitle",
+      "type": "text",
+      "x": 60,
+      "y": 84,
+      "width": 500,
+      "height": 18,
+      "text": "one block · B = blockDim.x = 32",
+      "fill": "none",
+      "stroke": "none",
+      "textRole": "subtitle",
+      "align": "left",
+      "labelPosition": "center",
+      "radius": 0,
+      "opacity": 0.72,
+      "locked": false
+    },
+    {
+      "id": "thread-0",
+      "type": "pill",
+      "x": 182,
+      "y": 140,
+      "width": 96,
+      "height": 40,
+      "text": "t0",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 11,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-0-columns",
+      "type": "frame",
+      "x": 100,
+      "y": 220,
+      "width": 260,
+      "height": 240,
+      "text": "columns read",
+      "fill": "mid",
+      "stroke": "solid",
+      "textRole": "micro",
+      "align": "center",
+      "labelPosition": "top",
+      "radius": 20,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-0-col-0",
+      "type": "box",
+      "x": 157,
+      "y": 270,
+      "width": 146,
+      "height": 32,
+      "text": "rowx[0]",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 8,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-0-col-1",
+      "type": "box",
+      "x": 157,
+      "y": 328,
+      "width": 146,
+      "height": 32,
+      "text": "rowx[B]",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 8,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-0-col-2",
+      "type": "box",
+      "x": 157,
+      "y": 386,
+      "width": 146,
+      "height": 32,
+      "text": "rowx[2B]",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 8,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-0-more",
+      "type": "text",
+      "x": 211,
+      "y": 430,
+      "width": 38,
+      "height": 22,
+      "text": "⋮",
+      "fill": "none",
+      "stroke": "none",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 0,
+      "opacity": 0.7,
+      "locked": false
+    },
+    {
+      "id": "thread-0-register",
+      "type": "box",
+      "x": 120,
+      "y": 520,
+      "width": 220,
+      "height": 60,
+      "text": "private registers\n(maxval, argmax)",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 13,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-0-to-columns",
+      "type": "connector",
+      "start": {
+        "x": 230,
+        "y": 180,
+        "bind": {
+          "elementId": "thread-0",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 230,
+        "y": 208,
+        "bind": {
+          "elementId": "thread-0-columns",
+          "anchor": "top",
+          "gap": 12
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-0-stride-1",
+      "type": "connector",
+      "start": {
+        "x": 230,
+        "y": 302,
+        "bind": {
+          "elementId": "thread-0-col-0",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 230,
+        "y": 323,
+        "bind": {
+          "elementId": "thread-0-col-1",
+          "anchor": "top",
+          "gap": 5
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "+B",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-0-stride-2",
+      "type": "connector",
+      "start": {
+        "x": 230,
+        "y": 360,
+        "bind": {
+          "elementId": "thread-0-col-1",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 230,
+        "y": 381,
+        "bind": {
+          "elementId": "thread-0-col-2",
+          "anchor": "top",
+          "gap": 5
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "+B",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-0-to-register",
+      "type": "connector",
+      "start": {
+        "x": 230,
+        "y": 460,
+        "bind": {
+          "elementId": "thread-0-columns",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 230,
+        "y": 508,
+        "bind": {
+          "elementId": "thread-0-register",
+          "anchor": "top",
+          "gap": 12
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-1",
+      "type": "pill",
+      "x": 532,
+      "y": 140,
+      "width": 96,
+      "height": 40,
+      "text": "t1",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 11,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-1-columns",
+      "type": "frame",
+      "x": 450,
+      "y": 220,
+      "width": 260,
+      "height": 240,
+      "text": "columns read",
+      "fill": "mid",
+      "stroke": "solid",
+      "textRole": "micro",
+      "align": "center",
+      "labelPosition": "top",
+      "radius": 20,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-1-col-0",
+      "type": "box",
+      "x": 507,
+      "y": 270,
+      "width": 146,
+      "height": 32,
+      "text": "rowx[1]",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 8,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-1-col-1",
+      "type": "box",
+      "x": 507,
+      "y": 328,
+      "width": 146,
+      "height": 32,
+      "text": "rowx[B + 1]",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 8,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-1-col-2",
+      "type": "box",
+      "x": 507,
+      "y": 386,
+      "width": 146,
+      "height": 32,
+      "text": "rowx[2B + 1]",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 8,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-1-more",
+      "type": "text",
+      "x": 561,
+      "y": 430,
+      "width": 38,
+      "height": 22,
+      "text": "⋮",
+      "fill": "none",
+      "stroke": "none",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 0,
+      "opacity": 0.7,
+      "locked": false
+    },
+    {
+      "id": "thread-1-register",
+      "type": "box",
+      "x": 470,
+      "y": 520,
+      "width": 220,
+      "height": 60,
+      "text": "private registers\n(maxval, argmax)",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 13,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-1-to-columns",
+      "type": "connector",
+      "start": {
+        "x": 580,
+        "y": 180,
+        "bind": {
+          "elementId": "thread-1",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 580,
+        "y": 208,
+        "bind": {
+          "elementId": "thread-1-columns",
+          "anchor": "top",
+          "gap": 12
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-1-stride-1",
+      "type": "connector",
+      "start": {
+        "x": 580,
+        "y": 302,
+        "bind": {
+          "elementId": "thread-1-col-0",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 580,
+        "y": 323,
+        "bind": {
+          "elementId": "thread-1-col-1",
+          "anchor": "top",
+          "gap": 5
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "+B",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-1-stride-2",
+      "type": "connector",
+      "start": {
+        "x": 580,
+        "y": 360,
+        "bind": {
+          "elementId": "thread-1-col-1",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 580,
+        "y": 381,
+        "bind": {
+          "elementId": "thread-1-col-2",
+          "anchor": "top",
+          "gap": 5
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "+B",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "thread-1-to-register",
+      "type": "connector",
+      "start": {
+        "x": 580,
+        "y": 460,
+        "bind": {
+          "elementId": "thread-1-columns",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 580,
+        "y": 508,
+        "bind": {
+          "elementId": "thread-1-register",
+          "anchor": "top",
+          "gap": 12
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "remaining-dots",
+      "type": "text",
+      "x": 790,
+      "y": 315,
+      "width": 60,
+      "height": 30,
+      "text": "···",
+      "fill": "none",
+      "stroke": "none",
+      "textRole": "title",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 0,
+      "opacity": 0.7,
+      "locked": false
+    },
+    {
+      "id": "remaining-threads",
+      "type": "text",
+      "x": 760,
+      "y": 352,
+      "width": 120,
+      "height": 18,
+      "text": "t2 … t31",
+      "fill": "none",
+      "stroke": "none",
+      "textRole": "micro",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 0,
+      "opacity": 0.72,
+      "locked": false
+    }
+  ]
+}

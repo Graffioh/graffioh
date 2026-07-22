@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "name": "cuda-warp-level-argmax",
+  "title": "Warp-level argmax",
+  "description": "A warp contains 32 threads, one per lane. Each thread exchanges its local argmax with lane_id XOR offset, then compares the two tuples at offsets 16, 8, 4, 2, and 1.",
+  "width": 960,
+  "height": 500,
+  "frame": true,
+  "grid": true,
+  "elements": [
+    { "type": "text", "id": "title", "x": 60, "y": 48, "width": 500, "height": 32, "text": "WARP-LEVEL ARGMAX", "fill": "none", "stroke": "none", "textRole": "title", "align": "left" },
+    { "type": "text", "id": "subtitle", "x": 60, "y": 84, "width": 500, "height": 18, "text": "32 threads · one lane per thread", "fill": "none", "stroke": "none", "textRole": "subtitle", "align": "left", "opacity": 0.72 },
+
+    { "type": "frame", "id": "warp", "x": 60, "y": 135, "width": 840, "height": 300, "text": "WARP", "fill": "soft", "stroke": "solid", "textRole": "micro", "align": "center", "labelPosition": "top", "radius": 24 },
+    { "type": "frame", "id": "threads", "x": 90, "y": 185, "width": 340, "height": 180, "text": "threads", "fill": "mid", "stroke": "solid", "textRole": "micro", "align": "center", "labelPosition": "top", "radius": 20 },
+    { "type": "frame", "id": "partners", "x": 530, "y": 185, "width": 340, "height": 180, "text": "XOR partners", "fill": "mid", "stroke": "solid", "textRole": "micro", "align": "center", "labelPosition": "top", "radius": 20 },
+
+    { "type": "box", "id": "lane-i", "x": 120, "y": 225, "width": 125, "height": 110, "text": "thread i\nlane i\nlocal argmax", "fill": "strong", "stroke": "solid", "textRole": "label", "align": "center", "radius": 16 },
+    { "type": "box", "id": "lane-j", "x": 275, "y": 225, "width": 125, "height": 110, "text": "thread j\nlane j\nlocal argmax", "fill": "strong", "stroke": "solid", "textRole": "label", "align": "center", "radius": 16 },
+    { "type": "box", "id": "partner-i", "x": 560, "y": 225, "width": 125, "height": 110, "text": "partner thread\nlane i XOR offset\nlocal argmax", "fill": "strong", "stroke": "solid", "textRole": "label", "align": "center", "radius": 16 },
+    { "type": "box", "id": "partner-j", "x": 715, "y": 225, "width": 125, "height": 110, "text": "partner thread\nlane j XOR offset\nlocal argmax", "fill": "strong", "stroke": "solid", "textRole": "label", "align": "center", "radius": 16 },
+
+    { "type": "connector", "id": "exchange-i", "start": { "x": 182.5, "y": 392, "bind": { "elementId": "lane-i", "anchor": "bottom", "gap": 57 } }, "end": { "x": 622.5, "y": 392, "bind": { "elementId": "partner-i", "anchor": "bottom", "gap": 57 } }, "route": "elbow", "stroke": "solid", "arrowStart": true, "arrowEnd": true },
+    { "type": "connector", "id": "exchange-j", "start": { "x": 337.5, "y": 410, "bind": { "elementId": "lane-j", "anchor": "bottom", "gap": 75 } }, "end": { "x": 777.5, "y": 410, "bind": { "elementId": "partner-j", "anchor": "bottom", "gap": 75 } }, "route": "elbow", "stroke": "solid", "arrowStart": true, "arrowEnd": true },
+    { "type": "text", "id": "offsets", "x": 250, "y": 404, "width": 460, "height": 18, "text": "offsets 16 → 8 → 4 → 2 → 1", "fill": "none", "stroke": "none", "textRole": "micro", "align": "center", "opacity": 0.72 }
+  ]
+}

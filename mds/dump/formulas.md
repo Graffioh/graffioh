@@ -11,8 +11,10 @@ $$
 -\log p_{\theta}\!\left(x_{i+1}\mid x_{1:i}\right)
 $$
 
-- $\frac{1}{|D|} \sum_{x \in D}$ is a way to get an approximation of probability distribution from the dataset
-- $\frac{1}{m} \sum_{i=1}^{m}$ is to gather the per-token probability of the whole sequence
+> [!note]
+> $\frac{1}{|D|} \sum_{x \in D}$ -> how much the model predict wrong based on the dataset size 
+>
+> thanks to the *empirical average*, for the *law of large numbers*, with a big enough dataset, we can approximate the true distribution
 
 $$
 p(x_{i+1}\mid x_{1:i})
@@ -25,6 +27,22 @@ p(x_{i+1}\mid x_{1:i})
 $$
 
 with $o_i[k]$ indexing into logits and taking k logit
+
+### Entropy
+
+$$
+H(P) = \log_2(\frac{1}{p}) = log_{\frac{1}{2}}(p_i) = -\log_2(p_i)
+$$
+
+$$
+H(P,Q) = \sum p_i (-\log_2(q_i))
+$$
+
+### KL Divergence
+
+$$
+D_{KL}(P,Q) = H(P, Q) - H(P)
+$$
 
 ## Perplexity
 

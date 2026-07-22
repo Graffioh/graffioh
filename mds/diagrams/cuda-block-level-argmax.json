@@ -1,0 +1,504 @@
+{
+  "version": 1,
+  "name": "cuda-block-level-argmax",
+  "title": "Block-level argmax",
+  "description": "Lane 0 of each warp writes its warp argmax to shared memory. After __syncthreads(), the active lanes of warp 0 load those values and repeat the XOR reduction to obtain one block argmax.",
+  "width": 960,
+  "height": 720,
+  "frame": true,
+  "grid": true,
+  "elements": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 336,
+      "y": 40,
+      "width": 336,
+      "height": 32,
+      "text": "BLOCK-LEVEL ARGMAX",
+      "fill": "none",
+      "stroke": "none",
+      "textRole": "title",
+      "align": "left",
+      "labelPosition": "center",
+      "radius": 0,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "block",
+      "type": "frame",
+      "x": 60,
+      "y": 130,
+      "width": 840,
+      "height": 540,
+      "text": "1 · lane 0 writes one result per warp",
+      "fill": "soft",
+      "stroke": "solid",
+      "textRole": "micro",
+      "align": "center",
+      "labelPosition": "top",
+      "radius": 24,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "warp-0",
+      "type": "box",
+      "x": 96,
+      "y": 192,
+      "width": 190,
+      "height": 92,
+      "text": "warp 0\nlane 0\nwarp argmax",
+      "fill": "mid",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 17,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "warp-1",
+      "type": "box",
+      "x": 350,
+      "y": 190,
+      "width": 190,
+      "height": 92,
+      "text": "warp 1\nlane 0\nwarp argmax",
+      "fill": "mid",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 17,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "warp-ellipsis",
+      "type": "text",
+      "x": 580,
+      "y": 228,
+      "width": 60,
+      "height": 30,
+      "text": "···",
+      "fill": "none",
+      "stroke": "none",
+      "textRole": "title",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 0,
+      "opacity": 0.7,
+      "locked": false
+    },
+    {
+      "id": "warp-last",
+      "type": "box",
+      "x": 670,
+      "y": 190,
+      "width": 190,
+      "height": 92,
+      "text": "warp n−1\nlane 0\nwarp argmax",
+      "fill": "mid",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 17,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "shared-memory",
+      "type": "frame",
+      "x": 100,
+      "y": 330,
+      "width": 760,
+      "height": 110,
+      "text": "shared memory",
+      "fill": "mid",
+      "stroke": "solid",
+      "textRole": "micro",
+      "align": "center",
+      "labelPosition": "top",
+      "radius": 18,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "shared-0",
+      "type": "box",
+      "x": 115,
+      "y": 370,
+      "width": 160,
+      "height": 48,
+      "text": "shared[0]\nwarp argmax",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 11,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "shared-1",
+      "type": "box",
+      "x": 365,
+      "y": 370,
+      "width": 160,
+      "height": 48,
+      "text": "shared[1]\nwarp argmax",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 11,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "shared-ellipsis",
+      "type": "text",
+      "x": 580,
+      "y": 379,
+      "width": 60,
+      "height": 30,
+      "text": "···",
+      "fill": "none",
+      "stroke": "none",
+      "textRole": "title",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 0,
+      "opacity": 0.7,
+      "locked": false
+    },
+    {
+      "id": "shared-last",
+      "type": "box",
+      "x": 685,
+      "y": 370,
+      "width": 160,
+      "height": 48,
+      "text": "shared[n−1]\nwarp argmax",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 11,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "warp-0-write",
+      "type": "connector",
+      "start": {
+        "x": 195,
+        "y": 282,
+        "bind": {
+          "elementId": "warp-0",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 195,
+        "y": 362,
+        "bind": {
+          "elementId": "shared-0",
+          "anchor": "top",
+          "gap": 8
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "warp-1-write",
+      "type": "connector",
+      "start": {
+        "x": 445,
+        "y": 282,
+        "bind": {
+          "elementId": "warp-1",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 445,
+        "y": 362,
+        "bind": {
+          "elementId": "shared-1",
+          "anchor": "top",
+          "gap": 8
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "warp-last-write",
+      "type": "connector",
+      "start": {
+        "x": 765,
+        "y": 282,
+        "bind": {
+          "elementId": "warp-last",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 765,
+        "y": 362,
+        "bind": {
+          "elementId": "shared-last",
+          "anchor": "top",
+          "gap": 8
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "barrier",
+      "type": "pill",
+      "x": 274,
+      "y": 455,
+      "width": 412,
+      "height": 30,
+      "text": "__syncthreads() · all warp results ready",
+      "fill": "strong",
+      "stroke": "none",
+      "textRole": "micro",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 9,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "warp-0-reduction",
+      "type": "frame",
+      "x": 100,
+      "y": 510,
+      "width": 760,
+      "height": 120,
+      "text": "warp 0",
+      "fill": "mid",
+      "stroke": "solid",
+      "textRole": "micro",
+      "align": "center",
+      "labelPosition": "top",
+      "radius": 18,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "lane-0",
+      "type": "box",
+      "x": 130,
+      "y": 555,
+      "width": 150,
+      "height": 50,
+      "text": "lane 0\nloads shared[0]",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 11,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "lane-1",
+      "type": "box",
+      "x": 345,
+      "y": 555,
+      "width": 150,
+      "height": 50,
+      "text": "lane 1\nloads shared[1]",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 11,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "lane-ellipsis",
+      "type": "text",
+      "x": 580,
+      "y": 565,
+      "width": 60,
+      "height": 30,
+      "text": "···",
+      "fill": "none",
+      "stroke": "none",
+      "textRole": "title",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 0,
+      "opacity": 0.7,
+      "locked": false
+    },
+    {
+      "id": "lane-last",
+      "type": "box",
+      "x": 680,
+      "y": 555,
+      "width": 150,
+      "height": 50,
+      "text": "lane n−1\nloads shared[n−1]",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 11,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "shared-0-load",
+      "type": "connector",
+      "start": {
+        "x": 195,
+        "y": 418,
+        "bind": {
+          "elementId": "shared-0",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 205,
+        "y": 547,
+        "bind": {
+          "elementId": "lane-0",
+          "anchor": "top",
+          "gap": 8
+        }
+      },
+      "route": "elbow",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "shared-1-load",
+      "type": "connector",
+      "start": {
+        "x": 445,
+        "y": 418,
+        "bind": {
+          "elementId": "shared-1",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 445.17844233515416,
+        "y": 457.0810664380044,
+        "bind": {
+          "elementId": "barrier",
+          "anchor": "auto",
+          "gap": 7
+        }
+      },
+      "route": "elbow",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "shared-last-load",
+      "type": "connector",
+      "start": {
+        "x": 765,
+        "y": 418,
+        "bind": {
+          "elementId": "shared-last",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 755,
+        "y": 547,
+        "bind": {
+          "elementId": "lane-last",
+          "anchor": "top",
+          "gap": 8
+        }
+      },
+      "route": "elbow",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "xor-reduction",
+      "type": "connector",
+      "start": {
+        "x": 205,
+        "y": 657,
+        "bind": {
+          "elementId": "lane-0",
+          "anchor": "bottom",
+          "gap": 52
+        }
+      },
+      "end": {
+        "x": 755,
+        "y": 657,
+        "bind": {
+          "elementId": "lane-last",
+          "anchor": "bottom",
+          "gap": 52
+        }
+      },
+      "route": "elbow",
+      "stroke": "solid",
+      "arrowStart": true,
+      "arrowEnd": true,
+      "text": "XOR reduction",
+      "opacity": 1,
+      "locked": false
+    }
+  ]
+}

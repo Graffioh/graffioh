@@ -848,6 +848,13 @@ export default function DevPage() {
 
           <span style={{ flex: 1 }} />
 
+          <ToolButton
+            title="open the visual diagram workbench"
+            onClick={() => window.open("/diagram", "_blank")}
+          >
+            diagram ↗
+          </ToolButton>
+
           {/* mode segmented control */}
           <span
             style={{
