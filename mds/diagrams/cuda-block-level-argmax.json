@@ -29,9 +29,9 @@
       "id": "block",
       "type": "frame",
       "x": 60,
-      "y": 130,
+      "y": 91,
       "width": 840,
-      "height": 540,
+      "height": 520,
       "text": "WARPS",
       "fill": "soft",
       "stroke": "solid",
@@ -46,7 +46,7 @@
       "id": "warp-0",
       "type": "box",
       "x": 96,
-      "y": 192,
+      "y": 153,
       "width": 190,
       "height": 92,
       "text": "warp 0\n(lane 0)\nreg = (maxval, argmax)",
@@ -63,7 +63,7 @@
       "id": "warp-1",
       "type": "box",
       "x": 350,
-      "y": 190,
+      "y": 151,
       "width": 190,
       "height": 92,
       "text": "warp 1\n(lane 0)\nreg = (maxval, argmax)",
@@ -80,7 +80,7 @@
       "id": "warp-ellipsis",
       "type": "text",
       "x": 572,
-      "y": 224,
+      "y": 185,
       "width": 60,
       "height": 30,
       "text": "···",
@@ -97,7 +97,7 @@
       "id": "warp-last",
       "type": "box",
       "x": 670,
-      "y": 190,
+      "y": 151,
       "width": 190,
       "height": 92,
       "text": "warp n−1\n(lane 0)\nreg = (maxval, argmax)",
@@ -114,7 +114,7 @@
       "id": "shared-memory",
       "type": "frame",
       "x": 100,
-      "y": 330,
+      "y": 291,
       "width": 760,
       "height": 110,
       "text": "",
@@ -131,7 +131,7 @@
       "id": "shared-0",
       "type": "box",
       "x": 114,
-      "y": 361,
+      "y": 330,
       "width": 160,
       "height": 48,
       "text": "shared[0]",
@@ -148,7 +148,7 @@
       "id": "shared-1",
       "type": "box",
       "x": 365,
-      "y": 361,
+      "y": 330,
       "width": 160,
       "height": 48,
       "text": "shared[1]",
@@ -164,8 +164,8 @@
     {
       "id": "shared-ellipsis",
       "type": "text",
-      "x": 572,
-      "y": 370,
+      "x": 576,
+      "y": 331,
       "width": 60,
       "height": 30,
       "text": "···",
@@ -182,7 +182,7 @@
       "id": "shared-last",
       "type": "box",
       "x": 685,
-      "y": 361,
+      "y": 330,
       "width": 160,
       "height": 48,
       "text": "shared[n−1]",
@@ -200,7 +200,7 @@
       "type": "connector",
       "start": {
         "x": 195,
-        "y": 282,
+        "y": 243,
         "bind": {
           "elementId": "warp-0",
           "anchor": "bottom",
@@ -209,7 +209,7 @@
       },
       "end": {
         "x": 195,
-        "y": 362,
+        "y": 323,
         "bind": {
           "elementId": "shared-0",
           "anchor": "top",
@@ -229,7 +229,7 @@
       "type": "connector",
       "start": {
         "x": 445,
-        "y": 282,
+        "y": 243,
         "bind": {
           "elementId": "warp-1",
           "anchor": "bottom",
@@ -238,7 +238,7 @@
       },
       "end": {
         "x": 445,
-        "y": 362,
+        "y": 323,
         "bind": {
           "elementId": "shared-1",
           "anchor": "top",
@@ -258,7 +258,7 @@
       "type": "connector",
       "start": {
         "x": 765,
-        "y": 282,
+        "y": 243,
         "bind": {
           "elementId": "warp-last",
           "anchor": "bottom",
@@ -267,7 +267,7 @@
       },
       "end": {
         "x": 765,
-        "y": 362,
+        "y": 323,
         "bind": {
           "elementId": "shared-last",
           "anchor": "top",
@@ -286,10 +286,10 @@
       "id": "barrier",
       "type": "pill",
       "x": 274,
-      "y": 455,
+      "y": 416,
       "width": 412,
       "height": 30,
-      "text": "__syncthreads() · all warp results ready",
+      "text": "__syncthreads()\nwait for all warp results",
       "fill": "strong",
       "stroke": "none",
       "textRole": "micro",
@@ -303,10 +303,10 @@
       "id": "warp-0-reduction",
       "type": "frame",
       "x": 100,
-      "y": 510,
+      "y": 471,
       "width": 760,
       "height": 120,
-      "text": "warp 0",
+      "text": "",
       "fill": "mid",
       "stroke": "solid",
       "textRole": "micro",
@@ -320,7 +320,7 @@
       "id": "lane-0",
       "type": "box",
       "x": 130,
-      "y": 555,
+      "y": 512,
       "width": 150,
       "height": 50,
       "text": "lane 0\nloads shared[0]",
@@ -337,7 +337,7 @@
       "id": "lane-1",
       "type": "box",
       "x": 345,
-      "y": 555,
+      "y": 512,
       "width": 150,
       "height": 50,
       "text": "lane 1\nloads shared[1]",
@@ -353,8 +353,8 @@
     {
       "id": "lane-ellipsis",
       "type": "text",
-      "x": 580,
-      "y": 565,
+      "x": 560,
+      "y": 522,
       "width": 60,
       "height": 30,
       "text": "···",
@@ -371,7 +371,7 @@
       "id": "lane-last",
       "type": "box",
       "x": 680,
-      "y": 555,
+      "y": 512,
       "width": 150,
       "height": 50,
       "text": "lane n−1\nloads shared[n−1]",
@@ -389,7 +389,7 @@
       "type": "connector",
       "start": {
         "x": 195,
-        "y": 418,
+        "y": 379,
         "bind": {
           "elementId": "shared-0",
           "anchor": "bottom",
@@ -397,47 +397,18 @@
         }
       },
       "end": {
-        "x": 205,
-        "y": 547,
-        "bind": {
-          "elementId": "lane-0",
-          "anchor": "top",
-          "gap": 8
-        }
-      },
-      "route": "elbow",
-      "stroke": "solid",
-      "arrowStart": false,
-      "arrowEnd": true,
-      "text": "",
-      "opacity": 1,
-      "locked": false
-    },
-    {
-      "id": "shared-1-load",
-      "type": "connector",
-      "start": {
-        "x": 445,
-        "y": 418,
-        "bind": {
-          "elementId": "shared-1",
-          "anchor": "bottom",
-          "gap": 0
-        }
-      },
-      "end": {
-        "x": 445.17844233515416,
-        "y": 457.0810664380044,
+        "x": 348.45096023003794,
+        "y": 412.7357426301054,
         "bind": {
           "elementId": "barrier",
           "anchor": "auto",
           "gap": 0
         }
       },
-      "route": "elbow",
+      "route": "straight",
       "stroke": "solid",
       "arrowStart": false,
-      "arrowEnd": true,
+      "arrowEnd": false,
       "text": "",
       "opacity": 1,
       "locked": false
@@ -447,7 +418,7 @@
       "type": "connector",
       "start": {
         "x": 765,
-        "y": 418,
+        "y": 379,
         "bind": {
           "elementId": "shared-last",
           "anchor": "bottom",
@@ -455,12 +426,121 @@
         }
       },
       "end": {
+        "x": 549.1273113122646,
+        "y": 413.2973136138147,
+        "bind": {
+          "elementId": "barrier",
+          "anchor": "auto",
+          "gap": 0
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": false,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "xor-reduction",
+      "type": "connector",
+      "start": {
+        "x": 205,
+        "y": 566,
+        "bind": {
+          "elementId": "lane-0",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
         "x": 755,
-        "y": 547,
+        "y": 566,
         "bind": {
           "elementId": "lane-last",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "mid": {
+        "x": 480,
+        "y": 585
+      },
+      "route": "elbow",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": false,
+      "text": "XOR reduction",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "text-4cf3ac85",
+      "type": "text",
+      "x": 494,
+      "y": 298,
+      "width": 216,
+      "height": 24,
+      "text": "shared memory",
+      "fill": "none",
+      "stroke": "none",
+      "textRole": "micro",
+      "fontSize": 16,
+      "align": "center",
+      "labelPosition": "center",
+      "radius": 0,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "connector-495a809c",
+      "type": "connector",
+      "start": {
+        "x": 445,
+        "y": 370,
+        "bind": {
+          "elementId": "shared-1",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 480,
+        "y": 416,
+        "bind": {
+          "elementId": "barrier",
           "anchor": "top",
-          "gap": 8
+          "gap": 0
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": false,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "connector-caffab26",
+      "type": "connector",
+      "start": {
+        "x": 418.975956213788,
+        "y": 450.22372563149474,
+        "bind": {
+          "elementId": "barrier",
+          "anchor": "auto",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 205,
+        "y": 516,
+        "bind": {
+          "elementId": "lane-0",
+          "anchor": "top",
+          "gap": 0
         }
       },
       "route": "elbow",
@@ -472,48 +552,139 @@
       "locked": false
     },
     {
-      "id": "xor-reduction",
+      "id": "connector-ea28495d",
       "type": "connector",
       "start": {
-        "x": 205,
-        "y": 657,
+        "x": 480,
+        "y": 446,
         "bind": {
-          "elementId": "lane-0",
+          "elementId": "barrier",
           "anchor": "bottom",
-          "gap": 52
+          "gap": 0
         }
       },
       "end": {
-        "x": 755,
-        "y": 657,
+        "x": 420,
+        "y": 516,
         "bind": {
-          "elementId": "lane-last",
-          "anchor": "bottom",
-          "gap": 52
+          "elementId": "lane-1",
+          "anchor": "top",
+          "gap": 0
         }
+      },
+      "mid": {
+        "x": 448,
+        "y": 489
       },
       "route": "elbow",
       "stroke": "solid",
-      "arrowStart": true,
+      "arrowStart": false,
       "arrowEnd": true,
-      "text": "XOR reduction",
+      "text": "",
       "opacity": 1,
       "locked": false
     },
     {
-      "id": "text-4cf3ac85",
-      "type": "text",
-      "x": 416,
-      "y": 325,
-      "width": 220,
-      "height": 40,
-      "text": "shared memory",
-      "fill": "none",
-      "stroke": "none",
-      "textRole": "micro",
+      "id": "connector-00f13a05",
+      "type": "connector",
+      "start": {
+        "x": 558.1665242574509,
+        "y": 438.30178163660105,
+        "bind": {
+          "elementId": "barrier",
+          "anchor": "auto",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 755,
+        "y": 516,
+        "bind": {
+          "elementId": "lane-last",
+          "anchor": "top",
+          "gap": 0
+        }
+      },
+      "route": "elbow",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "connector-1104da22",
+      "type": "connector",
+      "start": {
+        "x": 420,
+        "y": 562,
+        "bind": {
+          "elementId": "lane-1",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 420,
+        "y": 562,
+        "bind": {
+          "elementId": "lane-1",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": false,
+      "text": "",
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "pill-acd9677f",
+      "type": "pill",
+      "x": 410,
+      "y": 632,
+      "width": 140,
+      "height": 42,
+      "text": "block argmax",
+      "fill": "strong",
+      "stroke": "solid",
+      "textRole": "label",
       "align": "center",
       "labelPosition": "center",
-      "radius": 0,
+      "radius": 21,
+      "opacity": 1,
+      "locked": false
+    },
+    {
+      "id": "connector-2d281337",
+      "type": "connector",
+      "start": {
+        "x": 480,
+        "y": 591,
+        "bind": {
+          "elementId": "warp-0-reduction",
+          "anchor": "bottom",
+          "gap": 0
+        }
+      },
+      "end": {
+        "x": 480,
+        "y": 632,
+        "bind": {
+          "elementId": "pill-acd9677f",
+          "anchor": "top",
+          "gap": 0
+        }
+      },
+      "route": "straight",
+      "stroke": "solid",
+      "arrowStart": false,
+      "arrowEnd": true,
+      "text": "",
       "opacity": 1,
       "locked": false
     }

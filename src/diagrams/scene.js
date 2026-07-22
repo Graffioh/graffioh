@@ -383,8 +383,22 @@ const ANCHOR_AXES = Object.freeze({
   right: "h",
 });
 
-function anchorAxis(endpointValue) {
-  return ANCHOR_AXES[endpointValue?.bind?.anchor] || null;
+// For an auto bind the entry axis follows the side of the target the resolved
+// point landed on, so elbow legs always meet the border perpendicular to it.
+function endpointAxis(endpointValue, resolvedPoint, elementsOrScene) {
+  const fixed = ANCHOR_AXES[endpointValue?.bind?.anchor];
+  if (fixed) return fixed;
+
+  const bind = sanitizeBind(endpointValue?.bind);
+  if (!bind) return null;
+  const target = getElementById(elementsOrScene, bind.elementId);
+  if (!target || target.type === "connector") return null;
+  const bounds = getElementBounds(target);
+  if (!bounds || !bounds.width || !bounds.height) return null;
+
+  const dx = (resolvedPoint.x - bounds.cx) / Math.max(bounds.width / 2, 0.001);
+  const dy = (resolvedPoint.y - bounds.cy) / Math.max(bounds.height / 2, 0.001);
+  return Math.abs(dy) >= Math.abs(dx) ? "v" : "h";
 }
 
 function pointsForRoute(start, end, route, startAxis = null, endAxis = null) {
@@ -500,14 +514,23 @@ export function resolveConnector(connector, elementsOrScene = []) {
     end = resolveBoundPoint(connector?.end, start, elementsOrScene);
   }
 
-  const startAxis = anchorAxis(connector?.start);
-  const endAxis = anchorAxis(connector?.end);
+  const startAxis = endpointAxis(connector?.start, start, elementsOrScene);
+  const endAxis = endpointAxis(connector?.end, end, elementsOrScene);
+  // A leg toward the free waypoint takes a single L-bend, but when the far
+  // endpoint is unbound the leg mirrors the bound side's axis (a Z) so the
+  // arrow still meets its neighborhood along the same direction it left with.
   const points = mid
     ? dedupePoints([
         ...pointsForRoute(start, mid, connector?.route, startAxis, null),
         ...pointsForRoute(mid, end, connector?.route, null, endAxis).slice(1),
       ])
-    : pointsForRoute(start, end, connector?.route, startAxis, endAxis);
+    : pointsForRoute(
+        start,
+        end,
+        connector?.route,
+        startAxis || endAxis,
+        endAxis || startAxis
+      );
   const path = pathFromPoints(points);
   return {
     start,
