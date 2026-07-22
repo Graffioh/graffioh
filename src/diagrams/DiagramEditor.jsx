@@ -28,11 +28,17 @@ const RECOVERY_BASE_KEY = "graffioh:diagram-workbench:recovery-base:v1";
 const DRAG_MIME = "application/x-graffioh-diagram-element";
 const GRID = 8;
 const CENTER_SNAP_SCREEN_PX = 7;
+const DRAG_ACTIVATION_SCREEN_PX = 4;
+const BIND_PROXIMITY_SCREEN_PX = 16;
+const ANCHOR_SNAP_SCREEN_PX = 12;
+const MIDPOINT_CLEAR_SCREEN_PX = 6;
 const HISTORY_LIMIT = 80;
 const DIAGRAM_SLUG = /^[a-z0-9][a-z0-9-]*$/;
 const SHAPE_TYPES = new Set(["frame", "box", "pill", "ellipse", "text"]);
 const CONNECTION_TOOLS = new Set(["connector", "line"]);
 const NO_CENTER_GUIDES = Object.freeze({ vertical: false, horizontal: false });
+const NO_ALIGN_GUIDES = Object.freeze([]);
+const NO_ALIGN_TARGETS = Object.freeze({ vertical: [], horizontal: [] });
 
 const PALETTE = [
   { type: "frame", label: "Region", copy: "A quiet containing frame", key: "R" },
@@ -48,6 +54,7 @@ const TOOL_KEYS = Object.fromEntries(
   PALETTE.map((item) => [item.key.toLowerCase(), item.type])
 );
 TOOL_KEYS.v = "select";
+TOOL_KEYS.s = "pick";
 const NUDGE_BY_KEY = {
   ArrowLeft: { x: -1, y: 0 },
   ArrowRight: { x: 1, y: 0 },
@@ -56,46 +63,177 @@ const NUDGE_BY_KEY = {
 };
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
+
+// Deep-copy elements with fresh ids; connectors keep bindings to elements
+// copied alongside them and drop bindings to anything left behind.
+function cloneElementsWithOffset(elements, offset) {
+  const idMap = new Map();
+  const copies = elements.map((element) => {
+    const copy = clone(element);
+    copy.id = createElementId(element.type);
+    idMap.set(element.id, copy.id);
+    return copy;
+  });
+  copies.forEach((copy) => {
+    if (copy.type === "connector") {
+      for (const key of ["start", "end"]) {
+        copy[key] = {
+          ...copy[key],
+          x: copy[key].x + offset,
+          y: copy[key].y + offset,
+        };
+        const boundTo = copy[key].bind?.elementId;
+        if (!boundTo) continue;
+        if (idMap.has(boundTo))
+          copy[key].bind = { ...copy[key].bind, elementId: idMap.get(boundTo) };
+        else delete copy[key].bind;
+      }
+      if (copy.mid)
+        copy.mid = { x: copy.mid.x + offset, y: copy.mid.y + offset };
+    } else {
+      copy.x += offset;
+      copy.y += offset;
+    }
+  });
+  return copies;
+}
 const clamp = (value, minimum, maximum) =>
   Math.min(maximum, Math.max(minimum, value));
 const snap = (value, enabled = true) =>
   enabled ? Math.round(value / GRID) * GRID : value;
 
-function snapMovePosition(position, size, scene, zoom, enabled = true) {
+// Snap edges (left/center/right, top/center/bottom) of every element that is
+// not part of the move, collected once when the gesture starts.
+function buildAlignTargets(elements, movingIds) {
+  const vertical = [];
+  const horizontal = [];
+  for (const element of elements) {
+    if (
+      movingIds.has(element.id) ||
+      element.hidden ||
+      element.type === "connector"
+    )
+      continue;
+    const bounds = getElementBounds(element);
+    vertical.push(
+      { value: bounds.left, top: bounds.top, bottom: bounds.bottom },
+      { value: bounds.cx, top: bounds.top, bottom: bounds.bottom },
+      { value: bounds.right, top: bounds.top, bottom: bounds.bottom }
+    );
+    horizontal.push(
+      { value: bounds.top, left: bounds.left, right: bounds.right },
+      { value: bounds.cy, left: bounds.left, right: bounds.right },
+      { value: bounds.bottom, left: bounds.left, right: bounds.right }
+    );
+  }
+  return { vertical, horizontal };
+}
+
+function bestAlignDelta(targets, base, offsets, threshold) {
+  let best = null;
+  for (const target of targets) {
+    for (const offset of offsets) {
+      const delta = target.value - (base + offset);
+      if (
+        Math.abs(delta) <= threshold &&
+        (!best || Math.abs(delta) < Math.abs(best.delta))
+      )
+        best = { delta, value: target.value };
+    }
+  }
+  return best;
+}
+
+function moveGesturePosition(gesture, point, scene, zoom, enabled = true) {
+  const raw = {
+    x: gesture.origin.x + point.x - gesture.start.x,
+    y: gesture.origin.y + point.y - gesture.start.y,
+  };
+  if (!enabled)
+    return {
+      x: raw.x,
+      y: raw.y,
+      guides: NO_CENTER_GUIDES,
+      alignGuides: NO_ALIGN_GUIDES,
+    };
+
+  const size = gesture.size;
   const threshold = CENTER_SNAP_SCREEN_PX / Math.max(zoom, 0.01);
+  const targets = gesture.alignTargets || NO_ALIGN_TARGETS;
   const centeredX = scene.width / 2 - size.width / 2;
   const centeredY = scene.height / 2 - size.height / 2;
-  const gridX = snap(position.x, enabled);
-  const gridY = snap(position.y, enabled);
-  const x = enabled && Math.abs(position.x - centeredX) <= threshold
-    ? centeredX
-    : gridX;
-  const y = enabled && Math.abs(position.y - centeredY) <= threshold
-    ? centeredY
-    : gridY;
-  const vertical = enabled && Math.abs(x - centeredX) < 0.001;
-  const horizontal = enabled && Math.abs(y - centeredY) < 0.001;
+  const bestX = bestAlignDelta(
+    targets.vertical,
+    raw.x,
+    [0, size.width / 2, size.width],
+    threshold
+  );
+  const bestY = bestAlignDelta(
+    targets.horizontal,
+    raw.y,
+    [0, size.height / 2, size.height],
+    threshold
+  );
+  const centerDeltaX = centeredX - raw.x;
+  const centerDeltaY = centeredY - raw.y;
+
+  let x = snap(raw.x);
+  let vertical = false;
+  let alignX = null;
+  if (
+    Math.abs(centerDeltaX) <= threshold &&
+    (!bestX || Math.abs(centerDeltaX) <= Math.abs(bestX.delta))
+  ) {
+    x = centeredX;
+    vertical = true;
+  } else if (bestX) {
+    x = raw.x + bestX.delta;
+    alignX = bestX.value;
+  }
+
+  let y = snap(raw.y);
+  let horizontal = false;
+  let alignY = null;
+  if (
+    Math.abs(centerDeltaY) <= threshold &&
+    (!bestY || Math.abs(centerDeltaY) <= Math.abs(bestY.delta))
+  ) {
+    y = centeredY;
+    horizontal = true;
+  } else if (bestY) {
+    y = raw.y + bestY.delta;
+    alignY = bestY.value;
+  }
+
+  const alignGuides = [];
+  if (alignX !== null) {
+    let from = y;
+    let to = y + size.height;
+    for (const target of targets.vertical) {
+      if (Math.abs(target.value - alignX) > 0.5) continue;
+      from = Math.min(from, target.top);
+      to = Math.max(to, target.bottom);
+    }
+    alignGuides.push({ axis: "v", value: alignX, from, to });
+  }
+  if (alignY !== null) {
+    let from = x;
+    let to = x + size.width;
+    for (const target of targets.horizontal) {
+      if (Math.abs(target.value - alignY) > 0.5) continue;
+      from = Math.min(from, target.left);
+      to = Math.max(to, target.right);
+    }
+    alignGuides.push({ axis: "h", value: alignY, from, to });
+  }
 
   return {
     x,
     y,
-    guides: vertical || horizontal
-      ? { vertical, horizontal }
-      : NO_CENTER_GUIDES,
+    guides:
+      vertical || horizontal ? { vertical, horizontal } : NO_CENTER_GUIDES,
+    alignGuides: alignGuides.length ? alignGuides : NO_ALIGN_GUIDES,
   };
-}
-
-function moveGesturePosition(gesture, point, scene, zoom, enabled = true) {
-  return snapMovePosition(
-    {
-      x: gesture.origin.x + point.x - gesture.start.x,
-      y: gesture.origin.y + point.y - gesture.start.y,
-    },
-    gesture.size,
-    scene,
-    zoom,
-    enabled
-  );
 }
 
 function resizeGestureDimensions(gesture, point, element, enabled = true) {
@@ -108,6 +246,81 @@ function resizeGestureDimensions(gesture, point, element, enabled = true) {
     ),
     height: Math.max(24, snap(gesture.origin.height + dy, enabled)),
   };
+}
+
+function moveElementsByGesture(elements, gesture, position) {
+  const dx = position.x - gesture.origin.x;
+  const dy = position.y - gesture.origin.y;
+  const items = new Map(gesture.items.map((item) => [item.id, item]));
+  return elements.map((element) => {
+    const item = items.get(element.id);
+    if (!item) return element;
+    if (item.kind === "connector")
+      return {
+        ...element,
+        start: { ...element.start, x: item.start.x + dx, y: item.start.y + dy },
+        end: { ...element.end, x: item.end.x + dx, y: item.end.y + dy },
+        ...(item.mid
+          ? { mid: { x: item.mid.x + dx, y: item.mid.y + dy } }
+          : {}),
+      };
+    return { ...element, x: item.x + dx, y: item.y + dy };
+  });
+}
+
+function connectorHitBounds(element, scene) {
+  const resolved = resolveConnector(element, scene);
+  const xs = resolved.points.map((point) => point.x);
+  const ys = resolved.points.map((point) => point.y);
+  const left = Math.min(...xs);
+  const top = Math.min(...ys);
+  return {
+    x: left,
+    y: top,
+    width: Math.max(...xs) - left,
+    height: Math.max(...ys) - top,
+  };
+}
+
+// Font metrics per text role, mirroring TEXT_METRICS in BlogDiagram.jsx and
+// the sizes in diagrams.css (Commit Mono is monospace, so glyph width is
+// size × advance plus letter-spacing).
+const TEXT_HIT_METRICS = Object.freeze({
+  title: Object.freeze({ size: 25, spacing: 0.14, lineHeight: 31 }),
+  subtitle: Object.freeze({ size: 11, spacing: 0.04, lineHeight: 17 }),
+  label: Object.freeze({ size: 12, spacing: 0, lineHeight: 18 }),
+  micro: Object.freeze({ size: 9, spacing: 0.07, lineHeight: 14 }),
+  caption: Object.freeze({ size: 10, spacing: 0.025, lineHeight: 15 }),
+});
+
+// Standalone text draws its glyphs around an anchor instead of filling the
+// stored box, so marquee selection tests against the visible glyph block.
+function textVisualBounds(element) {
+  const bounds = getElementBounds(element);
+  const text = element.text || "";
+  if (!text.trim()) return bounds;
+  const metrics = TEXT_HIT_METRICS[element.textRole] || TEXT_HIT_METRICS.label;
+  const size = element.fontSize || metrics.size;
+  const lines = text.split("\n");
+  const longest = Math.max(...lines.map((line) => line.length));
+  const width = longest * size * (0.62 + metrics.spacing);
+  const height = lines.length * metrics.lineHeight * (size / metrics.size);
+  const x =
+    element.align === "left"
+      ? bounds.x
+      : element.align === "right"
+        ? bounds.right - width
+        : bounds.cx - width / 2;
+  return { x, y: bounds.cy - height / 2, width, height };
+}
+
+function rectContainsBounds(rect, bounds) {
+  return (
+    bounds.x >= rect.x &&
+    bounds.y >= rect.y &&
+    bounds.x + bounds.width <= rect.x + rect.width &&
+    bounds.y + bounds.height <= rect.y + rect.height
+  );
 }
 
 const isFormField = (target) =>
@@ -279,6 +492,19 @@ function Icon({ name }) {
         <path d="m5 3 13 9-6 1.5L9 19z" />
       </svg>
     );
+  if (name === "pick")
+    return (
+      <svg {...common}>
+        <rect
+          x="4.5"
+          y="5.5"
+          width="15"
+          height="13"
+          rx="2.5"
+          strokeDasharray="3 2.6"
+        />
+      </svg>
+    );
   if (name === "frame")
     return (
       <svg {...common}>
@@ -427,7 +653,12 @@ function scenePoint(event, overlayRef) {
   );
 }
 
-function bindableAt(scene, point, ignoredId) {
+// Walk elements front-to-back and return the first bindable hit, so small
+// shapes on top always beat the frames and surfaces behind them. Filled
+// shapes and text hit anywhere inside their bounds or within `pad` outside;
+// hollow shapes (fill "none") hit only within `pad` of their border, so a
+// frame interior stays transparent to binding.
+function bindableAt(scene, point, ignoredId, pad = 0) {
   for (let index = scene.elements.length - 1; index >= 0; index -= 1) {
     const element = scene.elements[index];
     if (
@@ -437,27 +668,99 @@ function bindableAt(scene, point, ignoredId) {
     )
       continue;
     const bounds = getElementBounds(element);
-    if (
-      point.x >= bounds.x &&
-      point.x <= bounds.x + bounds.width &&
-      point.y >= bounds.y &&
-      point.y <= bounds.y + bounds.height
-    )
-      return element;
+    const outsideX = Math.max(
+      bounds.x - point.x,
+      0,
+      point.x - (bounds.x + bounds.width)
+    );
+    const outsideY = Math.max(
+      bounds.y - point.y,
+      0,
+      point.y - (bounds.y + bounds.height)
+    );
+    const contained = outsideX === 0 && outsideY === 0;
+    const solid =
+      element.type === "text" || (element.fill || "none") !== "none";
+    let distance;
+    if (solid) distance = contained ? 0 : Math.hypot(outsideX, outsideY);
+    else if (contained)
+      distance = Math.min(
+        point.x - bounds.x,
+        bounds.x + bounds.width - point.x,
+        point.y - bounds.y,
+        bounds.y + bounds.height - point.y
+      );
+    else distance = Math.hypot(outsideX, outsideY);
+    if (distance <= pad) return element;
   }
   return null;
 }
 
-function endpoint(point, boundElement) {
+// The four fixed attachment points shown on a bind target, at the midpoint of
+// each side (which is on the border for rectangles and ellipses alike).
+function anchorDots(element) {
+  const bounds = getElementBounds(element);
+  return [
+    { anchor: "top", x: bounds.cx, y: bounds.top },
+    { anchor: "right", x: bounds.right, y: bounds.cy },
+    { anchor: "bottom", x: bounds.cx, y: bounds.bottom },
+    { anchor: "left", x: bounds.left, y: bounds.cy },
+  ];
+}
+
+function nearestAnchorDot(element, point, threshold) {
+  let best = null;
+  for (const dot of anchorDots(element)) {
+    const distance = Math.hypot(dot.x - point.x, dot.y - point.y);
+    if (distance <= threshold && (!best || distance < best.distance))
+      best = { ...dot, distance };
+  }
+  return best;
+}
+
+function distanceToSegment(point, a, b) {
+  const abx = b.x - a.x;
+  const aby = b.y - a.y;
+  const lengthSq = abx * abx + aby * aby;
+  const t = lengthSq
+    ? clamp(((point.x - a.x) * abx + (point.y - a.y) * aby) / lengthSq, 0, 1)
+    : 0;
+  return Math.hypot(point.x - (a.x + abx * t), point.y - (a.y + aby * t));
+}
+
+// Dragging the midpoint bends the connector through a waypoint; dragging it
+// back onto the straight line between the endpoints removes the bend.
+function midpointUpdate(elements, id, point, unsnapped, zoom) {
+  return elements.map((element) => {
+    if (element.id !== id || element.type !== "connector") return element;
+    const { mid: _mid, ...straight } = element;
+    const base = resolveConnector(straight, elements);
+    if (
+      distanceToSegment(point, base.start, base.end) * zoom <=
+      MIDPOINT_CLEAR_SCREEN_PX
+    )
+      return straight;
+    return {
+      ...element,
+      mid: { x: snap(point.x, !unsnapped), y: snap(point.y, !unsnapped) },
+    };
+  });
+}
+
+function endpoint(point, boundElement, anchor = "auto") {
+  const dot =
+    boundElement && anchor !== "auto"
+      ? anchorDots(boundElement).find((item) => item.anchor === anchor)
+      : null;
   return {
-    x: point.x,
-    y: point.y,
+    x: dot ? dot.x : point.x,
+    y: dot ? dot.y : point.y,
     ...(boundElement
       ? {
           bind: {
             elementId: boundElement.id,
-            anchor: "auto",
-            gap: 7,
+            anchor,
+            gap: 0,
           },
         }
       : {}),
@@ -597,16 +900,14 @@ function layerLabel(element) {
 
 function LayerPanel({
   elements,
-  selectedId,
+  selectedIds,
   onSelect,
   onToggleVisibility,
   onArrange,
   onRemove,
 }) {
   const layers = [...elements].reverse();
-  const selectedIndex = elements.findIndex(
-    (element) => element.id === selectedId
-  );
+  const hasSelection = selectedIds.length > 0;
 
   return (
     <section className="diagram-editor__layers" aria-label="Layers">
@@ -619,14 +920,14 @@ function LayerPanel({
           <div
             key={element.id}
             className="diagram-editor__layer"
-            data-selected={element.id === selectedId ? "true" : undefined}
+            data-selected={selectedIds.includes(element.id) ? "true" : undefined}
             data-hidden={element.hidden ? "true" : undefined}
           >
             <button
               type="button"
               className="diagram-editor__layer-select"
-              aria-pressed={element.id === selectedId}
-              onClick={() => onSelect(element.id)}
+              aria-pressed={selectedIds.includes(element.id)}
+              onClick={(event) => onSelect(element.id, event)}
             >
               <span className="diagram-editor__layer-type" aria-hidden="true">
                 <Icon name={element.type} />
@@ -661,21 +962,19 @@ function LayerPanel({
       >
         <button
           type="button"
-          aria-label="Send selected layer to back"
+          aria-label="Send selected layers to back"
           title="Send to back"
-          disabled={selectedIndex <= 0}
-          onClick={() => onArrange(selectedId, "back")}
+          disabled={!hasSelection}
+          onClick={() => onArrange(selectedIds, "back")}
         >
           <Icon name="back" />
         </button>
         <button
           type="button"
-          aria-label="Bring selected layer to front"
+          aria-label="Bring selected layers to front"
           title="Bring to front"
-          disabled={
-            selectedIndex < 0 || selectedIndex === elements.length - 1
-          }
-          onClick={() => onArrange(selectedId, "front")}
+          disabled={!hasSelection}
+          onClick={() => onArrange(selectedIds, "front")}
         >
           <Icon name="front" />
         </button>
@@ -683,10 +982,10 @@ function LayerPanel({
         <button
           type="button"
           className="diagram-editor__layer-delete"
-          aria-label="Delete selected layer"
+          aria-label="Delete selected layers"
           title="Delete layer"
-          disabled={selectedIndex < 0}
-          onClick={() => onRemove(selectedId)}
+          disabled={!hasSelection}
+          onClick={() => onRemove(selectedIds)}
         >
           <Icon name="trash" />
         </button>
@@ -698,6 +997,7 @@ function LayerPanel({
 function Inspector({
   scene,
   selected,
+  selectionCount,
   patchScene,
   patchElement,
   beginField,
@@ -706,6 +1006,51 @@ function Inspector({
   remove,
   arrange,
 }) {
+  if (!selected && selectionCount > 1) {
+    return (
+      <div className="diagram-editor__inspector">
+        <h2 className="diagram-editor__panel-title">Selection</h2>
+        <div className="diagram-editor__object-name">
+          {selectionCount} elements
+        </div>
+        <p className="diagram-editor__hint" style={{ margin: "0 0 14px" }}>
+          Drag any selected shape to move the group. Shift-click adds or
+          removes an element.
+        </p>
+        <section className="diagram-editor__actions">
+          <button
+            type="button"
+            className="diagram-editor__button"
+            onClick={() => arrange("front")}
+          >
+            to front
+          </button>
+          <button
+            type="button"
+            className="diagram-editor__button"
+            onClick={() => arrange("back")}
+          >
+            to back
+          </button>
+          <button
+            type="button"
+            className="diagram-editor__button"
+            onClick={duplicate}
+          >
+            duplicate
+          </button>
+          <button
+            type="button"
+            className="diagram-editor__button"
+            onClick={remove}
+          >
+            delete
+          </button>
+        </section>
+      </div>
+    );
+  }
+
   if (!selected) {
     return (
       <div className="diagram-editor__inspector">
@@ -730,17 +1075,6 @@ function Inspector({
               onBlur={finishField}
               onChange={(event) =>
                 patchScene({ title: event.target.value }, false)
-              }
-            />
-          </Field>
-          <Field label="What the diagram teaches">
-            <textarea
-              value={scene.description}
-              maxLength="800"
-              onFocus={beginField}
-              onBlur={finishField}
-              onChange={(event) =>
-                patchScene({ description: event.target.value }, false)
               }
             />
           </Field>
@@ -820,20 +1154,43 @@ function Inspector({
             />
           </Field>
           {shape && (
-            <Field label="Text role">
-              <select
-                value={selected.textRole || "label"}
-                onChange={(event) =>
-                  patchElement({ textRole: event.target.value }, true)
-                }
-              >
-                <option value="title">title</option>
-                <option value="subtitle">subtitle</option>
-                <option value="label">label</option>
-                <option value="micro">micro</option>
-                <option value="caption">caption</option>
-              </select>
-            </Field>
+            <div className="diagram-editor__field-row">
+              <Field label="Text role">
+                <select
+                  value={selected.textRole || "label"}
+                  onChange={(event) =>
+                    patchElement({ textRole: event.target.value }, true)
+                  }
+                >
+                  <option value="title">title</option>
+                  <option value="subtitle">subtitle</option>
+                  <option value="label">label</option>
+                  <option value="micro">micro</option>
+                  <option value="caption">caption</option>
+                </select>
+              </Field>
+              <Field label="Size · px">
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  placeholder="auto"
+                  value={selected.fontSize ?? ""}
+                  onChange={(event) => {
+                    const raw = event.target.value;
+                    patchElement(
+                      {
+                        fontSize:
+                          raw === ""
+                            ? undefined
+                            : clamp(Number(raw), 1, 120),
+                      },
+                      true
+                    );
+                  }}
+                />
+              </Field>
+            </div>
           )}
         </section>
       )}
@@ -1056,12 +1413,16 @@ export default function DiagramEditor({ theme }) {
     canUndo,
     canRedo,
   } = useSceneHistory(loadDraft);
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [activeTool, setActiveTool] = useState("select");
   const [editingId, setEditingId] = useState(null);
   const [gesture, setGesture] = useState(null);
+  const [marquee, setMarquee] = useState(null);
   const [centerGuides, setCenterGuides] = useState(NO_CENTER_GUIDES);
+  const [alignGuides, setAlignGuides] = useState(NO_ALIGN_GUIDES);
   const [draftConnector, setDraftConnector] = useState(null);
+  const [bindTargetId, setBindTargetId] = useState(null);
+  const [bindAnchor, setBindAnchor] = useState(null);
   const [zoom, setZoom] = useState(0.82);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [panGesture, setPanGesture] = useState(null);
@@ -1079,6 +1440,8 @@ export default function DiagramEditor({ theme }) {
   const importRef = useRef(null);
   const inlineRef = useRef(null);
   const spaceRef = useRef(false);
+  const dragEngagedRef = useRef(false);
+  const clipboardRef = useRef(null);
   const toastTimer = useRef(null);
   const activeFileRef = useRef("");
   const latestSceneRef = useRef(scene);
@@ -1100,14 +1463,18 @@ export default function DiagramEditor({ theme }) {
   saveConflictRef.current = saveConflict;
   orphanRecoveryRef.current = orphanRecovery;
 
-  const selected = useMemo(
-    () => scene.elements.find((element) => element.id === selectedId) || null,
-    [scene.elements, selectedId]
+  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const selectedElements = useMemo(
+    () => scene.elements.filter((element) => selectedIdSet.has(element.id)),
+    [scene.elements, selectedIdSet]
   );
+  const selected = selectedElements.length === 1 ? selectedElements[0] : null;
 
   useEffect(() => {
-    if (selectedId && !selected) setSelectedId(null);
-  }, [selected, selectedId]);
+    if (selectedElements.length === selectedIds.length) return;
+    const existing = new Set(selectedElements.map((element) => element.id));
+    setSelectedIds((current) => current.filter((id) => existing.has(id)));
+  }, [selectedElements, selectedIds]);
 
   const notify = useCallback((message) => {
     clearTimeout(toastTimer.current);
@@ -1342,7 +1709,7 @@ export default function DiagramEditor({ theme }) {
         latestSceneRef.current = nextScene;
         setActiveFile(name);
         reset(nextScene, recovered);
-        setSelectedId(null);
+        setSelectedIds([]);
         setEditingId(null);
         localStorage.setItem(FILE_SELECTION_KEY, name);
         localStorage.setItem(RECOVERY_FILE_KEY, name);
@@ -1435,7 +1802,7 @@ export default function DiagramEditor({ theme }) {
       persistedRevisionsRef.current.set(name, disk.revision);
       latestSceneRef.current = disk.scene;
       reset(disk.scene);
-      setSelectedId(null);
+      setSelectedIds([]);
       setEditingId(null);
       localStorage.setItem(STORAGE_KEY, disk.signature);
       localStorage.setItem(RECOVERY_FILE_KEY, name);
@@ -1501,7 +1868,7 @@ export default function DiagramEditor({ theme }) {
             latestSceneRef.current = recoveryScene;
             setActiveFile(recoveryFile);
             reset(recoveryScene);
-            setSelectedId(null);
+            setSelectedIds([]);
             setEditingId(null);
             localStorage.setItem(FILE_SELECTION_KEY, recoveryFile);
             localStorage.setItem(RECOVERY_FILE_KEY, recoveryFile);
@@ -1524,7 +1891,7 @@ export default function DiagramEditor({ theme }) {
           latestSceneRef.current = recoveryScene;
           setActiveFile("");
           reset(recoveryScene, true);
-          setSelectedId(null);
+          setSelectedIds([]);
           setEditingId(null);
           setSaveState(`unsaved recovery · ${recoveryFile}.json is missing`);
           notify("Recovery kept on canvas · use New or JSON to preserve it");
@@ -1647,81 +2014,95 @@ export default function DiagramEditor({ theme }) {
   const patchSelected = useCallback(
     (patch, historic = true) => {
       if (transitionRef.current) return;
-      if (!selectedId) return;
+      if (!selected) return;
+      const targetId = selected.id;
       const updater = (current) =>
         sanitizeScene(
           {
             ...current,
             elements: current.elements.map((element) =>
-              element.id === selectedId ? { ...element, ...patch } : element
+              element.id === targetId ? { ...element, ...patch } : element
             ),
           },
           current
         );
       (historic ? commit : replace)(updater);
     },
-    [commit, replace, selectedId]
+    [commit, replace, selected]
   );
 
-  const removeElement = useCallback((elementId) => {
-    if (!elementId) return;
-    commit((current) => ({
-      ...current,
-      elements: current.elements
-        .filter((element) => element.id !== elementId)
-        .map((element) => {
-          if (element.type !== "connector") return element;
-          const unbind = (end) =>
-            end?.bind?.elementId === elementId
-              ? { x: end.x, y: end.y }
-              : end;
-          return {
-            ...element,
-            start: unbind(element.start),
-            end: unbind(element.end),
-          };
-        }),
-    }));
-    if (elementId === selectedId) {
-      setSelectedId(null);
-      setEditingId(null);
-    }
-  }, [commit, selectedId]);
+  const removeElements = useCallback(
+    (ids) => {
+      const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
+      if (!idSet.size) return;
+      commit((current) => ({
+        ...current,
+        elements: current.elements
+          .filter((element) => !idSet.has(element.id))
+          .map((element) => {
+            if (element.type !== "connector") return element;
+            const unbind = (end) =>
+              end?.bind && idSet.has(end.bind.elementId)
+                ? { x: end.x, y: end.y }
+                : end;
+            return {
+              ...element,
+              start: unbind(element.start),
+              end: unbind(element.end),
+            };
+          }),
+      }));
+      setSelectedIds((current) => current.filter((id) => !idSet.has(id)));
+      setEditingId((current) =>
+        current && idSet.has(current) ? null : current
+      );
+    },
+    [commit]
+  );
 
   const removeSelected = useCallback(() => {
-    removeElement(selectedId);
-  }, [removeElement, selectedId]);
+    removeElements(selectedIds);
+  }, [removeElements, selectedIds]);
 
   const duplicateSelected = useCallback(() => {
-    if (!selected) return;
-    const copy = clone(selected);
-    copy.id = createElementId(selected.type);
-    if (selected.type === "connector") {
-      copy.start = { ...copy.start, x: copy.start.x + 16, y: copy.start.y + 16 };
-      copy.end = { ...copy.end, x: copy.end.x + 16, y: copy.end.y + 16 };
-      delete copy.start.bind;
-      delete copy.end.bind;
-    } else {
-      copy.x += 16;
-      copy.y += 16;
-    }
+    if (!selectedElements.length) return;
+    const copies = cloneElementsWithOffset(selectedElements, 16);
     commit((current) => ({
       ...current,
-      elements: [...current.elements, copy],
+      elements: [...current.elements, ...copies],
     }));
-    setSelectedId(copy.id);
-  }, [commit, selected]);
+    setSelectedIds(copies.map((copy) => copy.id));
+  }, [commit, selectedElements]);
 
-  const arrangeElement = useCallback(
-    (elementId, where) => {
-      if (!elementId) return;
+  const copySelected = useCallback(() => {
+    if (!selectedElements.length) return 0;
+    clipboardRef.current = { elements: clone(selectedElements), pastes: 0 };
+    return selectedElements.length;
+  }, [selectedElements]);
+
+  const pasteClipboard = useCallback(() => {
+    const clip = clipboardRef.current;
+    if (!clip?.elements.length) return;
+    clip.pastes += 1;
+    const copies = cloneElementsWithOffset(clip.elements, 16 * clip.pastes);
+    commit((current) => ({
+      ...current,
+      elements: [...current.elements, ...copies],
+    }));
+    setSelectedIds(copies.map((copy) => copy.id));
+  }, [commit]);
+
+  const arrangeElements = useCallback(
+    (ids, where) => {
+      const idSet = new Set(Array.isArray(ids) ? ids : [ids]);
+      if (!idSet.size) return;
       commit((current) => {
-        const chosen = current.elements.find((item) => item.id === elementId);
-        if (!chosen) return current;
-        const rest = current.elements.filter((item) => item.id !== elementId);
+        const chosen = current.elements.filter((item) => idSet.has(item.id));
+        if (!chosen.length) return current;
+        const rest = current.elements.filter((item) => !idSet.has(item.id));
         return {
           ...current,
-          elements: where === "front" ? [...rest, chosen] : [chosen, ...rest],
+          elements: where === "front" ? [...rest, ...chosen] : [...chosen, ...rest],
         };
       });
     },
@@ -1729,8 +2110,8 @@ export default function DiagramEditor({ theme }) {
   );
 
   const arrangeSelected = useCallback(
-    (where) => arrangeElement(selectedId, where),
-    [arrangeElement, selectedId]
+    (where) => arrangeElements(selectedIds, where),
+    [arrangeElements, selectedIds]
   );
 
   const toggleElementVisibility = useCallback((elementId) => {
@@ -1761,7 +2142,7 @@ export default function DiagramEditor({ theme }) {
         ...current,
         elements: [...current.elements, element],
       }));
-      setSelectedId(element.id);
+      setSelectedIds([element.id]);
       setActiveTool("select");
       if (type === "text") {
         setEditingId(element.id);
@@ -1799,12 +2180,40 @@ export default function DiagramEditor({ theme }) {
       if (gesture || panGesture) return;
       if (CONNECTION_TOOLS.has(activeTool)) return;
       event.stopPropagation();
-      setSelectedId(element.id);
+      if (event.shiftKey) {
+        setSelectedIds((current) =>
+          current.includes(element.id)
+            ? current.filter((id) => id !== element.id)
+            : [...current, element.id]
+        );
+        return;
+      }
+      const nextIds = selectedIds.includes(element.id)
+        ? selectedIds
+        : [element.id];
+      setSelectedIds(nextIds);
       if (element.locked || activeTool !== "select") return;
       if (element.type === "connector") return;
       if (isFormField(document.activeElement)) document.activeElement.blur();
       const point = scenePoint(event, overlayRef);
+      const items = scene.elements
+        .filter(
+          (item) => nextIds.includes(item.id) && !item.locked && !item.hidden
+        )
+        .map((item) =>
+          item.type === "connector"
+            ? {
+                id: item.id,
+                kind: "connector",
+                start: { x: item.start.x, y: item.start.y },
+                end: { x: item.end.x, y: item.end.y },
+                mid: item.mid ? { x: item.mid.x, y: item.mid.y } : null,
+              }
+            : { id: item.id, kind: "shape", x: item.x, y: item.y }
+        );
       setCenterGuides(NO_CENTER_GUIDES);
+      setAlignGuides(NO_ALIGN_GUIDES);
+      dragEngagedRef.current = false;
       beginGesture();
       event.currentTarget.setPointerCapture?.(event.pointerId);
       setGesture({
@@ -1814,9 +2223,14 @@ export default function DiagramEditor({ theme }) {
         start: point,
         origin: { x: element.x, y: element.y },
         size: { width: element.width, height: element.height },
+        items,
+        alignTargets: buildAlignTargets(
+          scene.elements,
+          new Set(items.map((item) => item.id))
+        ),
       });
     },
-    [activeTool, beginGesture, gesture, panGesture]
+    [activeTool, beginGesture, gesture, panGesture, scene.elements, selectedIds]
   );
 
   const beginResize = useCallback(
@@ -1826,6 +2240,7 @@ export default function DiagramEditor({ theme }) {
       event.stopPropagation();
       if (isFormField(document.activeElement)) document.activeElement.blur();
       const point = scenePoint(event, overlayRef);
+      dragEngagedRef.current = false;
       beginGesture();
       event.currentTarget.setPointerCapture?.(event.pointerId);
       setGesture({
@@ -1848,6 +2263,7 @@ export default function DiagramEditor({ theme }) {
       if (gesture || panGesture) return;
       event.stopPropagation();
       if (isFormField(document.activeElement)) document.activeElement.blur();
+      dragEngagedRef.current = false;
       beginGesture();
       event.currentTarget.setPointerCapture?.(event.pointerId);
       setGesture({
@@ -1855,19 +2271,61 @@ export default function DiagramEditor({ theme }) {
         id: element.id,
         which,
         pointerId: event.pointerId,
+        start: scenePoint(event, overlayRef),
       });
     },
     [beginGesture, gesture, panGesture]
   );
 
+  const beginMidpoint = useCallback(
+    (event, element) => {
+      if (event.button !== 0) return;
+      if (gesture || panGesture) return;
+      event.stopPropagation();
+      if (isFormField(document.activeElement)) document.activeElement.blur();
+      dragEngagedRef.current = false;
+      beginGesture();
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+      setGesture({
+        kind: "midpoint",
+        id: element.id,
+        pointerId: event.pointerId,
+        start: scenePoint(event, overlayRef),
+      });
+    },
+    [beginGesture, gesture, panGesture]
+  );
+
+  const straightenSelected = useCallback(() => {
+    if (!selected?.mid) return;
+    const targetId = selected.id;
+    commit((current) => ({
+      ...current,
+      elements: current.elements.map((element) => {
+        if (element.id !== targetId) return element;
+        const { mid: _mid, ...straight } = element;
+        return straight;
+      }),
+    }));
+  }, [commit, selected]);
+
   const beginConnector = useCallback(
-    (event, boundElement = null) => {
+    (event) => {
       if (event.button !== 0) return;
       if (gesture || panGesture) return;
       event.stopPropagation();
       if (isFormField(document.activeElement)) document.activeElement.blur();
       const point = scenePoint(event, overlayRef);
-      const start = endpoint(point, boundElement);
+      const startTarget = bindableAt(
+        scene,
+        point,
+        null,
+        BIND_PROXIMITY_SCREEN_PX / zoom
+      );
+      const startDot = startTarget
+        ? nearestAnchorDot(startTarget, point, ANCHOR_SNAP_SCREEN_PX / zoom)
+        : null;
+      const start = endpoint(point, startTarget, startDot?.anchor);
       event.currentTarget.setPointerCapture?.(event.pointerId);
       setGesture({
         kind: "connector",
@@ -1875,9 +2333,9 @@ export default function DiagramEditor({ theme }) {
         start,
         arrowEnd: activeTool !== "line",
       });
-      setDraftConnector({ start, end: point });
+      setDraftConnector({ start, end: { x: point.x, y: point.y } });
     },
-    [activeTool, gesture, panGesture]
+    [activeTool, gesture, panGesture, scene, zoom]
   );
 
   const onBlankPointerDown = useCallback(
@@ -1885,9 +2343,16 @@ export default function DiagramEditor({ theme }) {
       if (event.button !== 0) return;
       if (gesture || panGesture) return;
       const point = scenePoint(event, overlayRef);
-      if (activeTool === "select") {
-        setSelectedId(null);
+      if (activeTool === "select" || activeTool === "pick") {
         setEditingId(null);
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        setGesture({
+          kind: "marquee",
+          pointerId: event.pointerId,
+          start: point,
+          additive: event.shiftKey,
+          base: selectedIds,
+        });
         return;
       }
       if (CONNECTION_TOOLS.has(activeTool)) {
@@ -1896,7 +2361,7 @@ export default function DiagramEditor({ theme }) {
       }
       addElement(activeTool, point, event.altKey);
     },
-    [activeTool, addElement, beginConnector, gesture, panGesture]
+    [activeTool, addElement, beginConnector, gesture, panGesture, selectedIds]
   );
 
   const onElementPointerDown = useCallback(
@@ -1904,12 +2369,26 @@ export default function DiagramEditor({ theme }) {
       if (event.button !== 0) return;
       if (gesture || panGesture) return;
       if (CONNECTION_TOOLS.has(activeTool)) {
-        beginConnector(event, element.type === "connector" ? null : element);
+        beginConnector(event);
         return;
       }
       if (SHAPE_TYPES.has(activeTool)) {
         event.stopPropagation();
         addElement(activeTool, scenePoint(event, overlayRef), event.altKey);
+        return;
+      }
+      if (activeTool === "pick") {
+        event.stopPropagation();
+        setEditingId(null);
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+        setGesture({
+          kind: "marquee",
+          pointerId: event.pointerId,
+          start: scenePoint(event, overlayRef),
+          additive: event.shiftKey,
+          base: selectedIds,
+          clickTarget: element.id,
+        });
         return;
       }
       beginMove(event, element);
@@ -1921,13 +2400,49 @@ export default function DiagramEditor({ theme }) {
       beginMove,
       gesture,
       panGesture,
+      selectedIds,
     ]
   );
 
   const onPointerMove = useCallback(
     (event) => {
-      if (!gesture || gesture.pointerId !== event.pointerId) return;
+      if (!gesture) {
+        // With a connection tool armed, preview the bind target and its four
+        // anchor points under the cursor before the drag starts.
+        if (!panGesture && CONNECTION_TOOLS.has(activeTool)) {
+          const point = scenePoint(event, overlayRef);
+          const target = bindableAt(
+            scene,
+            point,
+            null,
+            BIND_PROXIMITY_SCREEN_PX / zoom
+          );
+          const dot = target
+            ? nearestAnchorDot(target, point, ANCHOR_SNAP_SCREEN_PX / zoom)
+            : null;
+          setBindTargetId(target ? target.id : null);
+          setBindAnchor(dot ? dot.anchor : null);
+        }
+        return;
+      }
+      if (gesture.pointerId !== event.pointerId) return;
       const point = scenePoint(event, overlayRef);
+
+      // A gesture only starts mutating the scene once the pointer has clearly
+      // travelled; a plain tap must never nudge or re-snap an element.
+      if (
+        !dragEngagedRef.current &&
+        (gesture.kind === "move" ||
+          gesture.kind === "resize" ||
+          gesture.kind === "endpoint" ||
+          gesture.kind === "midpoint")
+      ) {
+        const travelled =
+          Math.hypot(point.x - gesture.start.x, point.y - gesture.start.y) *
+          zoom;
+        if (travelled < DRAG_ACTIVATION_SCREEN_PX) return;
+        dragEngagedRef.current = true;
+      }
 
       if (gesture.kind === "move") {
         const next = moveGesturePosition(
@@ -1938,18 +2453,43 @@ export default function DiagramEditor({ theme }) {
           !event.altKey
         );
         setCenterGuides(next.guides);
+        setAlignGuides(next.alignGuides);
         replace((current) => ({
           ...current,
-          elements: current.elements.map((element) =>
-            element.id === gesture.id
-              ? {
-                  ...element,
-                  x: next.x,
-                  y: next.y,
-                }
-              : element
-          ),
+          elements: moveElementsByGesture(current.elements, gesture, next),
         }));
+      } else if (gesture.kind === "marquee") {
+        const width = Math.abs(point.x - gesture.start.x);
+        const height = Math.abs(point.y - gesture.start.y);
+        if (Math.max(width, height) * zoom < 4) return;
+        const rect = {
+          x: Math.min(gesture.start.x, point.x),
+          y: Math.min(gesture.start.y, point.y),
+          width,
+          height,
+        };
+        setMarquee(rect);
+        const hits = scene.elements
+          .filter((element) => {
+            if (element.hidden || element.locked) return false;
+            const bounds =
+              element.type === "connector"
+                ? connectorHitBounds(element, scene)
+                : element.type === "text"
+                  ? textVisualBounds(element)
+                  : getElementBounds(element);
+            return rectContainsBounds(rect, bounds);
+          })
+          .map((element) => element.id);
+        const nextIds = gesture.additive
+          ? [...new Set([...gesture.base, ...hits])]
+          : hits;
+        setSelectedIds((current) =>
+          current.length === nextIds.length &&
+          current.every((id, index) => id === nextIds[index])
+            ? current
+            : nextIds
+        );
       } else if (gesture.kind === "resize") {
         replace((current) => ({
           ...current,
@@ -1967,23 +2507,59 @@ export default function DiagramEditor({ theme }) {
               : element
           ),
         }));
+      } else if (gesture.kind === "midpoint") {
+        replace((current) => ({
+          ...current,
+          elements: midpointUpdate(
+            current.elements,
+            gesture.id,
+            point,
+            event.altKey,
+            zoom
+          ),
+        }));
       } else if (gesture.kind === "endpoint") {
+        const target = bindableAt(
+          scene,
+          point,
+          gesture.id,
+          BIND_PROXIMITY_SCREEN_PX / zoom
+        );
+        const dot = target
+          ? nearestAnchorDot(target, point, ANCHOR_SNAP_SCREEN_PX / zoom)
+          : null;
+        setBindTargetId(target ? target.id : null);
+        setBindAnchor(dot ? dot.anchor : null);
         replace((current) => ({
           ...current,
           elements: current.elements.map((element) =>
             element.id === gesture.id
               ? {
                   ...element,
-                  [gesture.which]: { x: point.x, y: point.y },
+                  [gesture.which]: endpoint(point, target, dot?.anchor),
                 }
               : element
           ),
         }));
       } else if (gesture.kind === "connector") {
-        setDraftConnector({ start: gesture.start, end: point });
+        const target = bindableAt(
+          scene,
+          point,
+          null,
+          BIND_PROXIMITY_SCREEN_PX / zoom
+        );
+        const dot = target
+          ? nearestAnchorDot(target, point, ANCHOR_SNAP_SCREEN_PX / zoom)
+          : null;
+        setBindTargetId(target ? target.id : null);
+        setBindAnchor(dot ? dot.anchor : null);
+        setDraftConnector({
+          start: gesture.start,
+          end: endpoint(point, target, dot?.anchor),
+        });
       }
     },
-    [gesture, replace, scene, zoom]
+    [activeTool, gesture, panGesture, replace, scene, zoom]
   );
 
   const onPointerUp = useCallback(
@@ -1991,10 +2567,21 @@ export default function DiagramEditor({ theme }) {
       if (!gesture || gesture.pointerId !== event.pointerId) return;
       const point = scenePoint(event, overlayRef);
       setCenterGuides(NO_CENTER_GUIDES);
+      setAlignGuides(NO_ALIGN_GUIDES);
+      setBindTargetId(null);
+      setBindAnchor(null);
 
       if (gesture.kind === "connector") {
-        const target = bindableAt(scene, point);
-        const end = endpoint(point, target);
+        const target = bindableAt(
+          scene,
+          point,
+          null,
+          BIND_PROXIMITY_SCREEN_PX / zoom
+        );
+        const dot = target
+          ? nearestAnchorDot(target, point, ANCHOR_SNAP_SCREEN_PX / zoom)
+          : null;
+        const end = endpoint(point, target, dot?.anchor);
         const distance = Math.hypot(point.x - gesture.start.x, point.y - gesture.start.y);
         if (distance > 5 || target) {
           const connector = createElement("connector", {
@@ -2009,60 +2596,110 @@ export default function DiagramEditor({ theme }) {
             ...current,
             elements: [...current.elements, connector],
           }));
-          setSelectedId(connector.id);
+          setSelectedIds([connector.id]);
         }
         setDraftConnector(null);
         setActiveTool("select");
+      } else if (gesture.kind === "marquee") {
+        const dragged =
+          Math.max(
+            Math.abs(point.x - gesture.start.x),
+            Math.abs(point.y - gesture.start.y)
+          ) * zoom >= 4;
+        if (!dragged) {
+          if (gesture.clickTarget) {
+            setSelectedIds((current) =>
+              gesture.additive
+                ? current.includes(gesture.clickTarget)
+                  ? current.filter((id) => id !== gesture.clickTarget)
+                  : [...current, gesture.clickTarget]
+                : [gesture.clickTarget]
+            );
+          } else if (!gesture.additive) {
+            setSelectedIds([]);
+          }
+        }
+        setMarquee(null);
       } else if (gesture.kind === "endpoint") {
-        const target = bindableAt(scene, point, gesture.id);
-        replace((current) => ({
-          ...current,
-          elements: current.elements.map((element) =>
-            element.id === gesture.id
-              ? { ...element, [gesture.which]: endpoint(point, target) }
-              : element
-          ),
-        }));
+        if (dragEngagedRef.current) {
+          const target = bindableAt(
+            scene,
+            point,
+            gesture.id,
+            BIND_PROXIMITY_SCREEN_PX / zoom
+          );
+          const dot = target
+            ? nearestAnchorDot(target, point, ANCHOR_SNAP_SCREEN_PX / zoom)
+            : null;
+          replace((current) => ({
+            ...current,
+            elements: current.elements.map((element) =>
+              element.id === gesture.id
+                ? {
+                    ...element,
+                    [gesture.which]: endpoint(point, target, dot?.anchor),
+                  }
+                : element
+            ),
+          }));
+        }
+        finishGesture();
+      } else if (gesture.kind === "midpoint") {
+        if (dragEngagedRef.current) {
+          replace((current) => ({
+            ...current,
+            elements: midpointUpdate(
+              current.elements,
+              gesture.id,
+              point,
+              event.altKey,
+              zoom
+            ),
+          }));
+        }
         finishGesture();
       } else if (gesture.kind === "resize") {
-        replace((current) => ({
-          ...current,
-          elements: current.elements.map((element) =>
-            element.id === gesture.id
-              ? {
-                  ...element,
-                  ...resizeGestureDimensions(
-                    gesture,
-                    point,
-                    element,
-                    !event.altKey
-                  ),
-                }
-              : element
-          ),
-        }));
+        if (dragEngagedRef.current) {
+          replace((current) => ({
+            ...current,
+            elements: current.elements.map((element) =>
+              element.id === gesture.id
+                ? {
+                    ...element,
+                    ...resizeGestureDimensions(
+                      gesture,
+                      point,
+                      element,
+                      !event.altKey
+                    ),
+                  }
+                : element
+            ),
+          }));
+        }
         finishGesture();
       } else if (gesture.kind === "move") {
-        const next = moveGesturePosition(
-          gesture,
-          point,
-          scene,
-          zoom,
-          !event.altKey
-        );
-        replace((current) => ({
-          ...current,
-          elements: current.elements.map((element) =>
-            element.id === gesture.id
-              ? { ...element, x: next.x, y: next.y }
-              : element
-          ),
-        }));
+        if (dragEngagedRef.current) {
+          const next = moveGesturePosition(
+            gesture,
+            point,
+            scene,
+            zoom,
+            !event.altKey
+          );
+          replace((current) => ({
+            ...current,
+            elements: moveElementsByGesture(current.elements, gesture, next),
+          }));
+        } else if (gesture.items.length > 1) {
+          setSelectedIds([gesture.id]);
+        }
         finishGesture();
       } else {
         finishGesture();
       }
       setGesture(null);
+      dragEngagedRef.current = false;
     },
     [commit, finishGesture, gesture, replace, scene, zoom]
   );
@@ -2071,15 +2708,27 @@ export default function DiagramEditor({ theme }) {
     if (gesture?.kind !== "connector") cancelGesture();
     setGesture(null);
     setCenterGuides(NO_CENTER_GUIDES);
+    setAlignGuides(NO_ALIGN_GUIDES);
     setDraftConnector(null);
+    setMarquee(null);
+    setBindTargetId(null);
+    setBindAnchor(null);
+    dragEngagedRef.current = false;
   }, [cancelGesture, gesture]);
+
+  // The hover preview of bind anchors only belongs to the connection tools.
+  useEffect(() => {
+    if (CONNECTION_TOOLS.has(activeTool)) return;
+    setBindTargetId((current) => (current === null ? current : null));
+    setBindAnchor((current) => (current === null ? current : null));
+  }, [activeTool]);
 
   const beginInlineEdit = useCallback(
     (event, element) => {
       if (gesture || panGesture) return;
       if (!("text" in element) || element.locked) return;
       event.stopPropagation();
-      setSelectedId(element.id);
+      setSelectedIds([element.id]);
       beginGesture();
       setEditingId(element.id);
       requestAnimationFrame(() => inlineRef.current?.focus());
@@ -2123,19 +2772,34 @@ export default function DiagramEditor({ theme }) {
     [panGesture]
   );
 
-  const onWheel = useCallback((event) => {
-    event.preventDefault();
-    if (gesture || panGesture) return;
-    if (event.ctrlKey || event.metaKey) {
-      const factor = event.deltaY < 0 ? 1.08 : 0.92;
-      setZoom((current) => clamp(current * factor, 0.2, 2.5));
-    } else {
-      setPan((current) => ({
-        x: current.x - event.deltaX,
-        y: current.y - event.deltaY,
-      }));
-    }
-  }, [gesture, panGesture]);
+  const onWheel = useCallback(
+    (event) => {
+      event.preventDefault();
+      if (gesture || panGesture) return;
+      if (event.ctrlKey || event.metaKey) {
+        const next = clamp(zoom * (event.deltaY < 0 ? 1.08 : 0.92), 0.2, 2.5);
+        if (next === zoom) return;
+        const workspace = workspaceRef.current;
+        if (workspace) {
+          // Shift the pan so the scene point under the cursor stays put.
+          const bounds = workspace.getBoundingClientRect();
+          const offsetX =
+            event.clientX - bounds.left - bounds.width / 2 - pan.x;
+          const offsetY =
+            event.clientY - bounds.top - bounds.height / 2 - pan.y;
+          const shift = 1 - next / zoom;
+          setPan({ x: pan.x + offsetX * shift, y: pan.y + offsetY * shift });
+        }
+        setZoom(next);
+      } else {
+        setPan((current) => ({
+          x: current.x - event.deltaX,
+          y: current.y - event.deltaY,
+        }));
+      }
+    },
+    [gesture, pan, panGesture, zoom]
+  );
 
   const onDrop = useCallback(
     (event) => {
@@ -2186,7 +2850,7 @@ export default function DiagramEditor({ theme }) {
       setDiagramFiles(files);
       setActiveFile(name);
       reset(nextScene);
-      setSelectedId(null);
+      setSelectedIds([]);
       setEditingId(null);
       localStorage.setItem(FILE_SELECTION_KEY, name);
       localStorage.setItem(RECOVERY_FILE_KEY, name);
@@ -2231,7 +2895,7 @@ export default function DiagramEditor({ theme }) {
       setDiagramFiles(files);
       setActiveFile(name);
       reset(recoveryScene);
-      setSelectedId(null);
+      setSelectedIds([]);
       setEditingId(null);
       localStorage.setItem(FILE_SELECTION_KEY, name);
       localStorage.setItem(RECOVERY_FILE_KEY, name);
@@ -2316,7 +2980,7 @@ export default function DiagramEditor({ theme }) {
       try {
         const raw = validateSceneDocument(JSON.parse(await file.text()));
         commit(sanitizeScene(raw));
-        setSelectedId(null);
+        setSelectedIds([]);
         notify("Diagram imported");
         requestAnimationFrame(fitCanvas);
       } catch (error) {
@@ -2363,10 +3027,14 @@ export default function DiagramEditor({ theme }) {
       }
       const mod = event.metaKey || event.ctrlKey;
       if (event.key === "Escape") {
+        const selectionTool = activeTool === "select" || activeTool === "pick";
+        const busy =
+          Boolean(editingId || gesture || panGesture) || !selectionTool;
         if (editingId) finishInlineEdit();
         cancelActiveGesture();
         setPanGesture(null);
-        setActiveTool("select");
+        if (!selectionTool) setActiveTool("select");
+        if (!busy) setSelectedIds([]);
         return;
       }
       if (gesture || panGesture) {
@@ -2385,9 +3053,41 @@ export default function DiagramEditor({ theme }) {
         else undo();
         return;
       }
+      if (mod && event.key.toLowerCase() === "a") {
+        event.preventDefault();
+        setSelectedIds(
+          scene.elements
+            .filter((element) => !element.hidden && !element.locked)
+            .map((element) => element.id)
+        );
+        setActiveTool("select");
+        return;
+      }
       if (mod && event.key.toLowerCase() === "d") {
         event.preventDefault();
         duplicateSelected();
+        return;
+      }
+      if (mod && event.key.toLowerCase() === "c") {
+        const count = copySelected();
+        if (count) {
+          event.preventDefault();
+          notify(`Copied ${count} element${count === 1 ? "" : "s"}`);
+        }
+        return;
+      }
+      if (mod && event.key.toLowerCase() === "x") {
+        const count = copySelected();
+        if (count) {
+          event.preventDefault();
+          removeSelected();
+          notify(`Cut ${count} element${count === 1 ? "" : "s"}`);
+        }
+        return;
+      }
+      if (mod && event.key.toLowerCase() === "v") {
+        event.preventDefault();
+        pasteClipboard();
         return;
       }
       if (event.key === "Delete" || event.key === "Backspace") {
@@ -2396,17 +3096,46 @@ export default function DiagramEditor({ theme }) {
         return;
       }
       const direction = NUDGE_BY_KEY[event.key];
-      if (selected && !selected.locked && direction) {
+      if (direction && selectedElements.some((element) => !element.locked)) {
         event.preventDefault();
         const amount = event.shiftKey ? 8 : 1;
-        if (selected.type !== "connector")
-          patchSelected(
+        const dx = direction.x * amount;
+        const dy = direction.y * amount;
+        commit((current) =>
+          sanitizeScene(
             {
-              x: selected.x + direction.x * amount,
-              y: selected.y + direction.y * amount,
+              ...current,
+              elements: current.elements.map((element) => {
+                if (!selectedIdSet.has(element.id) || element.locked)
+                  return element;
+                if (element.type === "connector")
+                  return {
+                    ...element,
+                    start: {
+                      ...element.start,
+                      x: element.start.x + dx,
+                      y: element.start.y + dy,
+                    },
+                    end: {
+                      ...element.end,
+                      x: element.end.x + dx,
+                      y: element.end.y + dy,
+                    },
+                    ...(element.mid
+                      ? {
+                          mid: {
+                            x: element.mid.x + dx,
+                            y: element.mid.y + dy,
+                          },
+                        }
+                      : {}),
+                  };
+                return { ...element, x: element.x + dx, y: element.y + dy };
+              }),
             },
-            true
-          );
+            current
+          )
+        );
         return;
       }
       if (!mod && !event.altKey && TOOL_KEYS[event.key.toLowerCase()]) {
@@ -2423,16 +3152,22 @@ export default function DiagramEditor({ theme }) {
       window.removeEventListener("keyup", keyup);
     };
   }, [
+    activeTool,
     cancelActiveGesture,
+    commit,
+    copySelected,
     duplicateSelected,
     editingId,
     finishInlineEdit,
     gesture,
-    patchSelected,
+    notify,
     panGesture,
+    pasteClipboard,
     redo,
     removeSelected,
-    selected,
+    scene.elements,
+    selectedElements,
+    selectedIdSet,
     undo,
   ]);
 
@@ -2442,10 +3177,22 @@ export default function DiagramEditor({ theme }) {
   const resolvedSelected = selected?.type === "connector" && !selected.hidden
     ? resolveConnector(selected, scene)
     : null;
-  const selectedPath = resolvedSelected?.path || "";
   const draftPath = draftConnector
-    ? `M ${draftConnector.start.x} ${draftConnector.start.y} L ${draftConnector.end.x} ${draftConnector.end.y}`
+    ? resolveConnector(
+        {
+          start: draftConnector.start,
+          end: draftConnector.end,
+          route: "straight",
+        },
+        scene
+      ).path
     : "";
+  const bindTarget = bindTargetId
+    ? scene.elements.find(
+        (element) => element.id === bindTargetId && !element.hidden
+      ) || null
+    : null;
+  const bindTargetBounds = bindTarget ? getElementBounds(bindTarget) : null;
   const editBounds = editingId && selected?.id === editingId && !selected.hidden
     ? getElementBounds(selected)
     : null;
@@ -2454,6 +3201,7 @@ export default function DiagramEditor({ theme }) {
     <div
       className="diagram-editor"
       data-theme={theme}
+      data-tool={activeTool}
       aria-busy={isTransitioning}
     >
       {isTransitioning && (
@@ -2514,6 +3262,13 @@ export default function DiagramEditor({ theme }) {
             shortcut="V"
             active={activeTool === "select"}
             onClick={() => setActiveTool("select")}
+          />
+          <ToolButton
+            name="pick"
+            label="Select only · never moves elements"
+            shortcut="S"
+            active={activeTool === "pick"}
+            onClick={() => setActiveTool("pick")}
           />
           <ToolButton
             name="text"
@@ -2655,9 +3410,9 @@ export default function DiagramEditor({ theme }) {
             ))}
           </div>
           <p className="diagram-editor__hint">
-            Drag a component onto the slab, or choose it and click. Center guides
-            snap on either axis; hold Alt to ignore all snapping. Double-click any
-            label to write in place.
+            Drag a component onto the slab, or choose it and click. Shift-click
+            or drag on empty canvas to select several elements. Hold Alt to
+            ignore snapping. Double-click any label to write in place.
           </p>
         </aside>
 
@@ -2693,6 +3448,11 @@ export default function DiagramEditor({ theme }) {
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
                   onPointerCancel={cancelActiveGesture}
+                  onPointerLeave={() => {
+                    if (gesture) return;
+                    setBindTargetId(null);
+                    setBindAnchor(null);
+                  }}
                 >
                   <rect
                     x="0"
@@ -2723,6 +3483,20 @@ export default function DiagramEditor({ theme }) {
                           data-center-guide="horizontal"
                         />
                       )}
+                    </g>
+                  )}
+
+                  {alignGuides.length > 0 && (
+                    <g className="diagram-editor__align-guides" aria-hidden="true">
+                      {alignGuides.map((guide) => (
+                        <line
+                          key={`${guide.axis}-${guide.value}`}
+                          x1={guide.axis === "v" ? guide.value : guide.from}
+                          y1={guide.axis === "v" ? guide.from : guide.value}
+                          x2={guide.axis === "v" ? guide.value : guide.to}
+                          y2={guide.axis === "v" ? guide.to : guide.value}
+                        />
+                      ))}
                     </g>
                   )}
 
@@ -2758,56 +3532,123 @@ export default function DiagramEditor({ theme }) {
                     );
                   })}
 
-                  {selectionBounds && (
-                    <>
+                  {selectedElements.map((element) => {
+                    if (element.hidden) return null;
+                    if (element.type === "connector")
+                      return (
+                        <path
+                          key={`selection-${element.id}`}
+                          d={resolveConnector(element, scene).path}
+                          className="diagram-editor__selection"
+                        />
+                      );
+                    const bounds = getElementBounds(element);
+                    return (
                       <rect
-                        x={selectionBounds.x - 5}
-                        y={selectionBounds.y - 5}
-                        width={selectionBounds.width + 10}
-                        height={selectionBounds.height + 10}
+                        key={`selection-${element.id}`}
+                        x={bounds.x - 5}
+                        y={bounds.y - 5}
+                        width={bounds.width + 10}
+                        height={bounds.height + 10}
                         rx="7"
                         className="diagram-editor__selection"
                       />
-                      {!selected.locked && (
-                        <rect
-                          x={selectionBounds.x + selectionBounds.width - 3}
-                          y={selectionBounds.y + selectionBounds.height - 3}
-                          width="10"
-                          height="10"
-                          rx="2"
-                          className="diagram-editor__handle"
-                          onPointerDown={(event) => beginResize(event, selected)}
-                        />
-                      )}
-                    </>
+                    );
+                  })}
+
+                  {selectionBounds && !selected.locked && activeTool !== "pick" && (
+                    <rect
+                      x={selectionBounds.x + selectionBounds.width - 3}
+                      y={selectionBounds.y + selectionBounds.height - 3}
+                      width="10"
+                      height="10"
+                      rx="2"
+                      className="diagram-editor__handle"
+                      onPointerDown={(event) => beginResize(event, selected)}
+                    />
                   )}
 
-                  {selected?.type === "connector" && selectedPath && (
-                    <>
-                      <path d={selectedPath} className="diagram-editor__selection" />
-                      {!selected.locked && resolvedSelected?.start && resolvedSelected?.end && (
-                        <>
-                          <circle
-                            cx={resolvedSelected.start.x}
-                            cy={resolvedSelected.start.y}
-                            r="6"
-                            className="diagram-editor__handle diagram-editor__handle--point"
-                            onPointerDown={(event) =>
-                              beginEndpoint(event, selected, "start")
-                            }
-                          />
-                          <circle
-                            cx={resolvedSelected.end.x}
-                            cy={resolvedSelected.end.y}
-                            r="6"
-                            className="diagram-editor__handle diagram-editor__handle--point"
-                            onPointerDown={(event) =>
-                              beginEndpoint(event, selected, "end")
-                            }
-                          />
-                        </>
-                      )}
-                    </>
+                  {selected?.type === "connector" &&
+                    activeTool !== "pick" &&
+                    !selected.locked &&
+                    resolvedSelected?.start &&
+                    resolvedSelected?.end && (
+                      <>
+                        <circle
+                          cx={resolvedSelected.start.x}
+                          cy={resolvedSelected.start.y}
+                          r="6"
+                          className="diagram-editor__handle diagram-editor__handle--point"
+                          onPointerDown={(event) =>
+                            beginEndpoint(event, selected, "start")
+                          }
+                        />
+                        <circle
+                          cx={resolvedSelected.end.x}
+                          cy={resolvedSelected.end.y}
+                          r="6"
+                          className="diagram-editor__handle diagram-editor__handle--point"
+                          onPointerDown={(event) =>
+                            beginEndpoint(event, selected, "end")
+                          }
+                        />
+                        <circle
+                          cx={selected.mid?.x ?? resolvedSelected.midpoint.x}
+                          cy={selected.mid?.y ?? resolvedSelected.midpoint.y}
+                          r="5"
+                          className="diagram-editor__handle diagram-editor__handle--mid"
+                          data-bent={selected.mid ? "true" : undefined}
+                          onPointerDown={(event) =>
+                            beginMidpoint(event, selected)
+                          }
+                          onDoubleClick={(event) => {
+                            event.stopPropagation();
+                            straightenSelected();
+                          }}
+                        />
+                      </>
+                    )}
+
+                  {marquee && (
+                    <rect
+                      x={marquee.x}
+                      y={marquee.y}
+                      width={marquee.width}
+                      height={marquee.height}
+                      className="diagram-editor__marquee"
+                    />
+                  )}
+
+                  {bindTargetBounds && (
+                    <rect
+                      x={bindTargetBounds.x - 4}
+                      y={bindTargetBounds.y - 4}
+                      width={bindTargetBounds.width + 8}
+                      height={bindTargetBounds.height + 8}
+                      rx={
+                        bindTarget.type === "ellipse"
+                          ? bindTargetBounds.height / 2 + 4
+                          : 8
+                      }
+                      className="diagram-editor__bind-target"
+                    />
+                  )}
+
+                  {bindTarget && (
+                    <g className="diagram-editor__anchors" aria-hidden="true">
+                      {anchorDots(bindTarget).map((dot) => (
+                        <circle
+                          key={dot.anchor}
+                          cx={dot.x}
+                          cy={dot.y}
+                          r={bindAnchor === dot.anchor ? 6 : 4}
+                          className="diagram-editor__anchor"
+                          data-active={
+                            bindAnchor === dot.anchor ? "true" : undefined
+                          }
+                        />
+                      ))}
+                    </g>
                   )}
 
                   {draftPath && (
@@ -2892,19 +3733,26 @@ export default function DiagramEditor({ theme }) {
         <aside className="diagram-editor__sidebar">
           <LayerPanel
             elements={scene.elements}
-            selectedId={selectedId}
-            onSelect={(elementId) => {
-              setSelectedId(elementId);
+            selectedIds={selectedIds}
+            onSelect={(elementId, event) => {
               setEditingId(null);
               setActiveTool("select");
+              setSelectedIds((current) =>
+                event?.shiftKey
+                  ? current.includes(elementId)
+                    ? current.filter((id) => id !== elementId)
+                    : [...current, elementId]
+                  : [elementId]
+              );
             }}
             onToggleVisibility={toggleElementVisibility}
-            onArrange={arrangeElement}
-            onRemove={removeElement}
+            onArrange={arrangeElements}
+            onRemove={removeElements}
           />
           <Inspector
             scene={scene}
             selected={selected}
+            selectionCount={selectedElements.length}
             patchScene={patchScene}
             patchElement={patchSelected}
             beginField={beginGesture}

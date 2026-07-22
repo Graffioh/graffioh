@@ -22,11 +22,11 @@ const bundledDiagrams = new Map(
 );
 
 const TEXT_METRICS = Object.freeze({
-  title: Object.freeze({ lineHeight: 31, topInset: 31 }),
-  subtitle: Object.freeze({ lineHeight: 17, topInset: 27 }),
-  label: Object.freeze({ lineHeight: 18, topInset: 29 }),
-  micro: Object.freeze({ lineHeight: 14, topInset: 28 }),
-  caption: Object.freeze({ lineHeight: 15, topInset: 27 }),
+  title: Object.freeze({ size: 25, lineHeight: 31, topInset: 31 }),
+  subtitle: Object.freeze({ size: 11, lineHeight: 17, topInset: 27 }),
+  label: Object.freeze({ size: 12, lineHeight: 18, topInset: 29 }),
+  micro: Object.freeze({ size: 9, lineHeight: 14, topInset: 28 }),
+  caption: Object.freeze({ size: 10, lineHeight: 15, topInset: 27 }),
 });
 
 const FILE_SLUG = /^[a-z0-9][a-z0-9-]*$/;
@@ -135,11 +135,17 @@ function textCoordinates(element) {
     right: "end",
   }[element.align];
   const metrics = TEXT_METRICS[element.textRole] || TEXT_METRICS.label;
+  const scale = element.fontSize ? element.fontSize / metrics.size : 1;
   const y = element.labelPosition === "top" && !isStandaloneText
-    ? element.y + metrics.topInset
+    ? element.y + metrics.topInset * scale
     : element.y + element.height / 2;
 
-  return { x: xByAlignment[element.align], y, textAnchor, lineHeight: metrics.lineHeight };
+  return {
+    x: xByAlignment[element.align],
+    y,
+    textAnchor,
+    lineHeight: metrics.lineHeight * scale,
+  };
 }
 
 function ElementText({ element }) {
@@ -156,6 +162,9 @@ function ElementText({ element }) {
       y={y}
       textAnchor={textAnchor}
       dominantBaseline="middle"
+      style={
+        element.fontSize ? { fontSize: `${element.fontSize}px` } : undefined
+      }
     >
       {lines.map((line, index) => (
         <tspan

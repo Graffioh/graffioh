@@ -45,10 +45,10 @@
     {
       "id": "warp",
       "type": "frame",
-      "x": 120,
-      "y": 216,
-      "width": 330,
-      "height": 202,
+      "x": 122,
+      "y": 200,
+      "width": 344,
+      "height": 200,
       "text": "warp",
       "fill": "mid",
       "stroke": "solid",
@@ -62,8 +62,8 @@
     {
       "id": "thread-count",
       "type": "text",
-      "x": 180,
-      "y": 256,
+      "x": 193,
+      "y": 255,
       "width": 202,
       "height": 18,
       "text": "32 threads",
@@ -79,8 +79,8 @@
     {
       "id": "thread-0",
       "type": "pill",
-      "x": 142,
-      "y": 296,
+      "x": 135,
+      "y": 275,
       "width": 36,
       "height": 22,
       "text": "t0",
@@ -96,8 +96,8 @@
     {
       "id": "thread-1",
       "type": "pill",
-      "x": 187,
-      "y": 296,
+      "x": 184,
+      "y": 275,
       "width": 36,
       "height": 22,
       "text": "t1",
@@ -113,8 +113,8 @@
     {
       "id": "thread-2",
       "type": "pill",
-      "x": 232,
-      "y": 296,
+      "x": 233,
+      "y": 275,
       "width": 36,
       "height": 22,
       "text": "t2",
@@ -130,8 +130,8 @@
     {
       "id": "thread-ellipsis",
       "type": "text",
-      "x": 280,
-      "y": 296,
+      "x": 275,
+      "y": 273,
       "width": 38,
       "height": 22,
       "text": "···",
@@ -147,8 +147,8 @@
     {
       "id": "thread-29",
       "type": "pill",
-      "x": 331,
-      "y": 296,
+      "x": 322,
+      "y": 274.5,
       "width": 35,
       "height": 23,
       "text": "t29",
@@ -164,8 +164,8 @@
     {
       "id": "thread-30",
       "type": "pill",
-      "x": 374,
-      "y": 296,
+      "x": 369.5,
+      "y": 275,
       "width": 35,
       "height": 23,
       "text": "t30",
@@ -182,7 +182,7 @@
       "id": "thread-31",
       "type": "pill",
       "x": 416,
-      "y": 296,
+      "y": 275,
       "width": 35,
       "height": 23,
       "text": "t31",
@@ -196,95 +196,10 @@
       "locked": false
     },
     {
-      "id": "thread-1-node",
-      "type": "ellipse",
-      "x": 206,
-      "y": 332,
-      "width": 6,
-      "height": 6,
-      "text": "",
-      "fill": "strong",
-      "stroke": "none",
-      "textRole": "label",
-      "align": "center",
-      "labelPosition": "center",
-      "radius": 0,
-      "opacity": 1,
-      "locked": false
-    },
-    {
-      "id": "thread-2-node",
-      "type": "ellipse",
-      "x": 243,
-      "y": 332,
-      "width": 6,
-      "height": 6,
-      "text": "",
-      "fill": "strong",
-      "stroke": "none",
-      "textRole": "label",
-      "align": "center",
-      "labelPosition": "center",
-      "radius": 0,
-      "opacity": 1,
-      "locked": false
-    },
-    {
-      "id": "thread-29-node",
-      "type": "ellipse",
-      "x": 341,
-      "y": 332,
-      "width": 6,
-      "height": 6,
-      "text": "",
-      "fill": "strong",
-      "stroke": "none",
-      "textRole": "label",
-      "align": "center",
-      "labelPosition": "center",
-      "radius": 0,
-      "opacity": 1,
-      "locked": false
-    },
-    {
-      "id": "thread-30-node",
-      "type": "ellipse",
-      "x": 378,
-      "y": 332,
-      "width": 6,
-      "height": 6,
-      "text": "",
-      "fill": "strong",
-      "stroke": "none",
-      "textRole": "label",
-      "align": "center",
-      "labelPosition": "center",
-      "radius": 0,
-      "opacity": 1,
-      "locked": false
-    },
-    {
-      "id": "thread-31-node",
-      "type": "ellipse",
-      "x": 415,
-      "y": 332,
-      "width": 6,
-      "height": 6,
-      "text": "",
-      "fill": "strong",
-      "stroke": "none",
-      "textRole": "label",
-      "align": "center",
-      "labelPosition": "center",
-      "radius": 0,
-      "opacity": 1,
-      "locked": false
-    },
-    {
       "id": "register-0",
       "type": "box",
-      "x": 143,
-      "y": 352,
+      "x": 136,
+      "y": 338,
       "width": 34,
       "height": 28,
       "text": "reg",
@@ -300,8 +215,8 @@
     {
       "id": "register-1",
       "type": "box",
-      "x": 188,
-      "y": 352,
+      "x": 184,
+      "y": 338,
       "width": 34,
       "height": 28,
       "text": "reg",
@@ -317,8 +232,8 @@
     {
       "id": "register-2",
       "type": "box",
-      "x": 232,
-      "y": 351,
+      "x": 233,
+      "y": 338,
       "width": 34,
       "height": 28,
       "text": "reg",
@@ -334,8 +249,8 @@
     {
       "id": "register-29",
       "type": "box",
-      "x": 331,
-      "y": 352,
+      "x": 322,
+      "y": 336,
       "width": 34,
       "height": 28,
       "text": "reg",
@@ -351,8 +266,8 @@
     {
       "id": "register-30",
       "type": "box",
-      "x": 374,
-      "y": 352,
+      "x": 370,
+      "y": 336,
       "width": 34,
       "height": 28,
       "text": "reg",
@@ -369,7 +284,7 @@
       "id": "register-31",
       "type": "box",
       "x": 416,
-      "y": 352,
+      "y": 336,
       "width": 34,
       "height": 28,
       "text": "reg",
@@ -386,8 +301,8 @@
       "id": "thread-0-register",
       "type": "connector",
       "start": {
-        "x": 172,
-        "y": 316,
+        "x": 165,
+        "y": 302,
         "bind": {
           "elementId": "thread-0",
           "anchor": "bottom",
@@ -395,8 +310,8 @@
         }
       },
       "end": {
-        "x": 172,
-        "y": 354,
+        "x": 165,
+        "y": 340,
         "bind": {
           "elementId": "register-0",
           "anchor": "top",
@@ -415,8 +330,8 @@
       "id": "thread-1-register",
       "type": "connector",
       "start": {
-        "x": 209,
-        "y": 316,
+        "x": 211,
+        "y": 300,
         "bind": {
           "elementId": "thread-1",
           "anchor": "bottom",
@@ -424,8 +339,8 @@
         }
       },
       "end": {
-        "x": 209,
-        "y": 354,
+        "x": 211,
+        "y": 338,
         "bind": {
           "elementId": "register-1",
           "anchor": "top",
@@ -444,8 +359,8 @@
       "id": "thread-2-register",
       "type": "connector",
       "start": {
-        "x": 246,
-        "y": 316,
+        "x": 248,
+        "y": 300,
         "bind": {
           "elementId": "thread-2",
           "anchor": "bottom",
@@ -453,8 +368,8 @@
         }
       },
       "end": {
-        "x": 246,
-        "y": 354,
+        "x": 248,
+        "y": 338,
         "bind": {
           "elementId": "register-2",
           "anchor": "top",
@@ -473,8 +388,8 @@
       "id": "thread-29-register",
       "type": "connector",
       "start": {
-        "x": 344,
-        "y": 316,
+        "x": 340,
+        "y": 300,
         "bind": {
           "elementId": "thread-29",
           "anchor": "bottom",
@@ -482,8 +397,8 @@
         }
       },
       "end": {
-        "x": 344,
-        "y": 354,
+        "x": 340,
+        "y": 338,
         "bind": {
           "elementId": "register-29",
           "anchor": "top",
@@ -502,8 +417,8 @@
       "id": "thread-30-register",
       "type": "connector",
       "start": {
-        "x": 381,
-        "y": 316,
+        "x": 377,
+        "y": 300,
         "bind": {
           "elementId": "thread-30",
           "anchor": "bottom",
@@ -511,8 +426,8 @@
         }
       },
       "end": {
-        "x": 381,
-        "y": 354,
+        "x": 377,
+        "y": 338,
         "bind": {
           "elementId": "register-30",
           "anchor": "top",
@@ -531,8 +446,8 @@
       "id": "thread-31-register",
       "type": "connector",
       "start": {
-        "x": 418,
-        "y": 316,
+        "x": 414,
+        "y": 300,
         "bind": {
           "elementId": "thread-31",
           "anchor": "bottom",
@@ -540,8 +455,8 @@
         }
       },
       "end": {
-        "x": 418,
-        "y": 354,
+        "x": 414,
+        "y": 338,
         "bind": {
           "elementId": "register-31",
           "anchor": "top",
@@ -645,8 +560,13 @@
       "id": "block-multiplicity",
       "type": "connector",
       "start": {
-        "x": 640,
-        "y": 281
+        "x": 659.2035976265803,
+        "y": 284.5411353609967,
+        "bind": {
+          "elementId": "block",
+          "anchor": "auto",
+          "gap": 0
+        }
       },
       "end": {
         "x": 735,
@@ -663,8 +583,8 @@
     {
       "id": "warp-copy-back",
       "type": "box",
-      "x": 504,
-      "y": 383,
+      "x": 538,
+      "y": 362,
       "width": 78,
       "height": 32,
       "text": "",
@@ -680,8 +600,8 @@
     {
       "id": "warp-copy-middle",
       "type": "box",
-      "x": 497,
-      "y": 377,
+      "x": 531,
+      "y": 356,
       "width": 78,
       "height": 32,
       "text": "",
@@ -697,8 +617,8 @@
     {
       "id": "warp-copy",
       "type": "box",
-      "x": 490,
-      "y": 371,
+      "x": 524,
+      "y": 350,
       "width": 78,
       "height": 32,
       "text": "warp",
@@ -714,10 +634,10 @@
     {
       "id": "warp-copy-note",
       "type": "text",
-      "x": 502,
-      "y": 347,
-      "width": 120,
-      "height": 18,
+      "x": 536,
+      "y": 324,
+      "width": 72,
+      "height": 24,
       "text": "many warps",
       "fill": "none",
       "stroke": "none",
@@ -732,12 +652,22 @@
       "id": "warp-multiplicity",
       "type": "connector",
       "start": {
-        "x": 460,
-        "y": 395
+        "x": 461.25595045209695,
+        "y": 358.6017228939363,
+        "bind": {
+          "elementId": "warp",
+          "anchor": "auto",
+          "gap": 0
+        }
       },
       "end": {
-        "x": 490,
-        "y": 387
+        "x": 523.0513936329563,
+        "y": 380.8724447976592,
+        "bind": {
+          "elementId": "warp-copy",
+          "anchor": "auto",
+          "gap": 0
+        }
       },
       "route": "elbow",
       "stroke": "solid",

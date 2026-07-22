@@ -127,6 +127,14 @@ function sanitizeEndpoint(value, fallback, width, height) {
   return endpoint;
 }
 
+function sanitizeMidpoint(value, width, height) {
+  if (!isRecord(value)) return undefined;
+  return {
+    x: finitePoint(value.x, 0, width),
+    y: finitePoint(value.y, 0, height),
+  };
+}
+
 function sanitizeElement(value, index = 0, sceneSize = {}) {
   if (!isRecord(value) || !ELEMENT_TYPES.has(value.type)) return null;
 
@@ -141,6 +149,7 @@ function sanitizeElement(value, index = 0, sceneSize = {}) {
       type,
       start: sanitizeEndpoint(value.start, { x: 120, y: 120 }, width, height),
       end: sanitizeEndpoint(value.end, { x: 300, y: 120 }, width, height),
+      mid: sanitizeMidpoint(value.mid, width, height),
       route: oneOf(value.route, ROUTES, "straight"),
       stroke: oneOf(value.stroke, CONNECTOR_STROKES, "solid"),
       arrowStart: boolean(value.arrowStart, false),
@@ -168,6 +177,7 @@ function sanitizeElement(value, index = 0, sceneSize = {}) {
     fill: oneOf(value.fill, FILL_ROLES, defaults.fill),
     stroke: oneOf(value.stroke, SHAPE_STROKES, defaultStroke),
     textRole: oneOf(value.textRole, TEXT_ROLES, "label"),
+    fontSize: finite(value.fontSize, 0, 1, 120) || undefined,
     align: oneOf(value.align, ALIGNMENTS, "center"),
     labelPosition: oneOf(value.labelPosition, LABEL_POSITIONS, "center"),
     radius: finite(value.radius, defaults.radius, 0, Math.min(elementWidth, elementHeight) / 2),
@@ -271,11 +281,16 @@ export function getElementBounds(element) {
   if (element.type === "connector") {
     const start = isRecord(element.start) ? element.start : { x: 0, y: 0 };
     const end = isRecord(element.end) ? element.end : start;
-    const left = Math.min(numberOr(start.x), numberOr(end.x));
-    const top = Math.min(numberOr(start.y), numberOr(end.y));
-    const right = Math.max(numberOr(start.x), numberOr(end.x));
-    const bottom = Math.max(numberOr(start.y), numberOr(end.y));
-    return boundsFromEdges(left, top, right, bottom);
+    const anchors = [start, end];
+    if (isRecord(element.mid)) anchors.push(element.mid);
+    const xs = anchors.map((point) => numberOr(point.x));
+    const ys = anchors.map((point) => numberOr(point.y));
+    return boundsFromEdges(
+      Math.min(...xs),
+      Math.min(...ys),
+      Math.max(...xs),
+      Math.max(...ys)
+    );
   }
 
   const x = numberOr(element.x);
@@ -359,9 +374,49 @@ function dedupePoints(points) {
   });
 }
 
-function pointsForRoute(start, end, route) {
+// Axis a connector segment must follow while touching a fixed anchor: leaving
+// or entering a top/bottom anchor is vertical, a left/right anchor horizontal.
+const ANCHOR_AXES = Object.freeze({
+  top: "v",
+  bottom: "v",
+  left: "h",
+  right: "h",
+});
+
+function anchorAxis(endpointValue) {
+  return ANCHOR_AXES[endpointValue?.bind?.anchor] || null;
+}
+
+function pointsForRoute(start, end, route, startAxis = null, endAxis = null) {
   if (route !== "elbow" || start.x === end.x || start.y === end.y) {
     return dedupePoints([start, end]);
+  }
+
+  // Fixed anchors dictate the elbow orientation at their end of the leg.
+  if (startAxis || endAxis) {
+    if (startAxis === "v" && endAxis === "v") {
+      const middleY = start.y + (end.y - start.y) / 2;
+      return dedupePoints([
+        start,
+        { x: start.x, y: middleY },
+        { x: end.x, y: middleY },
+        end,
+      ]);
+    }
+    if (startAxis === "h" && endAxis === "h") {
+      const middleX = start.x + (end.x - start.x) / 2;
+      return dedupePoints([
+        start,
+        { x: middleX, y: start.y },
+        { x: middleX, y: end.y },
+        end,
+      ]);
+    }
+    const corner =
+      startAxis === "v" || endAxis === "h"
+        ? { x: start.x, y: end.y }
+        : { x: end.x, y: start.y };
+    return dedupePoints([start, corner, end]);
   }
 
   if (Math.abs(end.x - start.x) >= Math.abs(end.y - start.y)) {
@@ -425,15 +480,34 @@ export function resolveConnector(connector, elementsOrScene = []) {
     x: numberOr(connector?.end?.x),
     y: numberOr(connector?.end?.y),
   };
+  const mid = isRecord(connector?.mid)
+    ? { x: numberOr(connector.mid.x), y: numberOr(connector.mid.y) }
+    : null;
 
-  // The second pass lets two bound ends aim at each other's resolved anchors
-  // while remaining deterministic for a single render/editor frame.
-  let start = resolveBoundPoint(connector?.start, rawEnd, elementsOrScene);
-  let end = resolveBoundPoint(connector?.end, start, elementsOrScene);
-  start = resolveBoundPoint(connector?.start, end, elementsOrScene);
-  end = resolveBoundPoint(connector?.end, start, elementsOrScene);
+  let start;
+  let end;
+  if (mid) {
+    // With a waypoint, each bound end aims at the waypoint so the border exit
+    // matches the first visible segment.
+    start = resolveBoundPoint(connector?.start, mid, elementsOrScene);
+    end = resolveBoundPoint(connector?.end, mid, elementsOrScene);
+  } else {
+    // The second pass lets two bound ends aim at each other's resolved anchors
+    // while remaining deterministic for a single render/editor frame.
+    start = resolveBoundPoint(connector?.start, rawEnd, elementsOrScene);
+    end = resolveBoundPoint(connector?.end, start, elementsOrScene);
+    start = resolveBoundPoint(connector?.start, end, elementsOrScene);
+    end = resolveBoundPoint(connector?.end, start, elementsOrScene);
+  }
 
-  const points = pointsForRoute(start, end, connector?.route);
+  const startAxis = anchorAxis(connector?.start);
+  const endAxis = anchorAxis(connector?.end);
+  const points = mid
+    ? dedupePoints([
+        ...pointsForRoute(start, mid, connector?.route, startAxis, null),
+        ...pointsForRoute(mid, end, connector?.route, null, endAxis).slice(1),
+      ])
+    : pointsForRoute(start, end, connector?.route, startAxis, endAxis);
   const path = pathFromPoints(points);
   return {
     start,

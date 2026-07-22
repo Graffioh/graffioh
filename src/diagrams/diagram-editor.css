@@ -2,6 +2,7 @@
   --editor-accent: #786ec4;
   --editor-accent-soft: rgba(120, 110, 196, 0.16);
   --editor-guide: #ef3f43;
+  --editor-align: #12a15e;
   --editor-panel: rgba(0, 0, 0, 0.025);
   --editor-panel-strong: rgba(0, 0, 0, 0.055);
   --editor-hairline: rgba(0, 0, 0, 0.13);
@@ -26,6 +27,7 @@
 .diagram-editor[data-theme="dark"] {
   --editor-accent: #8b9660;
   --editor-accent-soft: rgba(139, 150, 96, 0.18);
+  --editor-align: #3ecf8e;
   --editor-panel: rgba(255, 255, 255, 0.025);
   --editor-panel-strong: rgba(255, 255, 255, 0.06);
   --editor-hairline: rgba(255, 255, 255, 0.14);
@@ -601,6 +603,11 @@
   cursor: move;
 }
 
+.diagram-editor[data-tool="pick"] .diagram-editor__element-hit,
+.diagram-editor[data-tool="pick"] .diagram-editor__connector-hit {
+  cursor: crosshair;
+}
+
 .diagram-editor__center-guides {
   fill: none;
   stroke: var(--editor-guide);
@@ -609,6 +616,17 @@
 }
 
 .diagram-editor__center-guides line {
+  vector-effect: non-scaling-stroke;
+}
+
+.diagram-editor__align-guides {
+  fill: none;
+  stroke: var(--editor-align);
+  stroke-width: 1.25;
+  pointer-events: none;
+}
+
+.diagram-editor__align-guides line {
   vector-effect: non-scaling-stroke;
 }
 
@@ -640,6 +658,15 @@
   cursor: crosshair;
 }
 
+.diagram-editor__marquee {
+  fill: var(--editor-accent-soft);
+  stroke: var(--editor-accent);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
 .diagram-editor__draft-connector {
   fill: none;
   stroke: var(--editor-accent);
@@ -647,6 +674,41 @@
   stroke-dasharray: 6 4;
   vector-effect: non-scaling-stroke;
   pointer-events: none;
+}
+
+.diagram-editor__bind-target {
+  fill: none;
+  stroke: var(--editor-accent);
+  stroke-width: 2;
+  opacity: 0.55;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.diagram-editor__anchors {
+  pointer-events: none;
+}
+
+.diagram-editor__anchor {
+  fill: var(--bg-color);
+  stroke: var(--editor-accent);
+  stroke-width: 1.6;
+  opacity: 0.9;
+  vector-effect: non-scaling-stroke;
+}
+
+.diagram-editor__anchor[data-active="true"] {
+  fill: var(--editor-accent);
+  opacity: 1;
+}
+
+.diagram-editor__handle--mid {
+  fill: var(--editor-accent-soft);
+  cursor: grab;
+}
+
+.diagram-editor__handle--mid[data-bent="true"] {
+  fill: var(--editor-accent);
 }
 
 .diagram-editor__inline-editor {
