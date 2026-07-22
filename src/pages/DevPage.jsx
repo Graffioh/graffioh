@@ -19,7 +19,13 @@ import {
   EditorSelection,
   Compartment,
 } from "@codemirror/state";
-import { EditorView, keymap, drawSelection } from "@codemirror/view";
+import {
+  EditorView,
+  keymap,
+  drawSelection,
+  lineNumbers,
+  highlightActiveLineGutter,
+} from "@codemirror/view";
 import {
   history,
   defaultKeymap,
@@ -187,7 +193,21 @@ function cmTheme(dark) {
         paddingBottom: "45vh",
       },
       ".cm-content": { padding: "0", caretColor: "var(--text-color)" },
-      ".cm-line": { padding: "0 24px" },
+      ".cm-line": { padding: "0 24px 0 14px" },
+      ".cm-gutters": {
+        backgroundColor: "transparent",
+        color: dark ? "rgba(255,255,255,0.28)" : "rgba(0,0,0,0.26)",
+        border: "none",
+        paddingLeft: "10px",
+      },
+      ".cm-lineNumbers .cm-gutterElement": {
+        minWidth: "34px",
+        textAlign: "right",
+      },
+      ".cm-activeLineGutter": {
+        backgroundColor: "transparent",
+        color: "var(--text-color)",
+      },
       "&.cm-focused": { outline: "none" },
       ".cm-cursor": { borderLeftColor: "var(--text-color)" },
       "&.cm-focused .cm-selectionBackground, .cm-selectionBackground": {
@@ -271,6 +291,8 @@ function MarkdownEditor({
           vimConf.of(vimEnabled ? vim() : []),
           history(),
           drawSelection(),
+          lineNumbers(),
+          highlightActiveLineGutter(),
           EditorView.lineWrapping,
           markdown({ base: markdownLanguage, codeLanguages: languages }),
           themeConf.of([cmTheme(dark), syntaxHighlighting(cmHighlight(dark))]),

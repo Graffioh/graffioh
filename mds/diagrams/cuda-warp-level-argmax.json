@@ -192,7 +192,7 @@
       "stroke": "solid",
       "arrowStart": true,
       "arrowEnd": true,
-      "text": "compare respective argmax in registry",
+      "text": "compare respective (maxval, argmax) in register",
       "opacity": 1,
       "locked": false
     },
@@ -225,7 +225,7 @@
       "stroke": "solid",
       "arrowStart": true,
       "arrowEnd": true,
-      "text": "compare respective argmax in registry",
+      "text": "compare respective (maxval, argmax) in register",
       "opacity": 1,
       "locked": false
     },

@@ -2,7 +2,7 @@ const blogPosts = [
   {
     id: "19",
     title: "How to write an argmax kernel",
-    date: "21-07-2026",
+    date: "22-07-2026",
   },
   {
     id: "18",
