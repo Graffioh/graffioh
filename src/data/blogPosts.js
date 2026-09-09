@@ -1,5 +1,11 @@
 const blogPosts = [
   {
+    id: "20",
+    title: "Continuous batching in Lucebox",
+    date: "09-09-2026",
+    url: "https://www.lucebox.com/blog/continuous-batching",
+  },
+  {
     id: "19",
     title: "How to write an argmax kernel",
     date: "22-07-2026",

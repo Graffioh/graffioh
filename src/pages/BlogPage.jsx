@@ -16,7 +16,11 @@ export default function BlogPage() {
       <ul>
         {blogPosts.map((post) => (
           <li key={post.id} className="my-8 break-words">
-            <Link to={`/blog/post/${post.id}`}>{post.title}</Link>
+            {post.url ? (
+              <a href={post.url}>{post.title}</a>
+            ) : (
+              <Link to={`/blog/post/${post.id}`}>{post.title}</Link>
+            )}
             <p className="text-sm text-stone-400">{post.date}</p>
           </li>
         ))}
