@@ -898,7 +898,7 @@ function CalloutIcon({ type, color }) {
   }
 }
 
-// A callout card: a soft neutral-grey panel set apart from the body, its label
+// A callout card: an unfilled panel set apart from the body, its label
 // up top and the body markdown underneath. note/toc wear a quiet "folder-tab"
 // label notched into the top border (no glyph, no left rail); the louder types
 // (tip/warning/…) keep an in-flow icon + label and the accent left rail.
@@ -931,12 +931,12 @@ function Callout({ type = "note", title, children, theme }) {
         // label that straddles the top border.
         padding: tab ? "0.72em 0.9em 0.62em 0.9em" : "0.55em 0.9em 0.62em 0.9em",
         borderRadius: "0.6em",
-        // Match the bullet list panel: same neutral-grey fill + uniform border
+        // Match the bullet list panel: transparent fill + uniform border
         // (no glow). Body text runs a hair smaller than the bullets (0.82 vs
         // 0.9em) so a note reads as a quieter aside.
         fontSize: "0.82em",
         lineHeight: 1.55,
-        background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+        background: "transparent",
         border: `1px solid ${
           isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.13)"
         }`,
@@ -1521,7 +1521,7 @@ export default function ContentViewer({
           <code
             {...rest}
             // inline code: a quiet, flat pill that sits in the prose flow
-            // without competing with it. Warm tinted background + hairline
+            // without competing with it. A transparent background + hairline
             // border echo the blog's muted palette (index.css variables);
             // no gradient or glow so it reads as typography, not a widget.
             // Dark mode inverts to the photographic negative.
@@ -1530,7 +1530,7 @@ export default function ContentViewer({
               fontFamily:
                 '"Commit Mono", "Fira Code", Menlo, Consolas, "DejaVu Sans Mono", monospace',
               fontSize: "0.8em",
-              background: theme === "dark" ? "rgba(255,255,255,0.07)" : "rgba(0,0,0,0.045)",
+              background: "transparent",
               color: "inherit",
               border: theme === "dark"
                 ? "1px solid var(--border-color)"
@@ -1543,8 +1543,7 @@ export default function ContentViewer({
           </code>
         );
       },
-      // A whole list → ONE soft tinted panel (the bullets share a single
-      // merged background instead of each being its own floating card), so
+      // A whole list shares one unfilled panel, so
       // a list reads as a grouped unit. Inline-styled because a top-level
       // `<ul>` is a direct child of `.markdown`, where the `> * { all:
       // revert }` rule (index.css) would wipe class-applied layout; inline
@@ -1583,9 +1582,7 @@ export default function ContentViewer({
               width: "fit-content",
               maxWidth: "100%",
               borderRadius: "0.6em",
-              background: isDark
-                ? "rgba(255,255,255,0.06)"
-                : "rgba(0,0,0,0.06)",
+              background: "transparent",
               border: `1px solid ${
                 isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.13)"
               }`,

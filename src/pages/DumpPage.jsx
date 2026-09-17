@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { topics, searchHaystacks } from "../dumps";
+import { topics } from "../dumps";
 import { ThemeContext } from "../ThemeContext";
 
 const ORB_SIZE = 34; // px — small
@@ -54,37 +54,11 @@ export default function DumpPage() {
     setHoveredId(id);
   };
 
-  // Text search over the dump notes — the query matches a note's title or its
-  // body (via the haystacks precomputed in dumps.js, so a keystroke costs one
-  // .includes per note, not a full-corpus lowercase). Matched orbs light up
-  // (and the rest dim). `matchedIds` is null when the box is empty.
-  const [query, setQuery] = useState("");
-  const matchedIds = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return null;
-    const set = new Set();
-    for (const t of topics) {
-      if (searchHaystacks[t.id].includes(q)) set.add(t.id);
-    }
-    return set;
-  }, [query]);
-  const searching = matchedIds !== null;
-
-  // Mirror the live match set into a ref so the rAF loop can gently slow the
-  // matched orbs (easier to read / click) without re-subscribing every frame.
-  const matchedRef = useRef(null);
-  useEffect(() => {
-    matchedRef.current = matchedIds;
-  }, [matchedIds]);
-
   // Begin the zoom into a given orb, then navigate. We snapshot the current
   // positions first so coming back resumes from here.
   const enterOrb = (topic, i) => {
     if (enteringRef.current) return;
-    // Carry the active search term into the note so the keyword lands
-    // highlighted (ContentViewer reads it off the ?q= param).
-    const q = query.trim();
-    const dest = `/dump/${topic.id}${q ? `?q=${encodeURIComponent(q)}` : ""}`;
+    const dest = `/dump/${topic.id}`;
     const s = stateRef.current[i];
     if (!s) {
       navigate(dest);
@@ -309,10 +283,6 @@ export default function DumpPage() {
         }
         if (hoveredRef.current === topicIds[i])
           factor = Math.min(factor, 0.04);
-        // a search match lingers (gentle slow) so it's easy to spot and click
-        const matched = matchedRef.current;
-        if (matched && matched.has(topicIds[i]))
-          factor = Math.min(factor, 0.22);
 
         s.x += s.vx * dt * factor;
         s.y += s.vy * dt * factor;
@@ -538,22 +508,6 @@ export default function DumpPage() {
     };
   }, []);
 
-  // Neutral accent for the search chrome: white on the dark page, black on the
-  // light one — same black-hole / white-matter motif as the orbs themselves.
-  const accent = theme === "dark" ? "255,255,255" : "0,0,0";
-  const matchCount = searching ? matchedIds.size : 0;
-
-  // Enter dives into the sole match; Escape clears the box.
-  const onSearchKey = (e) => {
-    if (e.key === "Enter" && searching && matchCount === 1) {
-      const id = [...matchedIds][0];
-      const idx = topics.findIndex((t) => t.id === id);
-      if (idx !== -1) enterOrb(topics[idx], idx);
-    } else if (e.key === "Escape") {
-      setQuery("");
-    }
-  };
-
   return (
     <>
       <div
@@ -569,107 +523,10 @@ export default function DumpPage() {
       >
         <h1 className="text-2xl font-bold text-center pt-4 pb-3">dump</h1>
 
-        {/* search — a grey "negative-space" pill (same material as the bullet
-            panels / callouts) that filters the notes by title or body; matched
-            orbs light up while the rest dim. */}
-        <div className="flex flex-col items-center gap-1 pb-3">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.55em",
-              width: "min(100%, 22rem)",
-              padding: "0.42em 0.85em",
-              borderRadius: "999px",
-              background:
-                theme === "dark"
-                  ? "rgba(255,255,255,0.06)"
-                  : "rgba(0,0,0,0.06)",
-              border: `1px solid rgba(${accent},${
-                theme === "dark" ? 0.14 : 0.13
-              })`,
-              boxShadow: query
-                ? `0 0 12px 0 rgba(${accent},0.2)`
-                : `0 0 6px 0 rgba(${accent},0.1)`,
-              transition: "box-shadow 0.2s ease",
-            }}
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke={`rgba(${accent},0.8)`}
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              style={{ flex: "0 0 auto" }}
-            >
-              <circle cx="11" cy="11" r="7" />
-              <line x1="21" y1="21" x2="16.5" y2="16.5" />
-            </svg>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={onSearchKey}
-              placeholder="search in the dumps…"
-              aria-label="Search dump notes"
-              style={{
-                flex: "1 1 auto",
-                minWidth: 0,
-                background: "transparent",
-                border: "none",
-                outline: "none",
-                color: "var(--text-color)",
-                fontSize: "0.85rem",
-              }}
-            />
-            {query && (
-              <button
-                onClick={() => setQuery("")}
-                aria-label="Clear search"
-                style={{
-                  flex: "0 0 auto",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: `rgba(${accent},0.7)`,
-                  fontSize: "1.05rem",
-                  lineHeight: 1,
-                }}
-              >
-                ×
-              </button>
-            )}
-          </div>
-          {/* match tally — fixed height so the layout doesn't jump as you type */}
-          <span
-            className="text-xs"
-            aria-live="polite"
-            style={{
-              height: "1.1em",
-              opacity: searching ? 0.7 : 0,
-              color:
-                matchCount === 0 ? `rgba(${accent},0.7)` : "var(--text-color)",
-              transition: "opacity 0.2s ease",
-            }}
-          >
-            {searching
-              ? matchCount === 0
-                ? "no matches"
-                : `${matchCount} match${matchCount === 1 ? " — press ↵" : "es"}`
-              : " "}
-          </span>
-        </div>
-
         {/* title list — hover to highlight the matching orb, click to dive in */}
         <ul className="flex flex-wrap justify-center gap-x-2 gap-y-1 pb-4 text-xs">
           {topics.map((topic, idx) => {
-            const isMatch = searching && matchedIds.has(topic.id);
-            const dimmed = searching && !isMatch;
-            const lit = hoveredId === topic.id || isMatch;
+            const lit = hoveredId === topic.id;
             return (
               <li key={topic.id} className="flex items-center gap-x-2">
                 {idx > 0 && (
@@ -684,9 +541,7 @@ export default function DumpPage() {
                       ? theme === "dark"
                         ? "text-white"
                         : "text-black"
-                      : dimmed
-                        ? "text-stone-600 opacity-40"
-                        : "text-stone-500"
+                      : "text-stone-500"
                   }`}
                 >
                   {topic.title}
@@ -714,11 +569,7 @@ export default function DumpPage() {
           }
         >
           {topics.map((topic, i) => {
-            const isMatch = searching && matchedIds.has(topic.id);
-            const dimmed = searching && !isMatch;
-            // a search hit lights the orb the same way a hover does; the misses
-            // fade back so the matches pop out of the field.
-            const isHot = hoveredId === topic.id || isMatch;
+            const isHot = hoveredId === topic.id;
             return (
               // outer wrapper: JS drives its translate (position) every frame
               <div
@@ -728,8 +579,6 @@ export default function DumpPage() {
                 style={{
                   width: ORB_SIZE,
                   height: ORB_SIZE,
-                  opacity: dimmed ? 0.16 : 1,
-                  transition: "opacity 0.25s ease",
                 }}
               >
                 {/* inner button: owns hover/scale — no conflict with the translate above */}
