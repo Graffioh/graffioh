@@ -1,13 +1,13 @@
 const blogPosts = [
   {
     id: "21",
-    title: "PFlash v2: 3x faster processing on long prompts",
+    title: "Pflash v2 [Lucebox]",
     date: "15-10-2026",
     url: "https://www.lucebox.com/blog/pflash-v2",
   },
   {
     id: "20",
-    title: "Continuous batching in Lucebox",
+    title: "Continuous batching [Lucebox]",
     date: "09-09-2026",
     url: "https://www.lucebox.com/blog/continuous-batching",
   },
