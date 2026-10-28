@@ -1167,7 +1167,8 @@ export default function ContentViewer({
         return (
           <>
             <Tag className={className} {...rest}>
-              {level >= 2 && level <= 4 && (
+              {/* orbs are the dump's motif — blog posts / chronicles stay plain */}
+              {currentNoteId && level >= 2 && level <= 4 && (
                 <SectionOrb theme={theme} level={level} />
               )}
               {children}
@@ -1673,15 +1674,27 @@ export default function ContentViewer({
                 height: "0.4em",
                 marginTop: "0.5em",
                 borderRadius: "999px",
-                background: isDark
-                  ? "radial-gradient(circle at 50% 42%, #fff 58%, #fafafa 78%, rgba(255,255,255,0) 100%)"
-                  : "radial-gradient(circle at 50% 42%, #000 58%, #050505 78%, rgba(0,0,0,0) 100%)",
-                border: isDark
-                  ? "1px solid rgba(255,255,255,0.55)"
-                  : "1px solid rgba(0,0,0,0.35)",
-                boxShadow: isDark
-                  ? "0 0 5px 0 rgba(255,255,255,0.45)"
-                  : "0 0 5px 0 rgba(0,0,0,0.35)",
+                // glowing orb on dump notes; a plain flat dot elsewhere
+                ...(currentNoteId
+                  ? {
+                      background: isDark
+                        ? "radial-gradient(circle at 50% 42%, #fff 58%, #fafafa 78%, rgba(255,255,255,0) 100%)"
+                        : "radial-gradient(circle at 50% 42%, #000 58%, #050505 78%, rgba(0,0,0,0) 100%)",
+                      border: isDark
+                        ? "1px solid rgba(255,255,255,0.55)"
+                        : "1px solid rgba(0,0,0,0.35)",
+                      boxShadow: isDark
+                        ? "0 0 5px 0 rgba(255,255,255,0.45)"
+                        : "0 0 5px 0 rgba(0,0,0,0.35)",
+                    }
+                  : {
+                      width: "0.32em",
+                      height: "0.32em",
+                      marginTop: "0.6em",
+                      background: isDark
+                        ? "rgba(255,255,255,0.6)"
+                        : "rgba(0,0,0,0.6)",
+                    }),
               }}
             />
             <div style={{ flex: "1 1 auto", minWidth: 0 }}>{children}</div>

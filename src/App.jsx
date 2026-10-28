@@ -100,9 +100,6 @@ function Header() {
       <Link to={"/dump"} className="px-2 py-1" onClick={close}>
         dump
       </Link>
-      <Link to={"/chronicles"} className="px-2 py-1" onClick={close}>
-        chronicles
-      </Link>
       {/*
       <Link to={"/bertologies"} className="px-2 py-1" onClick={close}>
         bertologies

@@ -36,64 +36,32 @@ export default function CodeReference({ code, language, sourceUrl, title, theme 
         margin: "1em 0",
         maxWidth: "100%",
         overflow: "hidden",
+        position: "relative",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: title ? "space-between" : "flex-end",
-          gap: "0.75em",
-          minHeight: 36,
-          padding: "0 0.62em",
-          background: material.panel,
-          borderBottom: `1px solid ${material.ink}1f`,
-        }}
-      >
-        {title && (
-          <span
-            style={{
-              minWidth: 0,
-              overflow: "hidden",
-              color: material.ink,
-              fontFamily: '"Commit Mono", "SFMono-Regular", Consolas, monospace',
-              fontSize: "0.72rem",
-              fontWeight: 600,
-              letterSpacing: "0.025em",
-              lineHeight: 1,
-              opacity: 0.68,
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {title}
-          </span>
-        )}
-        {source && (
-          <a
-            href={source.href}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`View ${source.filename} on GitHub`}
-            title={`View ${source.filename} on GitHub`}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 26,
-              height: 26,
-              color: material.ink,
-              textDecoration: "none",
-              border: `1px solid ${material.ink}33`,
-              borderRadius: "0.48em",
-              background: `${material.ink}0a`,
-              cursor: "pointer",
-            }}
-          >
-            <GithubMark color={material.ink} size={15} />
-          </a>
-        )}
-      </div>
+      {/* no header bar — just the GitHub mark floating in the top-right corner */}
+      {source && (
+        <a
+          href={source.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`View ${source.filename} on GitHub`}
+          title={title ? `${title} · ${source.filename}` : `View ${source.filename} on GitHub`}
+          style={{
+            position: "absolute",
+            top: "0.7em",
+            right: "0.75em",
+            display: "inline-flex",
+            lineHeight: 0,
+            opacity: 0.55,
+            cursor: "pointer",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = 0.55)}
+        >
+          <GithubMark color={material.ink} size={16} />
+        </a>
+      )}
 
       <SyntaxHighlighter
         PreTag="div"
@@ -109,7 +77,8 @@ export default function CodeReference({ code, language, sourceUrl, title, theme 
           borderRadius: 0,
           boxShadow: "none",
           margin: 0,
-          padding: "0.85em 1.1em 1em",
+          // right padding keeps long lines from running under the GitHub mark
+          padding: source ? "0.85em 2.6em 1em 1.1em" : "0.85em 1.1em 1em",
           overflowX: "auto",
         }}
       />

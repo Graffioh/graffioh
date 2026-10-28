@@ -8,6 +8,9 @@ import { chronicles } from "../chronicles";
 export default function ChroniclesPage() {
   return (
     <div className="p-8 max-w-3xl mx-auto">
+      <Link to="/dump" className="text-sm text-stone-400">
+        ← back to orbs
+      </Link>
       <h1 className="text-xl font-bold text-center pb-8">
         chronicles from a dumb guy trying to optimize/experiment stuff
       </h1>

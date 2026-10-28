@@ -15,8 +15,13 @@ const INV_SLOW_RADIUS = 1 / SLOW_RADIUS;
 const COLLISION_CELL_SIZE = ORB_SIZE;
 const ORB_SIZE_SQ = ORB_SIZE * ORB_SIZE;
 const MAX_PARTICLES = 600;
-const topicIds = topics.map((topic) => topic.id);
-const topicCount = topics.length;
+// Every dump note is an orb, plus one extra orb that dives into /chronicles.
+const orbItems = [
+  ...topics,
+  { id: "chronicles", title: "chronicles", to: "/chronicles" },
+];
+const topicIds = orbItems.map((topic) => topic.id);
+const topicCount = orbItems.length;
 
 // Orb positions persist across navigation (changing section, or entering an
 // orb and coming back) — module-scoped so they survive DumpPage unmount and
@@ -58,7 +63,7 @@ export default function DumpPage() {
   // positions first so coming back resumes from here.
   const enterOrb = (topic, i) => {
     if (enteringRef.current) return;
-    const dest = `/dump/${topic.id}`;
+    const dest = topic.to ?? `/dump/${topic.id}`;
     const s = stateRef.current[i];
     if (!s) {
       navigate(dest);
@@ -111,7 +116,7 @@ export default function DumpPage() {
     // Fresh layout: spread the orbs across the canvas with zippy velocities.
     const seed = () => {
       const { width, height } = bounds;
-      return topics.map((_, i) => {
+      return orbItems.map((_, i) => {
         const cols = Math.ceil(Math.sqrt(topicCount));
         const rows = Math.ceil(topicCount / cols);
         const cx = ((i % cols) + 0.5) * (width / cols);
@@ -141,7 +146,7 @@ export default function DumpPage() {
 
     sizeCanvas();
     // Resume where we left off if possible, otherwise seed a fresh layout.
-    if (savedOrbs && savedOrbs.length === topics.length) {
+    if (savedOrbs && savedOrbs.length === orbItems.length) {
       stateRef.current = savedOrbs;
       clampAll();
     } else {
@@ -525,7 +530,7 @@ export default function DumpPage() {
 
         {/* title list — hover to highlight the matching orb, click to dive in */}
         <ul className="flex flex-wrap justify-center gap-x-2 gap-y-1 pb-4 text-xs">
-          {topics.map((topic, idx) => {
+          {orbItems.map((topic, idx) => {
             const lit = hoveredId === topic.id;
             return (
               <li key={topic.id} className="flex items-center gap-x-2">
@@ -568,7 +573,7 @@ export default function DumpPage() {
               : undefined
           }
         >
-          {topics.map((topic, i) => {
+          {orbItems.map((topic, i) => {
             const isHot = hoveredId === topic.id;
             return (
               // outer wrapper: JS drives its translate (position) every frame
