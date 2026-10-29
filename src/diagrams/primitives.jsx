@@ -63,7 +63,7 @@ export function DiagramCanvas({
           y="28"
           width={width - 56}
           height={height - 56}
-          rx="26"
+          rx="0"
         />
       )}
       {children}

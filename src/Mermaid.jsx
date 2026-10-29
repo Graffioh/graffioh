@@ -84,7 +84,7 @@ export default function Mermaid({ code, theme, zoomable = true }) {
         className="text-sm my-4"
         style={{
           ...slab(isDark),
-          borderRadius: "0.7em",
+          borderRadius: 0,
           padding: "1em 1.1em",
           overflowX: "auto",
           whiteSpace: "pre",
@@ -110,7 +110,7 @@ export default function Mermaid({ code, theme, zoomable = true }) {
         onClick={canZoom ? () => setExpanded(true) : undefined}
         style={{
           ...slab(isDark),
-          borderRadius: "0.7em",
+          borderRadius: 0,
           padding: "1em 1.1em",
           overflowX: "auto",
           display: "flex",

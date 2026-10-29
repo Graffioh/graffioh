@@ -188,7 +188,7 @@ export default function Plot({ spec, fenceLang, theme, zoomable = true }) {
   // the light page (same background as Mermaid / the code slabs). In dark mode
   // the rim is white and the glow neutral-grey; in light mode a soft dark rim.
   const frame = {
-    borderRadius: "0.7em",
+    borderRadius: 0,
     overflow: "hidden",
     border: isDark
       ? "1px solid rgba(255,255,255,0.55)"

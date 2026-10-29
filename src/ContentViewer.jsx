@@ -930,7 +930,7 @@ function Callout({ type = "note", title, children, theme }) {
         // Extra top padding on the tab variant so the first body line clears the
         // label that straddles the top border.
         padding: tab ? "0.72em 0.9em 0.62em 0.9em" : "0.55em 0.9em 0.62em 0.9em",
-        borderRadius: "0.6em",
+        borderRadius: 0,
         // Match the bullet list panel: transparent fill + uniform border
         // (no glow). Body text runs a hair smaller than the bullets (0.82 vs
         // 0.9em) so a note reads as a quieter aside.
@@ -1317,7 +1317,7 @@ export default function ContentViewer({
                 borderSpacing: 0,
                 fontSize: "0.9em",
                 lineHeight: 1.45,
-                borderRadius: "0.65em",
+                borderRadius: 0,
                 overflow: "hidden",
                 background: isDark
                   ? "rgba(255,255,255,0.055)"
@@ -1496,7 +1496,7 @@ export default function ContentViewer({
             wrapLongLines={false}
             customStyle={{
               overflowX: "auto",
-              borderRadius: "0.7em",
+              borderRadius: 0,
               padding: "1em 1.1em",
               ...(theme === "dark"
                 ? {
@@ -1582,7 +1582,7 @@ export default function ContentViewer({
               flexDirection: "column",
               width: "fit-content",
               maxWidth: "100%",
-              borderRadius: "0.6em",
+              borderRadius: 0,
               background: "transparent",
               border: `1px solid ${
                 isDark ? "rgba(255,255,255,0.14)" : "rgba(0,0,0,0.13)"

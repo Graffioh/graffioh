@@ -254,7 +254,7 @@ export default function ImageLightbox({ src, alt, svg, slabStyle, maxWidthPx, on
           style={{
             ...slabStyle,
             ...transformStyle,
-            borderRadius: "0.7em",
+            borderRadius: 0,
             padding: "1.3em 1.5em",
             boxSizing: "border-box",
             // Definite width so the SVG's width:100% has a basis; capped to the

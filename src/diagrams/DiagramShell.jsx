@@ -46,7 +46,7 @@ export default function DiagramShell({ children, theme, label, scrollable = true
         margin: "1.5em 0",
         width: "100%",
         maxWidth: "100%",
-        borderRadius: "0.8em",
+        borderRadius: 0,
         overflowX: scrollable ? "auto" : "hidden",
         overflowY: "hidden",
         WebkitOverflowScrolling: scrollable ? "touch" : undefined,

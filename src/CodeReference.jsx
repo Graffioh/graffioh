@@ -32,7 +32,7 @@ export default function CodeReference({ code, language, sourceUrl, title, theme 
         border: material.border,
         boxShadow: material.boxShadow,
         background: material.background,
-        borderRadius: "0.7em",
+        borderRadius: 0,
         margin: "1em 0",
         maxWidth: "100%",
         overflow: "hidden",

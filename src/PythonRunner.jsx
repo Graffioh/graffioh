@@ -215,7 +215,7 @@ export default function PythonRunner({ code, theme }) {
           background: s.background,
         },
         color: s.ink,
-        borderRadius: "0.7em",
+        borderRadius: 0,
         overflow: "hidden",
       }}
     >

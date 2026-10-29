@@ -236,7 +236,7 @@ export default function CodeFile({ url, theme }) {
         background: s.background,
         boxShadow: s.boxShadow,
         color: s.ink,
-        borderRadius: "0.8em",
+        borderRadius: 0,
         overflow: "hidden",
       }}
     >
