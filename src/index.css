@@ -314,3 +314,135 @@ a:hover {
       display: none !important;
     }
   }
+
+/* ---------------------------------------------------------------------------
+   Blog post reading layout (ContentViewer variant="post").
+   A fixed ~640px measure instead of the viewport-relative 8/12 column, so the
+   page reads the same on a laptop and a 32" monitor. Selectors are doubled
+   (`.markdown.post-body > x`) to outrank the `.markdown > * { all: revert }`
+   reset above.
+   ------------------------------------------------------------------------- */
+.post-column {
+    max-width: calc(720px + 2rem); /* 720px text + the px-4 gutters */
+}
+
+.markdown.post-body {
+    /* the site's own Palatino stack + weight from :root — only the measure and
+       rhythm change for posts */
+    font-family: inherit;
+    font-size: 18px;
+    line-height: 1.65;
+    font-weight: 500;
+    padding-top: 3rem;
+    padding-bottom: 6rem;
+}
+
+.markdown.post-body > h1 {
+    font-size: 2.25rem;
+    line-height: 1.25;
+    font-weight: 400;
+    margin: 0 0 1.5rem;
+    letter-spacing: -0.01em;
+}
+
+.markdown.post-body > .post-meta {
+    font-family: "Commit Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #6b6760;
+    margin: 0 0 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+body.dark .markdown.post-body > .post-meta {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.markdown.post-body > h2 {
+    font-size: 1.5rem;
+    line-height: 1.9rem;
+    font-weight: 600;
+    margin: 2.75rem 0 1rem;
+}
+.markdown.post-body > h3 {
+    font-size: 1.2rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+    margin: 2.25rem 0 0.75rem;
+}
+.markdown.post-body > h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 1.75rem 0 0.5rem;
+}
+
+.markdown.post-body > p {
+    margin: 0 0 1.75rem;
+}
+
+.markdown.post-body > ul,
+.markdown.post-body > ol {
+    margin: -0.75rem 0 1.75rem;
+    padding-left: 18px;
+}
+.markdown.post-body > ul {
+    list-style: disc;
+}
+.markdown.post-body > ol {
+    list-style: decimal;
+}
+.markdown.post-body li {
+    line-height: 30px;
+    padding-left: 8px;
+    margin-bottom: 0.4rem;
+}
+.markdown.post-body li + li {
+    border-top: 0;
+}
+.markdown.post-body li::marker {
+    font-weight: 700;
+}
+
+.markdown.post-body > hr {
+    border: 0;
+    border-top: 1px solid var(--border-color);
+    margin: 2.5rem 0;
+}
+
+.markdown.post-body > blockquote {
+    margin: 0 0 1.75rem;
+}
+
+/* Wide blocks. Every fenced block (code, blog-diagram, mermaid, plot, python
+   runner, codefile) renders inside a <pre> that is a direct child of the
+   markdown. They all share ONE wide measure that breaks symmetrically out of
+   the 640px text column, so code and figures line up with each other while
+   the prose stays narrow. Done with margins (not transforms) so nothing
+   creates a new containing block. Inline-styled margins on the slabs need
+   !important to yield. */
+.markdown.post-body {
+    --post-wide: min(800px, calc(100vw - 2rem));
+}
+.markdown.post-body > pre {
+    /* the <pre> used to clip the slab glow into a visible band (overflow-x) */
+    overflow: visible;
+    margin: 2.25rem 0;
+    padding: 0;
+    font-size: 16px;
+}
+.markdown.post-body > pre > * {
+    width: var(--post-wide) !important;
+    max-width: none !important;
+    margin: 0 0 0 calc(50% - var(--post-wide) / 2) !important;
+}
+/* code a touch smaller than prose, like most long-form sites */
+.markdown.post-body > pre .text-sm {
+    font-size: 13.5px;
+    line-height: 1.6;
+}
+/* Diagrams: never taller than most of the viewport */
+.markdown.post-body .diagram-canvas {
+    max-height: 62vh;
+}

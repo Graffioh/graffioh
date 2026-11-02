@@ -3,6 +3,20 @@ import { useParams } from "react-router-dom";
 import ContentViewer from "../ContentViewer";
 import blogPosts from "../data/blogPosts";
 
+// "15-10-2026" → "October 15, 2026"
+function formatDate(ddmmyyyy) {
+  const [d, m, y] = ddmmyyyy.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return Number.isNaN(date.getTime())
+    ? ddmmyyyy
+    : date.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC",
+      });
+}
+
 export default function PostPage() {
   const { id } = useParams();
   const [content, setContent] = useState(null);
@@ -21,25 +35,32 @@ export default function PostPage() {
     loadContent();
   }, [id]);
 
+  // ~230 wpm over the prose only — fenced blocks (code, diagrams) are skipped.
+  const minutes = content
+    ? Math.max(
+        1,
+        Math.round(
+          content.replace(/```[\s\S]*?```/g, "").split(/\s+/).filter(Boolean)
+            .length / 230
+        )
+      )
+    : 0;
+
   return (
     <div>
       {content ? (
         <ContentViewer
           content={content}
+          variant="post"
           titleMeta={
             post ? (
-              <time
-                dateTime={post.date.split("-").reverse().join("-")}
-                style={{
-                  color: "#a8a29e",
-                  display: "block",
-                  fontSize: "0.875rem",
-                  marginBottom: "0.5rem",
-                  marginTop: "-0.9rem",
-                }}
-              >
-                {post.date}
-              </time>
+              <div className="post-meta">
+                <time dateTime={post.date.split("-").reverse().join("-")}>
+                  {formatDate(post.date)}
+                </time>
+                {" • "}
+                {minutes} min read
+              </div>
             ) : null
           }
         />

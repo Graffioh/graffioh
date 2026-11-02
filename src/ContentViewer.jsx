@@ -1099,7 +1099,12 @@ export default function ContentViewer({
   // fill the parent instead of the site's centered 8/12 column — used by the
   // /dev workbench's split-view preview pane, whose pane is already narrow
   fluid = false,
+  // "post" → blog-post reading layout: a fixed ~640px text column (instead of
+  // the viewport-relative 8/12 column), plain lists, and the `.post-body`
+  // typography in index.css. Dump / notes / chronicles keep the default.
+  variant = "default",
 }) {
+  const isPost = variant === "post";
   const { theme } = useContext(ThemeContext);
   const location = useLocation();
   const params = useParams();
@@ -1560,6 +1565,13 @@ export default function ContentViewer({
         // out as a quiet, indented outline (styled by `.toc-list` in
         // index.css — these sit inside the callout, so `all: revert`
         // doesn't reach them and class CSS applies cleanly).
+        if (isPost && !inToc) {
+          return (
+            <ul {...rest} className={className}>
+              {children}
+            </ul>
+          );
+        }
         if (inToc) {
           return (
             <ul {...rest} className={`toc-list ${className || ""}`.trim()}>
@@ -1614,6 +1626,9 @@ export default function ContentViewer({
         const { children, node, ordered, index, checked, ...rest } = props;
         const isDark = theme === "dark";
         const inToc = useContext(TocContext);
+        if (isPost && !inToc) {
+          return <li {...rest}>{children}</li>;
+        }
         // TOC row: a small neutral dot + the anchor link, no panel /
         // glow / divider. `borderTop: 0` cancels the `.markdown li + li`
         // hairline (an inline value beats that non-important CSS rule).
@@ -1757,7 +1772,7 @@ export default function ContentViewer({
         );
       },
     };
-  }, [theme, centered, zoomable, currentNoteId, titleMeta]);
+  }, [theme, centered, zoomable, currentNoteId, titleMeta, isPost]);
 
   // The rendered markdown element, memoized: ContentViewer re-renders for
   // lightbox open/close and for every location change (hash included) — far
@@ -1766,7 +1781,7 @@ export default function ContentViewer({
   const markdown = useMemo(
     () => (
       <Markdown
-        className={`markdown ${centered ? "text-center" : ""}`}
+        className={`markdown ${isPost ? "post-body" : ""} ${centered ? "text-center" : ""}`}
         remarkPlugins={REMARK_PLUGINS}
         rehypePlugins={rehypePlugins}
         components={components}
@@ -1774,7 +1789,7 @@ export default function ContentViewer({
         {cleaned}
       </Markdown>
     ),
-    [cleaned, centered, rehypePlugins, components]
+    [cleaned, centered, isPost, rehypePlugins, components]
   );
 
   return (
@@ -1782,7 +1797,11 @@ export default function ContentViewer({
       <div className="w-full">
         <div
           className={
-            fluid ? "w-full px-6" : "md:w-8/12 w-full px-4 mx-auto"
+            fluid
+              ? "w-full px-6"
+              : isPost
+                ? "post-column w-full px-4 mx-auto"
+                : "md:w-8/12 w-full px-4 mx-auto"
           }
         >
           {markdown}
