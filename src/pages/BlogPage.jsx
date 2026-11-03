@@ -17,7 +17,17 @@ export default function BlogPage() {
         {blogPosts.map((post) => (
           <li key={post.id} className="my-8 break-words">
             {post.url ? (
-              <a href={post.url}>{post.title}</a>
+              <a href={post.url}>
+                {post.title}
+                {post.brand === "lucebox" && (
+                  <span
+                    className="lucebox-mark"
+                    role="img"
+                    aria-label="Lucebox"
+                    title="Lucebox"
+                  />
+                )}
+              </a>
             ) : (
               <Link to={`/blog/post/${post.id}`}>{post.title}</Link>
             )}

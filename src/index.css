@@ -446,3 +446,19 @@ body.dark .markdown.post-body > .post-meta {
 .markdown.post-body .diagram-canvas {
     max-height: 62vh;
 }
+
+/* Lucebox burst mark next to cross-posted blog titles */
+.lucebox-mark {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.75em;
+    margin-left: 0.35em;
+    vertical-align: 0;
+    background-color: #000000;
+    -webkit-mask: url("/lucebox-mark.webp") center / contain no-repeat;
+    mask: url("/lucebox-mark.webp") center / contain no-repeat;
+}
+
+body.dark .lucebox-mark {
+    background-color: #ffffff;
+}
