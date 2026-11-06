@@ -1091,6 +1091,21 @@ function rehypeHighlightTerm(term) {
   };
 }
 
+// Marks the document's first <h1> as its title, so the post meta line (date,
+// read time) renders once under it instead of under every top-level heading.
+function rehypeMarkTitle() {
+  return (tree) => {
+    const find = (node) => {
+      if (node.type === "element" && node.tagName === "h1") {
+        node.properties = { ...node.properties, dataPostTitle: true };
+        return true;
+      }
+      return (node.children || []).some(find);
+    };
+    find(tree);
+  };
+}
+
 export default function ContentViewer({
   content,
   centered = false,
@@ -1122,7 +1137,7 @@ export default function ContentViewer({
     return q ? q.trim() : "";
   }, [location.search]);
   const rehypePlugins = useMemo(() => {
-    const plugins = [rehypeRaw, rehypeRemoveComments, rehypeSlug];
+    const plugins = [rehypeRaw, rehypeRemoveComments, rehypeSlug, rehypeMarkTitle];
     if (searchTerm) plugins.push([rehypeHighlightTerm, searchTerm]);
     plugins.push(rehypeKatex);
     return plugins;
@@ -1164,7 +1179,7 @@ export default function ContentViewer({
     // orb per external reference cited in that heading's section.
     const heading = (level, className) =>
       function Heading(props) {
-        const { node, children, ...rest } = props;
+        const { node, children, "data-post-title": _isTitle, ...rest } = props;
         const id = props.id;
         const Tag = `h${level}`;
         const refs =
@@ -1179,7 +1194,7 @@ export default function ContentViewer({
               {children}
               {refs.length > 0 && <RefOrbs refs={refs} theme={theme} />}
             </Tag>
-            {level === 1 && titleMeta}
+            {node?.properties?.dataPostTitle && titleMeta}
           </>
         );
       };
