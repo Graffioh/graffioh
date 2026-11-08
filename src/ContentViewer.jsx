@@ -1091,8 +1091,8 @@ function rehypeHighlightTerm(term) {
   };
 }
 
-// Marks the document's first <h1> as its title, so the post meta line (date,
-// read time) renders once under it instead of under every top-level heading.
+// Marks the document's first <h1> as its title, so the post date renders once
+// under it instead of under every top-level heading.
 function rehypeMarkTitle() {
   return (tree) => {
     const find = (node) => {

@@ -346,15 +346,10 @@ a:hover {
 }
 
 .markdown.post-body > .post-meta {
-    font-family: "Commit Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.75rem;
-    line-height: 1rem;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
     color: #6b6760;
-    margin: 0 0 2rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid var(--border-color);
+    margin: -1.1rem 0 2rem; /* pulls the date up into the h1's bottom margin */
 }
 body.dark .markdown.post-body > .post-meta {
     color: rgba(255, 255, 255, 0.5);
