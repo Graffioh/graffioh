@@ -49,6 +49,7 @@
     --hover-shadow-color: rgba(0, 0, 0, 0.15); /* subtle shadow */
     --blockquote-border-color: #c8c5c0; /* muted warm gray */
     --vortex-color: rgba(0, 0, 0, 0.05); /* faint overlay */
+    --header-rule-color: #000000; /* header divider */
   }
   
   /* Dark theme */
@@ -60,11 +61,16 @@
     --hover-shadow-color: rgba(255, 255, 255, 0.15); /* subtle glow */
     --blockquote-border-color: #5a5555; /* muted warm gray */
     --vortex-color: rgba(255, 255, 255, 0.05); /* faint overlay */
+    --header-rule-color: #ffffff; /* header divider */
   }
 
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
+}
+
+.site-header {
+    border-bottom: 1px solid var(--header-rule-color);
 }
 
 .markdown > * {

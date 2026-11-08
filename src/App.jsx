@@ -115,7 +115,7 @@ function Header() {
 
   return (
     <div className="md:w-8/12 mx-auto">
-      <div className="flex border-b-2 border-stone-500 justify-between items-center p-2">
+      <div className="site-header flex justify-between items-center p-2">
         <Link
           to={"/"}
           aria-label="berto"
